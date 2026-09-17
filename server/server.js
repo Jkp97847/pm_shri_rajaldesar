@@ -30,21 +30,77 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 });
 
+const crypto = require('node:crypto');
+const helmet = require('helmet');
+const { rateLimit } = require('express-rate-limit');
+
+// Security Headers (Clickjacking, MIME Sniffing, XSS protection)
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false
+}));
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(uploadsDir));
 
-// Simple Admin Auth Middleware
-const ADMIN_TOKEN = "pm-shri-rajaldesar-admin-token-secure-2026";
+// Rate Limiting Protection (Brute-Force & Anti-DDoS)
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes window
+  max: 5, // Maximum 5 attempts per 15 minutes
+  message: { 
+    success: false, 
+    message: "सुरक्षा कारणों से बहुत अधिक असफल प्रयास किए गए हैं। कृपया 15 मिनट बाद पुनः प्रयास करें।" 
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const contactLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 5,
+  message: { success: false, message: "बहुत अधिक संदेश भेजे गए हैं। कृपया कुछ समय बाद पुनः प्रयास करें।" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const generalApiLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000,
+  max: 180,
+  message: { success: false, message: "Too many requests. Please slow down." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Dynamic Cryptographic Session Management (Zero hardcoded secrets)
+const activeSessions = new Map();
+
+// Automatically purge expired sessions every 30 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [t, s] of activeSessions.entries()) {
+    if (s.expiresAt < now) activeSessions.delete(t);
+  }
+}, 30 * 60 * 1000);
 
 function adminAuth(req, res, next) {
   const token = req.headers['x-admin-token'] || req.query.token;
-  if (token === ADMIN_TOKEN) {
-    return next();
+  if (!token) {
+    return res.status(401).json({ success: false, message: "Unauthorized: Admin access required." });
   }
-  return res.status(401).json({ success: false, message: "Unauthorized: Admin access required." });
+  const session = activeSessions.get(token);
+  if (!session || Date.now() > session.expiresAt) {
+    if (session) activeSessions.delete(token);
+    return res.status(401).json({ success: false, message: "सत्र समाप्त हो गया है। कृपया पुनः लॉगिन करें।" });
+  }
+  // Refresh session activity expiry
+  session.expiresAt = Date.now() + 8 * 60 * 60 * 1000;
+  return next();
 }
+
+// Apply general rate limiter to protect all API endpoints from spam & DDoS
+app.use('/api', generalApiLimiter);
 
 // ----------------------------------------------------
 // PUBLIC ROUTES
@@ -149,8 +205,8 @@ app.get('/api/results/search', (req, res) => {
   }
 });
 
-// 7. Contact Us Form (Saves into inquiries table)
-app.post('/api/contact', (req, res) => {
+// 7. Contact Us Form (Saves into inquiries table, protected by contactLimiter)
+app.post('/api/contact', contactLimiter, (req, res) => {
   try {
     const { name, phone, email, subject, message } = req.body;
     if (!name || !phone || !message) {
@@ -203,15 +259,26 @@ app.get('/api/library', (req, res) => {
 // ADMIN ROUTES
 // ----------------------------------------------------
 
-// Admin Login
-app.post('/api/admin/login', (req, res) => {
+// Admin Login (Protected by 5-attempt Rate Limiting & 256-bit Cryptographic Sessions)
+app.post('/api/admin/login', loginLimiter, (req, res) => {
   const { password } = req.body;
   const currentPassword = db.prepare("SELECT value FROM settings WHERE key = 'admin_password'").get()?.value || 'admin@rajaldesar123';
   if (password === currentPassword) {
-    res.json({ success: true, token: ADMIN_TOKEN, message: "Login successful!" });
+    const sessionToken = crypto.randomBytes(32).toString('hex');
+    activeSessions.set(sessionToken, { expiresAt: Date.now() + 8 * 60 * 60 * 1000 });
+    res.json({ success: true, token: sessionToken, message: "लॉगिन सफल!" });
   } else {
-    res.status(401).json({ success: false, message: "Invalid admin password. Default is 'admin@rajaldesar123'" });
+    res.status(401).json({ success: false, message: "अमान्य एडमिन पासवर्ड! कृपया सही पासवर्ड दर्ज करें।" });
   }
+});
+
+// Admin Logout (Instantly invalidates session token)
+app.post('/api/admin/logout', (req, res) => {
+  const token = req.headers['x-admin-token'] || req.query.token;
+  if (token && activeSessions.has(token)) {
+    activeSessions.delete(token);
+  }
+  res.json({ success: true, message: "सत्र सफलतापूर्वक समाप्त (Logged out) हुआ।" });
 });
 
 // Admin Verify Token
@@ -233,8 +300,8 @@ app.post('/api/admin/change-password', adminAuth, (req, res) => {
   res.json({ success: true, message: "प्रशासक पासवर्ड सफलतापूर्वक बदल दिया गया है।" });
 });
 
-// Admin Recover/Reset Password (Forgot Password)
-app.post('/api/admin/recover-password', (req, res) => {
+// Admin Recover/Reset Password (Forgot Password - Protected by Rate Limiting)
+app.post('/api/admin/recover-password', loginLimiter, (req, res) => {
   try {
     const { udise_code, recovery_pin, new_password } = req.body;
     if (!udise_code || !recovery_pin || !new_password) {

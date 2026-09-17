@@ -186,6 +186,12 @@ export default function Admin() {
   };
 
   const handleLogout = () => {
+    if (token) {
+      fetch('/api/admin/logout', {
+        method: 'POST',
+        headers: { 'x-admin-token': token }
+      }).catch(() => {});
+    }
     sessionStorage.removeItem('pm_admin_token');
     try { localStorage.removeItem('pm_admin_token'); } catch (e) {}
     setToken('');
