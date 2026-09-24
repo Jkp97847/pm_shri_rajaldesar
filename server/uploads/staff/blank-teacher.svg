@@ -1,0 +1,44 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 450" width="400" height="450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#ea580c"/>
+    </linearGradient>
+    <linearGradient id="avatar" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#94a3b8"/>
+      <stop offset="100%" stop-color="#64748b"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="400" height="450" fill="url(#bg)"/>
+  
+  <!-- Subtle pattern circle -->
+  <circle cx="200" cy="180" r="130" fill="#334155" opacity="0.3"/>
+  
+  <!-- Avatar Silhouette -->
+  <!-- Head -->
+  <circle cx="200" cy="140" r="55" fill="url(#avatar)"/>
+  
+  <!-- Academic Cap Accent -->
+  <polygon points="200,65 140,88 200,105 260,88" fill="url(#accent)"/>
+  <polygon points="200,105 200,120 235,108 235,95" fill="#d97706"/>
+  <circle cx="200" cy="85" r="4" fill="#fef3c7"/>
+  <path d="M 235,100 Q 248,110 248,135" stroke="#f59e0b" stroke-width="3" fill="none"/>
+  
+  <!-- Shoulders / Body -->
+  <path d="M 100,310 C 100,225 150,215 200,215 C 250,215 300,225 300,310 Z" fill="url(#avatar)"/>
+  
+  <!-- Badge at bottom -->
+  <rect x="70" y="350" width="260" height="42" rx="21" fill="#1e293b" stroke="#f59e0b" stroke-width="2"/>
+  <text x="200" y="376" font-family="sans-serif" font-size="14" font-weight="bold" fill="#f8fafc" text-anchor="middle">
+    पीएम श्री शिक्षक (Faculty)
+  </text>
+  <text x="200" y="420" font-family="sans-serif" font-size="12" fill="#94a3b8" text-anchor="middle">
+    PM SHRI RAJALDESAR
+  </text>
+</svg>

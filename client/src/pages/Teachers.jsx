@@ -94,9 +94,10 @@ export default function Teachers() {
                 {/* Photo container */}
                 <div className="h-56 bg-slate-100 overflow-hidden relative">
                   <img
-                    src={teacher.photo || "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&q=80"}
+                    src={teacher.photo || "/uploads/staff/blank-teacher.png"}
                     alt={teacher.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                    onError={(e) => { e.currentTarget.src = "/uploads/staff/blank-teacher.png"; }}
                   />
                   <span className="absolute bottom-2 left-2 bg-blue-950/80 backdrop-blur-md text-amber-400 text-[11px] font-bold px-2.5 py-0.5 rounded">
                     {teacher.department}

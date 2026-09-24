@@ -142,8 +142,8 @@ export default function Home() {
                 />
                 <div>
                   <span className="text-amber-400 text-xs font-bold uppercase tracking-wider">प्रधानाचार्य संदेश (Principal's Desk)</span>
-                  <h4 className="text-lg font-bold text-white leading-tight">डॉ. सरोज शर्मा</h4>
-                  <p className="text-xs text-slate-300">प्रधानाचार्य, रा.बा.उ.मा.वि. राजलदेसर</p>
+                  <h4 className="text-lg font-bold text-white leading-tight">{settings.principal_name || "श्री मोहन लाल (प्रधानाचार्य)"}</h4>
+                  <p className="text-xs text-slate-300">प्रधानाचार्य, {settings.school_name_hi || "रा.बा.उ.मा.वि. राजलदेसर"}</p>
                   <p className="text-[11px] text-emerald-400 font-semibold mt-0.5">M.A., M.Ed., Ph.D.</p>
                 </div>
               </div>

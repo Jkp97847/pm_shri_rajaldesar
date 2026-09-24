@@ -196,76 +196,175 @@ function initDB() {
   if (teachersCount === 0) {
     const defaultTeachers = [
       {
-        name: "डॉ. सरोज शर्मा",
+        name: "MOHAN LAL",
         designation: "प्रधानाचार्य (Principal)",
         department: "Administration",
         qualification: "M.A., M.Ed., Ph.D. (Education)",
-        experience: "24 Years",
+        experience: "24+ Years",
         photo: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&q=80",
-        phone: "+91 98290XXXXX"
+        phone: "+91 1567294010"
       },
       {
-        name: "श्री राजेश कुमार स्वामी",
-        designation: "प्राध्यापक (रसायन विज्ञान / Lecturer Chemistry)",
+        name: "SUCHITRA MANJHU",
+        designation: "प्राध्यापक (Lecturer I Gr.) - Physics (Science Stream)",
+        department: "Science",
+        qualification: "M.Sc. (Physics), B.Ed.",
+        experience: "10+ Years",
+        photo: "/uploads/staff/blank-teacher.png",
+        phone: ""
+      },
+      {
+        name: "RIKHA RAM",
+        designation: "प्राध्यापक (Lecturer I Gr.) - Political Science",
+        department: "Arts",
+        qualification: "M.A. (Political Science), B.Ed.",
+        experience: "12+ Years",
+        photo: "/uploads/staff/2.jpeg",
+        phone: ""
+      },
+      {
+        name: "VIMLA CHOUDHARY",
+        designation: "प्राध्यापक (Lecturer I Gr.) - Hindi Literature",
+        department: "Arts",
+        qualification: "M.A. (Hindi Literature), B.Ed.",
+        experience: "14+ Years",
+        photo: "/uploads/staff/3.jpeg",
+        phone: ""
+      },
+      {
+        name: "MAHESH KUMAR SANKHOLIA",
+        designation: "प्राध्यापक (Lecturer I Gr.) - Sanskrit Literature",
+        department: "Arts",
+        qualification: "M.A. (Sanskrit Literature), B.Ed.",
+        experience: "15+ Years",
+        photo: "/uploads/staff/blank-teacher.png",
+        phone: ""
+      },
+      {
+        name: "TILOKA RAM DUDI",
+        designation: "प्राध्यापक (Lecturer I Gr.) - Hindi Literature",
+        department: "Arts",
+        qualification: "M.A. (Hindi Literature), B.Ed.",
+        experience: "11+ Years",
+        photo: "/uploads/staff/5.jpeg",
+        phone: ""
+      },
+      {
+        name: "RAMESH KUMAR",
+        designation: "प्राध्यापक (Lecturer I Gr.) - Physics (Science Stream)",
+        department: "Science",
+        qualification: "M.Sc. (Physics), B.Ed.",
+        experience: "10+ Years",
+        photo: "/uploads/staff/blank-teacher.png",
+        phone: ""
+      },
+      {
+        name: "SARITA SHARMA",
+        designation: "प्राध्यापक (Lecturer I Gr.) - Hindi (Compulsory)",
+        department: "Arts",
+        qualification: "M.A. (Hindi), B.Ed.",
+        experience: "12+ Years",
+        photo: "/uploads/staff/blank-teacher.png",
+        phone: ""
+      },
+      {
+        name: "INDER SINGH",
+        designation: "प्राध्यापक (Lecturer I Gr.) - Sanskrit Literature",
+        department: "Arts",
+        qualification: "M.A. (Sanskrit Literature), B.Ed.",
+        experience: "13+ Years",
+        photo: "/uploads/staff/8.jpeg",
+        phone: ""
+      },
+      {
+        name: "RAM KISHOR MEGHWAL",
+        designation: "प्राध्यापक (Lecturer I Gr.) - Sanskrit Literature",
+        department: "Arts",
+        qualification: "M.A. (Sanskrit Literature), B.Ed.",
+        experience: "10+ Years",
+        photo: "/uploads/staff/9.jpeg",
+        phone: ""
+      },
+      {
+        name: "MANOJ KUMAR SARSWAT",
+        designation: "प्राध्यापक (Lecturer I Gr.) - Biology (Science Stream)",
+        department: "Science",
+        qualification: "M.Sc. (Biology/Botany), B.Ed.",
+        experience: "15+ Years",
+        photo: "/uploads/staff/10.jpeg",
+        phone: ""
+      },
+      {
+        name: "RASHMI MAHARSHI",
+        designation: "प्राध्यापक (Lecturer I Gr.) - Political Science",
+        department: "Arts",
+        qualification: "M.A. (Political Science), B.Ed.",
+        experience: "12+ Years",
+        photo: "/uploads/staff/11.jpeg",
+        phone: ""
+      },
+      {
+        name: "KANHAIYA LAL SHARMA",
+        designation: "प्राध्यापक (Lecturer I Gr.) - Chemistry (Science Stream)",
         department: "Science",
         qualification: "M.Sc. (Chemistry), B.Ed.",
-        experience: "16 Years",
-        photo: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&q=80",
-        phone: "+91 94141XXXXX"
+        experience: "14+ Years",
+        photo: "/uploads/staff/12.jpeg",
+        phone: ""
       },
       {
-        name: "श्रीमती अनिता चौधरी",
-        designation: "वरिष्ठ अध्यापिका (जीव विज्ञान / Biology)",
-        department: "Science",
-        qualification: "M.Sc. (Zoology), B.Ed.",
-        experience: "14 Years",
-        photo: "https://images.unsplash.com/photo-1580894732444-8ecded7900cd?w=400&q=80",
-        phone: "+91 94142XXXXX"
-      },
-      {
-        name: "श्री हनुमान प्रसाद पारीक",
-        designation: "प्राध्यापक (हिन्दी साहित्य / Lecturer Hindi)",
+        name: "LOHITA JHAJHARIA",
+        designation: "प्राध्यापक (Lecturer I Gr.) - English (Compulsory)",
         department: "Arts",
-        qualification: "M.A. (Hindi), NET, B.Ed.",
-        experience: "18 Years",
-        photo: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80",
-        phone: "+91 94143XXXXX"
+        qualification: "M.A. (English), B.Ed.",
+        experience: "10+ Years",
+        photo: "/uploads/staff/13.jpeg",
+        phone: ""
       },
       {
-        name: "सुश्री पूजा सेठी",
-        designation: "सूचना एवं संचार प्रौद्योगिकी प्रभारी (ICT / Computer Teacher)",
+        name: "ANAND SINGH",
+        designation: "वरिष्ठ अध्यापक (Senior Teacher) - Mathematics",
+        department: "Science",
+        qualification: "B.Sc., M.Sc. (Mathematics), B.Ed.",
+        experience: "11+ Years",
+        photo: "/uploads/staff/14.jpeg",
+        phone: ""
+      },
+      {
+        name: "ANITA",
+        designation: "वरिष्ठ अध्यापिका (Senior Teacher) - Urdu",
+        department: "Arts",
+        qualification: "M.A. (Urdu), B.Ed.",
+        experience: "10+ Years",
+        photo: "/uploads/staff/15.jpeg",
+        phone: ""
+      },
+      {
+        name: "SHISHPAL",
+        designation: "वरिष्ठ अध्यापक (Senior Teacher) - Sanskrit",
+        department: "Arts",
+        qualification: "M.A. (Sanskrit), B.Ed.",
+        experience: "9+ Years",
+        photo: "/uploads/staff/blank-teacher.png",
+        phone: ""
+      },
+      {
+        name: "JAGDISH PRAJAPAT",
+        designation: "बेसिक कंप्यूटर अनुदेशक (Basic Computer Instructor)",
         department: "ICT",
-        qualification: "MCA, B.Tech (CS)",
-        experience: "8 Years",
-        photo: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=400&q=80",
-        phone: "+91 94144XXXXX"
+        qualification: "B.Tech (CS) / PGDCA / MCA",
+        experience: "6+ Years",
+        photo: "/uploads/staff/18.jpeg",
+        phone: ""
       },
       {
-        name: "श्रीमती कविता मेघवाल",
-        designation: "शारीरिक शिक्षिका (PTI / Sports Incharge)",
-        department: "Sports",
-        qualification: "M.P.Ed., NIS (Athletics)",
-        experience: "11 Years",
-        photo: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&q=80",
-        phone: "+91 94145XXXXX"
-      },
-      {
-        name: "श्री सुरेन्द्र सिंह शेखावत",
-        designation: "प्राध्यापक (वाणिज्य / Commerce & Accountancy)",
-        department: "Commerce",
-        qualification: "M.Com, B.Ed.",
-        experience: "15 Years",
-        photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80",
-        phone: "+91 94146XXXXX"
-      },
-      {
-        name: "श्रीमती रेखा जांगिड़",
-        designation: "पुस्तकालय प्रभारी (Librarian)",
-        department: "Administration",
-        qualification: "M.Lib.I.Sc.",
-        experience: "9 Years",
-        photo: "https://images.unsplash.com/photo-1548142813-c348350df52b?w=400&q=80",
-        phone: "+91 94147XXXXX"
+        name: "MANISH SHARMA",
+        designation: "वरिष्ठ कंप्यूटर अनुदेशक (Senior Computer Instructor)",
+        department: "ICT",
+        qualification: "MCA / M.Tech (Computer Science)",
+        experience: "8+ Years",
+        photo: "/uploads/staff/blank-teacher.png",
+        phone: ""
       }
     ];
 
