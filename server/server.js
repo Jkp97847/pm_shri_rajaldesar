@@ -272,11 +272,19 @@ app.post('/api/admin/login', loginLimiter, (req, res) => {
   }
 });
 
-// Admin Logout (Instantly invalidates session token)
+// Admin Logout (Instantly invalidates session token, supports sendBeacon from browser close)
 app.post('/api/admin/logout', (req, res) => {
-  const token = req.headers['x-admin-token'] || req.query.token;
+  let token = req.headers['x-admin-token'] || req.query.token;
+  if (!token && req.body) {
+    if (typeof req.body === 'string') {
+      try { token = JSON.parse(req.body).token; } catch (e) { token = req.body; }
+    } else if (req.body.token) {
+      token = req.body.token;
+    }
+  }
   if (token && activeSessions.has(token)) {
     activeSessions.delete(token);
+    console.log(`[Admin Session Terminated] Token ending in ...${token.slice(-6)} destroyed.`);
   }
   res.json({ success: true, message: "सत्र सफलतापूर्वक समाप्त (Logged out) हुआ।" });
 });

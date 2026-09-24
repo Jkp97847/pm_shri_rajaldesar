@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   ShieldCheck, Lock, LogOut, Bell, Users, Image as ImageIcon, Award, 
   Plus, Trash2, Upload, CheckCircle2, AlertCircle, RefreshCw, Eye,
@@ -10,10 +11,7 @@ import { useSchool } from '../context/SchoolContext';
 
 export default function Admin() {
   const { settings, refreshSettings } = useSchool();
-  const [token, setToken] = useState(() => {
-    try { localStorage.removeItem('pm_admin_token'); } catch (e) {}
-    return sessionStorage.getItem('pm_admin_token') || '';
-  });
+  const [token, setToken] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [activeTab, setActiveTab] = useState('school_details');
@@ -118,11 +116,57 @@ export default function Admin() {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [uploading, setUploading] = useState(false);
 
-  // Load all data when authenticated
+  // Verify session on mount (guarantees that restarting browser/server forces clean login)
+  useEffect(() => {
+    try { localStorage.removeItem('pm_admin_token'); } catch (e) {}
+    const savedToken = sessionStorage.getItem('pm_admin_token');
+    if (savedToken) {
+      fetch('/api/admin/verify', {
+        headers: { 'x-admin-token': savedToken }
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.valid) {
+            setToken(savedToken);
+          } else {
+            handleLogout();
+          }
+        })
+        .catch(() => {
+          handleLogout();
+        });
+    } else {
+      setToken('');
+    }
+  }, []);
+
+  // When authenticated, load admin data
   useEffect(() => {
     if (token) {
       loadAllData();
     }
+  }, [token]);
+
+  // Auto-logout when closing the browser window or tab
+  useEffect(() => {
+    const handleBrowserClose = () => {
+      const curToken = token || sessionStorage.getItem('pm_admin_token');
+      if (curToken) {
+        try {
+          const blob = new Blob([JSON.stringify({ token: curToken })], { type: 'application/json' });
+          navigator.sendBeacon('/api/admin/logout', blob);
+        } catch (e) {}
+        try { sessionStorage.removeItem('pm_admin_token'); } catch (e) {}
+        try { localStorage.removeItem('pm_admin_token'); } catch (e) {}
+      }
+    };
+
+    window.addEventListener('pagehide', handleBrowserClose);
+    window.addEventListener('beforeunload', handleBrowserClose);
+    return () => {
+      window.removeEventListener('pagehide', handleBrowserClose);
+      window.removeEventListener('beforeunload', handleBrowserClose);
+    };
   }, [token]);
 
   const loadAllData = () => {
@@ -186,13 +230,14 @@ export default function Admin() {
   };
 
   const handleLogout = () => {
-    if (token) {
+    const curToken = token || sessionStorage.getItem('pm_admin_token');
+    if (curToken) {
       fetch('/api/admin/logout', {
         method: 'POST',
-        headers: { 'x-admin-token': token }
+        headers: { 'x-admin-token': curToken }
       }).catch(() => {});
     }
-    sessionStorage.removeItem('pm_admin_token');
+    try { sessionStorage.removeItem('pm_admin_token'); } catch (e) {}
     try { localStorage.removeItem('pm_admin_token'); } catch (e) {}
     setToken('');
   };
@@ -920,6 +965,15 @@ export default function Admin() {
               <ShieldCheck className="w-4 h-4 text-amber-400" />
               <span>लॉग-इन करें</span>
             </button>
+
+            <div className="pt-3 text-center border-t border-slate-100">
+              <Link
+                to="/"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-blue-950 transition"
+              >
+                <span>← मुख्य पृष्ठ पर जाएं (Go to Home Page)</span>
+              </Link>
+            </div>
           </form>
         </div>
 
