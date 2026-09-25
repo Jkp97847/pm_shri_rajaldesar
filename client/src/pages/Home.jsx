@@ -6,8 +6,10 @@ import {
   Calendar, ArrowRight, Sparkles, GraduationCap, Building, Shield, 
   Flame, FileText, ChevronRight, UserCheck
 } from 'lucide-react';
+import { useSchool } from '../context/SchoolContext';
 
 export default function Home() {
+  const { settings } = useSchool();
   const [notices, setNotices] = useState([]);
   const [toppers, setToppers] = useState([]);
   const [activeNoticeTab, setActiveNoticeTab] = useState('all');

@@ -137,8 +137,6 @@ export default function Admin() {
       try { sessionStorage.clear(); } catch (e) {}
       try { localStorage.removeItem('pm_admin_token'); } catch (e) {}
       setToken('');
-      // Redirect to Home Page immediately so Home Page opens first!
-      window.location.replace('/');
       return;
     }
 

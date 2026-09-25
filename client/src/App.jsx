@@ -27,10 +27,54 @@ function ScrollToTop() {
   return null;
 }
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50 text-slate-800">
+          <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-xl border border-slate-200 text-center space-y-4">
+            <div className="w-14 h-14 mx-auto rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-2xl font-black">
+              ★
+            </div>
+            <h2 className="text-xl font-black text-blue-950">पीएम श्री विद्यालय राजलदेसर</h2>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              पेज लोड करने में कोई तकनीकी समस्या आई है। कृपया मुख्य पृष्ठ पर जाएं।
+            </p>
+            <button
+              onClick={() => {
+                this.setState({ hasError: false });
+                window.location.href = '/';
+              }}
+              className="bg-blue-950 hover:bg-blue-900 text-white font-bold px-6 py-2.5 rounded-xl text-xs transition shadow-md"
+            >
+              ← मुख्य पृष्ठ पर जाएं (Go to Home Page)
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   return (
-    <SchoolProvider>
-      <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 selection:bg-amber-500 selection:text-slate-950">
+    <ErrorBoundary>
+      <SchoolProvider>
+        <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 selection:bg-amber-500 selection:text-slate-950">
         <ScrollToTop />
         
         {/* Daily Announcement Modal (Pops up on first visit of the day or upon new notices) */}
@@ -61,5 +105,6 @@ export default function App() {
         <Footer />
       </div>
     </SchoolProvider>
+    </ErrorBoundary>
   );
 }
