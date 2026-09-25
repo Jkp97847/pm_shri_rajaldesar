@@ -74,15 +74,19 @@ const generalApiLimiter = rateLimit({
 });
 
 // Dynamic Cryptographic Session Management (Zero hardcoded secrets)
+// Sessions require active heartbeats while tab is open; closing browser expires session rapidly.
 const activeSessions = new Map();
 
-// Automatically purge expired sessions every 30 minutes
+// Automatically purge expired sessions every 15 seconds
 setInterval(() => {
   const now = Date.now();
   for (const [t, s] of activeSessions.entries()) {
-    if (s.expiresAt < now) activeSessions.delete(t);
+    if (s.expiresAt < now) {
+      activeSessions.delete(t);
+      console.log(`[Admin Session Expired] Inactive session token ending in ...${t.slice(-6)} purged.`);
+    }
   }
-}, 30 * 60 * 1000);
+}, 15 * 1000);
 
 function adminAuth(req, res, next) {
   const token = req.headers['x-admin-token'] || req.query.token;
@@ -94,8 +98,9 @@ function adminAuth(req, res, next) {
     if (session) activeSessions.delete(token);
     return res.status(401).json({ success: false, message: "सत्र समाप्त हो गया है। कृपया पुनः लॉगिन करें।" });
   }
-  // Refresh session activity expiry
-  session.expiresAt = Date.now() + 8 * 60 * 60 * 1000;
+  // Refresh session activity expiry (active request keeps session alive for next 60 seconds)
+  session.lastPing = Date.now();
+  session.expiresAt = Date.now() + 60 * 1000;
   return next();
 }
 
@@ -265,11 +270,38 @@ app.post('/api/admin/login', loginLimiter, (req, res) => {
   const currentPassword = db.prepare("SELECT value FROM settings WHERE key = 'admin_password'").get()?.value || 'admin@rajaldesar123';
   if (password === currentPassword) {
     const sessionToken = crypto.randomBytes(32).toString('hex');
-    activeSessions.set(sessionToken, { expiresAt: Date.now() + 8 * 60 * 60 * 1000 });
+    activeSessions.set(sessionToken, { 
+      createdAt: Date.now(),
+      lastPing: Date.now(),
+      expiresAt: Date.now() + 60 * 1000 // Requires ongoing heartbeat or active use
+    });
+    console.log(`[Admin Login] Session created for admin. Expires in 60s unless active.`);
     res.json({ success: true, token: sessionToken, message: "लॉगिन सफल!" });
   } else {
     res.status(401).json({ success: false, message: "अमान्य एडमिन पासवर्ड! कृपया सही पासवर्ड दर्ज करें।" });
   }
+});
+
+// Admin Heartbeat Ping (Keeps session alive while admin browser tab is actively open)
+app.post('/api/admin/heartbeat', (req, res) => {
+  let token = req.headers['x-admin-token'] || req.query.token;
+  if (!token && req.body) {
+    if (typeof req.body === 'string') {
+      try { token = JSON.parse(req.body).token; } catch (e) { token = req.body; }
+    } else if (req.body.token) {
+      token = req.body.token;
+    }
+  }
+  if (token && activeSessions.has(token)) {
+    const session = activeSessions.get(token);
+    if (Date.now() <= session.expiresAt) {
+      session.lastPing = Date.now();
+      session.expiresAt = Date.now() + 60 * 1000;
+      return res.json({ success: true, valid: true });
+    }
+    activeSessions.delete(token);
+  }
+  return res.status(401).json({ success: false, message: "सत्र समाप्त हो चुका है।" });
 });
 
 // Admin Logout (Instantly invalidates session token, supports sendBeacon from browser close)

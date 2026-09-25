@@ -116,9 +116,32 @@ export default function Admin() {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [uploading, setUploading] = useState(false);
 
-  // Verify session on mount (guarantees that restarting browser/server forces clean login)
+  // Verify session on mount (detects if browser was closed & reopened, enforces home page first)
   useEffect(() => {
     try { localStorage.removeItem('pm_admin_token'); } catch (e) {}
+
+    // Check if the browser was closed and reopened:
+    // If a heartbeat existed and is older than 4 seconds, the browser was closed!
+    const lastHeartbeat = Number(sessionStorage.getItem('pm_admin_last_heartbeat') || 0);
+    const now = Date.now();
+    const wasBrowserClosed = lastHeartbeat > 0 && (now - lastHeartbeat > 4000);
+
+    if (wasBrowserClosed) {
+      const curToken = sessionStorage.getItem('pm_admin_token');
+      if (curToken) {
+        try {
+          const blob = new Blob([JSON.stringify({ token: curToken })], { type: 'application/json' });
+          navigator.sendBeacon('/api/admin/logout', blob);
+        } catch (e) {}
+      }
+      try { sessionStorage.clear(); } catch (e) {}
+      try { localStorage.removeItem('pm_admin_token'); } catch (e) {}
+      setToken('');
+      // Redirect to Home Page immediately so Home Page opens first!
+      window.location.replace('/');
+      return;
+    }
+
     const savedToken = sessionStorage.getItem('pm_admin_token');
     if (savedToken) {
       fetch('/api/admin/verify', {
@@ -147,6 +170,36 @@ export default function Admin() {
     }
   }, [token]);
 
+  // Active Heartbeat: while admin tab is open, keeps session alive on server and client
+  useEffect(() => {
+    if (!token) return;
+
+    // Immediately mark active timestamp
+    sessionStorage.setItem('pm_admin_last_heartbeat', Date.now().toString());
+
+    // Update timestamp every 1s in sessionStorage
+    const localTimer = setInterval(() => {
+      sessionStorage.setItem('pm_admin_last_heartbeat', Date.now().toString());
+    }, 1000);
+
+    // Send server heartbeat ping every 15s to keep activeSession alive
+    const serverPing = setInterval(() => {
+      fetch('/api/admin/heartbeat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-token': token }
+      }).then(res => {
+        if (!res.ok) {
+          handleLogout();
+        }
+      }).catch(() => {});
+    }, 15000);
+
+    return () => {
+      clearInterval(localTimer);
+      clearInterval(serverPing);
+    };
+  }, [token]);
+
   // Auto-logout when closing the browser window or tab
   useEffect(() => {
     const handleBrowserClose = () => {
@@ -156,7 +209,7 @@ export default function Admin() {
           const blob = new Blob([JSON.stringify({ token: curToken })], { type: 'application/json' });
           navigator.sendBeacon('/api/admin/logout', blob);
         } catch (e) {}
-        try { sessionStorage.removeItem('pm_admin_token'); } catch (e) {}
+        try { sessionStorage.clear(); } catch (e) {}
         try { localStorage.removeItem('pm_admin_token'); } catch (e) {}
       }
     };
@@ -219,6 +272,7 @@ export default function Admin() {
       .then(data => {
         if (data.success) {
           sessionStorage.setItem('pm_admin_token', data.token);
+          sessionStorage.setItem('pm_admin_last_heartbeat', Date.now().toString());
           try { localStorage.removeItem('pm_admin_token'); } catch (e) {}
           setToken(data.token);
           setPassword('');
@@ -237,9 +291,10 @@ export default function Admin() {
         headers: { 'x-admin-token': curToken }
       }).catch(() => {});
     }
-    try { sessionStorage.removeItem('pm_admin_token'); } catch (e) {}
+    try { sessionStorage.clear(); } catch (e) {}
     try { localStorage.removeItem('pm_admin_token'); } catch (e) {}
     setToken('');
+    window.location.replace('/');
   };
 
   const handleChangePassword = (e) => {
