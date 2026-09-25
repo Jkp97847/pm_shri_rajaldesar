@@ -44,16 +44,19 @@ export default function DailyNoticeModal() {
 
   return (
     <>
-      {/* 1. Non-blocking Floating Announcement Pill at bottom-right (Allows Home Page to open first!) */}
+      {/* 1. Non-blocking Floating Announcement Pill at bottom-right (Tiranga Styled) */}
       {!isOpen && (
-        <div className="fixed bottom-4 right-4 z-40 max-w-sm bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border-2 border-orange-500/60 p-3 sm:p-3.5 flex items-center justify-between gap-3 transition-all hover:scale-102">
-          <div className="flex items-center gap-2.5 overflow-hidden">
-            <div className="w-8 h-8 rounded-full bg-orange-600 text-white flex items-center justify-center shrink-0 shadow-sm animate-pulse">
-              <Bell className="w-4 h-4" />
+        <div className="fixed bottom-4 right-4 z-40 max-w-sm bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border-2 border-orange-500 p-3 sm:p-3.5 flex items-center justify-between gap-3 transition-all hover:scale-102 relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 tiranga-bar"></div>
+
+          <div className="flex items-center gap-2.5 overflow-hidden pt-0.5">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-orange-500 to-amber-500 text-white flex items-center justify-center shrink-0 shadow-sm animate-pulse">
+              <Bell className="w-4 h-4 text-white" />
             </div>
             <div className="overflow-hidden">
-              <span className="text-[10px] font-black text-orange-600 uppercase tracking-wider block">
-                ★ आज की नवीन सूचना
+              <span className="text-[10px] font-black text-orange-600 uppercase tracking-wider block flex items-center gap-1">
+                <span>🇮🇳</span>
+                <span>आज की नवीन सूचना</span>
               </span>
               <p className="text-xs font-bold text-blue-950 truncate max-w-[200px]">
                 {notice.title}
@@ -61,10 +64,10 @@ export default function DailyNoticeModal() {
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
             <button
               onClick={() => setIsOpen(true)}
-              className="bg-blue-950 hover:bg-blue-900 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg shadow-sm transition"
+              className="bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white text-[11px] font-black px-3 py-1.5 rounded-lg shadow-sm transition"
             >
               देखें →
             </button>
@@ -82,13 +85,13 @@ export default function DailyNoticeModal() {
       {/* 2. Full Announcement Modal (Opens when user clicks 'देखें') */}
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
-          <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden border-2 border-orange-500/30">
+          <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden border-2 border-orange-500/40">
             
             {/* Tricolor Govt Header Line */}
-            <div className="h-1.5 w-full bg-gradient-to-r from-orange-500 via-white to-green-600"></div>
+            <div className="h-2 w-full tiranga-bar"></div>
 
-            {/* Modal Header */}
-            <div className="bg-gradient-to-r from-orange-600 via-amber-600 to-orange-700 text-white p-4 sm:p-5 flex items-center justify-between">
+            {/* Modal Header (Chakra Navy Blue with Saffron & Green accents) */}
+            <div className="bg-gradient-to-r from-blue-950 via-slate-900 to-blue-950 text-white p-4 sm:p-5 flex items-center justify-between border-b border-orange-500/30">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white shrink-0">
                   <Bell className="w-5 h-5 animate-bounce" />

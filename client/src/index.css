@@ -32,3 +32,19 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* Indian Tricolor (तिरंगा) Custom Classes */
+.tiranga-bar {
+  height: 4px;
+  width: 100%;
+  background: linear-gradient(to right, #FF9933 0%, #FF9933 33.33%, #FFFFFF 33.33%, #FFFFFF 66.66%, #138808 66.66%, #138808 100%);
+}
+
+.tiranga-gradient-bg {
+  background: linear-gradient(135deg, rgba(255, 153, 51, 0.08) 0%, rgba(255, 255, 255, 0.98) 50%, rgba(19, 136, 8, 0.08) 100%);
+}
+
+.tiranga-badge {
+  background: linear-gradient(to right, #ea580c, #059669);
+  color: #ffffff;
+}

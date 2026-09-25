@@ -29,35 +29,35 @@ export default function Navbar() {
 
   return (
     <header className="w-full bg-white shadow-md sticky top-0 z-50">
-      {/* 1. Top Govt / PM SHRI Tricolor Bar */}
-      <div className="h-1.5 w-full bg-gradient-to-r from-orange-500 via-white to-green-600"></div>
+      {/* 1. Top Govt / PM SHRI Indian Tricolor Ribbon */}
+      <div className="h-2 w-full tiranga-bar shadow-sm"></div>
 
-      {/* 2. Top Info Header */}
-      <div className="bg-slate-900 text-slate-300 text-xs py-1.5 px-4 sm:px-8 border-b border-slate-800">
+      {/* 2. Top Info Header (Ashoka Chakra Navy Blue) */}
+      <div className="bg-gradient-to-r from-blue-950 via-slate-950 to-blue-950 text-slate-200 text-xs py-1.5 px-4 sm:px-8 border-b border-blue-900/60">
         <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
           <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1 text-amber-400 font-semibold">
-              <Sparkles className="w-3.5 h-3.5" />
+            <span className="flex items-center gap-1.5 text-orange-400 font-bold">
+              <Sparkles className="w-3.5 h-3.5 text-orange-400" />
               <span>भारत सरकार की महत्वाकांक्षी पीएम श्री (PM SHRI) योजना से चयनित</span>
             </span>
-            <span className="hidden md:inline text-slate-500">|</span>
-            <span className="hidden md:inline text-slate-300">UDISE: <strong>{settings.udise_code || "08040700105"}</strong></span>
+            <span className="hidden md:inline text-slate-600">|</span>
+            <span className="hidden md:inline text-slate-300">UDISE: <strong className="text-white font-mono bg-blue-900/60 px-1.5 py-0.5 rounded">{settings.udise_code || "08040700105"}</strong></span>
           </div>
 
           <div className="flex items-center gap-4 text-slate-300">
-            <a href={`tel:${settings.contact_phone}`} className="hover:text-amber-400 flex items-center gap-1 transition">
+            <a href={`tel:${settings.contact_phone}`} className="hover:text-orange-400 flex items-center gap-1 transition">
               <Phone className="w-3 h-3 text-emerald-400" />
               <span>{settings.contact_phone}</span>
             </a>
             <span className="text-slate-600">|</span>
-            <a href={`mailto:${settings.contact_email}`} className="hover:text-amber-400 flex items-center gap-1 transition">
+            <a href={`mailto:${settings.contact_email}`} className="hover:text-orange-400 flex items-center gap-1 transition">
               <Mail className="w-3 h-3 text-sky-400" />
               <span className="hidden sm:inline">{settings.contact_email}</span>
             </a>
             <span className="text-slate-600">|</span>
             <Link 
               to="/admin" 
-              className="bg-amber-600/30 hover:bg-amber-600 text-amber-300 hover:text-white px-2.5 py-0.5 rounded flex items-center gap-1 text-xs font-semibold transition border border-amber-500/40"
+              className="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white px-3 py-0.5 rounded flex items-center gap-1 text-xs font-bold transition shadow-sm border border-orange-400/50"
             >
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>Admin Panel</span>
@@ -66,45 +66,50 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* 3. Main School Brand Banner */}
-      <div className="bg-gradient-to-b from-amber-50/50 to-white py-3 px-4 sm:px-8 border-b border-amber-100">
+      {/* 3. Main School Brand Banner (Tiranga Wash: Kesariya to Shwet to India Green) */}
+      <div className="bg-gradient-to-r from-orange-50/70 via-white to-emerald-50/70 py-3.5 px-4 sm:px-8 border-b border-orange-200/50">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 sm:gap-5">
-            {/* National & PM SHRI Emblem Logos */}
+            {/* National & PM SHRI Emblem Logos with Tricolor Rim */}
             <div className="flex items-center gap-2">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-amber-600 to-orange-500 p-1 shadow-md flex items-center justify-center text-white shrink-0">
-                <div className="w-full h-full rounded-full bg-white flex flex-col items-center justify-center text-center p-1 border-2 border-amber-500">
+              <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full p-1 bg-gradient-to-b from-orange-500 via-white to-emerald-600 shadow-md flex items-center justify-center shrink-0">
+                <div className="w-full h-full rounded-full bg-white flex flex-col items-center justify-center text-center p-1 border border-blue-900 shadow-inner">
                   <span className="text-[10px] sm:text-[11px] font-black text-orange-600 tracking-tighter uppercase leading-none">PM SHRI</span>
-                  <span className="text-[9px] sm:text-[10px] font-extrabold text-blue-900 tracking-wider">SCHOOL</span>
-                  <span className="text-[7px] text-green-700 font-bold">RAJASTHAN</span>
+                  <span className="text-[9px] sm:text-[10px] font-black text-blue-950 tracking-wider">SCHOOL</span>
+                  <span className="text-[7px] text-emerald-700 font-black">RAJASTHAN</span>
                 </div>
               </div>
             </div>
 
             {/* School Name */}
             <div>
-              <div className="inline-block bg-orange-100 text-orange-800 text-[11px] font-bold px-2 py-0.5 rounded-full mb-0.5 border border-orange-200">
-                ★ पीएम श्री विद्यालय ★
+              <div className="inline-flex items-center gap-1.5 bg-gradient-to-r from-orange-500 via-amber-500 to-emerald-600 text-white text-[11px] font-black px-2.5 py-0.5 rounded-full mb-1 shadow-sm">
+                <span>🇮🇳</span>
+                <span>पीएम श्री विद्यालय (PM SHRI SCHOOL)</span>
               </div>
               <h1 className="text-base sm:text-xl md:text-2xl font-black text-blue-950 tracking-tight leading-tight">
                 {settings.school_name_hi || "पीएम श्री यूनियन क्लब राजकीय बालिका उच्च माध्यमिक विद्यालय"}
               </h1>
-              <p className="text-xs sm:text-sm font-semibold text-slate-600 uppercase tracking-wide">
+              <p className="text-xs sm:text-sm font-semibold text-slate-700 uppercase tracking-wide">
                 {settings.school_name || "PM SHRI UNION CLUB GOVT GIRLS SR. SEC. SCHOOL, RAJALDESAR (CHURU)"}
               </p>
-              <p className="text-[11px] text-emerald-800 font-bold italic">
-                ॥ सा विद्या या विमुक्तये ॥ (ज्ञान वही जो मुक्ति दिलाए)
+              <p className="text-[11px] text-emerald-800 font-extrabold italic flex items-center gap-1 mt-0.5">
+                <span className="text-orange-600">॥</span>
+                <span>सा विद्या या विमुक्तये</span>
+                <span className="text-emerald-700">॥</span>
+                <span className="font-semibold text-slate-600">(ज्ञान वही जो मुक्ति दिलाए)</span>
               </p>
             </div>
           </div>
 
-          {/* Right badge */}
+          {/* Right badge (RBSE & Location with Tiranga styling) */}
           <div className="hidden lg:flex flex-col items-end text-right">
-            <span className="bg-blue-900 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
-              माध्यमिक शिक्षा बोर्ड राजस्थान (RBSE)
+            <span className="bg-gradient-to-r from-blue-950 to-blue-900 text-white text-xs font-bold px-3.5 py-1.5 rounded-full shadow-sm border border-orange-400/30 flex items-center gap-1.5">
+              <Award className="w-3.5 h-3.5 text-amber-400" />
+              <span>माध्यमिक शिक्षा बोर्ड राजस्थान (RBSE)</span>
             </span>
-            <span className="text-xs text-slate-500 mt-1 flex items-center gap-1 font-medium">
-              <MapPin className="w-3 h-3 text-red-500" />
+            <span className="text-xs text-slate-600 mt-1.5 flex items-center gap-1 font-semibold">
+              <MapPin className="w-3.5 h-3.5 text-orange-600" />
               राजलदेसर (चूरू), पिन - {settings.pin_code || "331801"}
             </span>
           </div>
@@ -112,10 +117,10 @@ export default function Navbar() {
           {/* Mobile Menu Toggle Button */}
           <button 
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 rounded-lg text-slate-700 hover:bg-slate-100 focus:outline-none"
+            className="lg:hidden p-2 rounded-lg text-slate-700 hover:bg-orange-50 focus:outline-none border border-slate-200"
             aria-label="Toggle navigation menu"
           >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {mobileMenuOpen ? <X className="w-6 h-6 text-orange-600" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
       </div>
@@ -123,8 +128,8 @@ export default function Navbar() {
       {/* 3.5. Live Breaking News Ticker (Right above Navigation Tabs) */}
       <NoticeTicker />
 
-      {/* 4. Desktop Navigation Bar */}
-      <nav className="hidden lg:block bg-blue-950 text-white shadow">
+      {/* 4. Desktop Navigation Bar (Chakra Blue with Saffron active highlights) */}
+      <nav className="hidden lg:block bg-gradient-to-r from-blue-950 via-slate-900 to-blue-950 text-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-8 flex items-center justify-between">
           <div className="flex items-center space-x-1">
             {navLinks.map((item) => {
@@ -136,11 +141,11 @@ export default function Navbar() {
                   to={item.path}
                   className={`flex items-center gap-1.5 px-3.5 py-3 text-sm font-semibold transition border-b-2 ${
                     active 
-                      ? 'border-amber-400 text-amber-400 bg-blue-900/60' 
-                      : 'border-transparent text-slate-100 hover:text-amber-300 hover:bg-blue-900/40'
+                      ? 'border-orange-400 text-orange-400 bg-white/10' 
+                      : 'border-transparent text-slate-100 hover:text-orange-300 hover:bg-blue-900/50'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${active ? 'text-amber-400' : 'text-blue-300'}`} />
+                  <Icon className={`w-4 h-4 ${active ? 'text-orange-400' : 'text-blue-300'}`} />
                   <span>{item.name}</span>
                 </Link>
               );
@@ -149,12 +154,14 @@ export default function Navbar() {
 
           <Link
             to="/result"
-            className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow transition flex items-center gap-1.5"
+            className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-black px-4 py-1.5 rounded-full shadow-md transition flex items-center gap-1.5 border border-orange-300/30"
           >
-            <Award className="w-4 h-4" />
-            <span>रिजल्ट चेक करें</span>
+            <Award className="w-4 h-4 text-white" />
+            <span>परीक्षा परिणाम</span>
           </Link>
         </div>
+        {/* Subtle Tricolor baseline beneath navbar */}
+        <div className="h-0.5 w-full bg-gradient-to-r from-orange-500 via-white to-emerald-600"></div>
       </nav>
 
       {/* 5. Mobile Navigation Dropdown */}

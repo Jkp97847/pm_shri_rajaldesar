@@ -5,39 +5,39 @@ import { ChevronLeft, ChevronRight, Award, Sparkles, BookOpen, Monitor, Shield, 
 const slides = [
   {
     title: "पीएम श्री यूनियन क्लब रा.बा.उ.मा. विद्यालय, राजलदेसर",
-    subtitle: "PM SHRI SCHOOL - भविष्य के भारत के निर्माण हेतु आधुनिक एवं संस्कारयुक्त बालिका शिक्षा",
-    tag: "राष्ट्रीय शिक्षा नीति (NEP 2020) के अनुरूप चयनित",
+    subtitle: "PM SHRI SCHOOL — भविष्य के भारत के निर्माण हेतु आधुनिक एवं संस्कारयुक्त बालिका शिक्षा",
+    tag: "🇮🇳 राष्ट्रीय शिक्षा नीति (NEP 2020) के अनुरूप चयनित",
     image: "https://images.unsplash.com/photo-1577896851231-70ef18881754?w=1600&q=80",
     linkText: "हमारे बारे में जानें",
     linkUrl: "/about",
-    color: "from-blue-950/90 via-blue-900/70 to-transparent"
+    color: "from-blue-950/95 via-orange-950/60 to-transparent"
   },
   {
     title: "21वीं सदी का आधुनिक आईसीटी व कंप्यूटर लैब",
     subtitle: "प्रत्येक छात्रा को कोडिंग, डिजिटल साक्षरता और आधुनिक कंप्यूटर तकनीकों का निःशुल्क प्रशिक्षण",
-    tag: "स्मार्ट क्लासरूम एवं डिजिटल शिक्षा",
+    tag: "🇮🇳 स्मार्ट क्लासरूम एवं डिजिटल शिक्षा",
     image: "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=1600&q=80",
     linkText: "कंप्यूटर लैब देखें",
     linkUrl: "/computer-lab",
-    color: "from-slate-950/90 via-slate-900/75 to-transparent"
+    color: "from-slate-950/95 via-blue-950/70 to-transparent"
   },
   {
     title: "बोर्ड परीक्षाओं में 100% उत्कृष्ट परीक्षा परिणाम",
     subtitle: "सत्र 2025-26 में 15 से अधिक बालिकाओं ने 90%+ अंक हासिल कर रचा नया इतिहास",
-    tag: "शैक्षणिक उत्कृष्टता एवं मेरिट रिकॉर्ड",
+    tag: "🇮🇳 शैक्षणिक उत्कृष्टता एवं मेरिट रिकॉर्ड",
     image: "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=1600&q=80",
     linkText: "परिणाम एवं टॉपर्स देखें",
     linkUrl: "/result",
-    color: "from-amber-950/90 via-amber-900/70 to-transparent"
+    color: "from-orange-950/95 via-amber-900/60 to-transparent"
   },
   {
     title: "खेलकूद एवं सर्वांगीण व्यक्तित्व विकास",
     subtitle: "खो-खो, कबड्डी, एथलेटिक्स व वॉलीबॉल में जिला व राज्य स्तर पर पदकों की भरमार",
-    tag: "फिट इंडिया & स्पोर्ट्स एक्सीलेंस",
+    tag: "🇮🇳 फिट इंडिया & स्पोर्ट्स एक्सीलेंस",
     image: "https://images.unsplash.com/photo-1526676037777-05a232554f77?w=1600&q=80",
     linkText: "खेलकूद उपलब्धियां",
     linkUrl: "/game",
-    color: "from-emerald-950/90 via-emerald-900/70 to-transparent"
+    color: "from-emerald-950/95 via-green-950/60 to-transparent"
   }
 ];
 
@@ -56,6 +56,9 @@ export default function HeroSlider() {
 
   return (
     <div className="relative w-full h-[450px] sm:h-[520px] md:h-[580px] overflow-hidden bg-slate-900 shadow-xl">
+      {/* Subtle top Tiranga ribbon */}
+      <div className="absolute top-0 left-0 right-0 h-1.5 z-20 tiranga-bar"></div>
+
       {slides.map((slide, index) => (
         <div
           key={index}
@@ -79,8 +82,8 @@ export default function HeroSlider() {
               <div className="max-w-2xl space-y-4">
                 
                 {/* Badge */}
-                <div className="inline-flex items-center gap-2 bg-amber-500 text-slate-950 px-3 py-1 rounded-full text-xs sm:text-sm font-black shadow-lg">
-                  <Sparkles className="w-4 h-4" />
+                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-3.5 py-1 rounded-full text-xs sm:text-sm font-black shadow-lg border border-orange-300/40">
+                  <Sparkles className="w-4 h-4 text-white" />
                   <span>{slide.tag}</span>
                 </div>
 
@@ -98,7 +101,7 @@ export default function HeroSlider() {
                 <div className="pt-4 flex flex-wrap items-center gap-3">
                   <Link
                     to={slide.linkUrl}
-                    className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 py-3 rounded-lg text-sm sm:text-base shadow-lg transition flex items-center gap-2 group"
+                    className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black px-6 py-3 rounded-xl text-sm sm:text-base shadow-xl transition flex items-center gap-2 group border border-orange-300/30"
                   >
                     <span>{slide.linkText}</span>
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -106,7 +109,7 @@ export default function HeroSlider() {
 
                   <Link
                     to="/classes"
-                    className="bg-white/20 hover:bg-white/30 backdrop-blur-md text-white font-semibold px-5 py-3 rounded-lg text-sm sm:text-base border border-white/40 transition flex items-center gap-2"
+                    className="bg-white/20 hover:bg-white/30 backdrop-blur-md text-white font-bold px-5 py-3 rounded-xl text-sm sm:text-base border border-white/50 transition flex items-center gap-2"
                   >
                     <BookOpen className="w-4 h-4" />
                     <span>निःशुल्क प्रवेश विवरण</span>
