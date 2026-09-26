@@ -7,7 +7,19 @@ export default function Teachers() {
   const [selectedDept, setSelectedDept] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const departments = ['All', 'Administration', 'Science', 'Arts', 'Commerce', 'ICT', 'Sports'];
+  const departments = ['All', 'Administration', 'Science', 'Arts', 'ICT', 'Primary / Elementary'];
+
+  const getDeptLabel = (dept) => {
+    switch (dept) {
+      case 'All': return 'सभी संकाय (All)';
+      case 'Administration': return 'प्रशासन (Admin)';
+      case 'Science': return 'विज्ञान संकाय';
+      case 'Arts': return 'कला संकाय';
+      case 'ICT': return 'कंप्यूटर / ICT';
+      case 'Primary / Elementary': return 'प्राथमिक / उच्च प्राथमिक';
+      default: return dept;
+    }
+  };
 
   useEffect(() => {
     fetch('/api/teachers')
@@ -23,10 +35,11 @@ export default function Teachers() {
   }, []);
 
   const filtered = teachers.filter(t => {
-    const matchesDept = selectedDept === 'All' || t.department.toLowerCase() === selectedDept.toLowerCase();
+    const matchesDept = selectedDept === 'All' || (t.department && t.department.toLowerCase() === selectedDept.toLowerCase());
     const matchesSearch = t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           t.designation.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          (t.qualification && t.qualification.toLowerCase().includes(searchQuery.toLowerCase()));
+                          (t.qualification && t.qualification.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                          (t.phone && t.phone.includes(searchQuery));
     return matchesDept && matchesSearch;
   });
 
@@ -35,6 +48,7 @@ export default function Teachers() {
       
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-blue-950 via-slate-900 to-blue-900 text-white rounded-2xl p-8 sm:p-10 shadow-xl relative overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-1.5 tiranga-bar"></div>
         <div className="max-w-2xl space-y-3 relative z-10">
           <span className="bg-amber-500 text-slate-950 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider">
             शिक्षक वृंद (Our Dedicated Faculty)
@@ -62,7 +76,7 @@ export default function Teachers() {
                   : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
               }`}
             >
-              {dept === 'All' ? 'सभी विभाग (All)' : dept}
+              {getDeptLabel(dept)}
             </button>
           ))}
         </div>
@@ -122,6 +136,12 @@ export default function Teachers() {
                       <Award className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                       <span>अनुभव: {teacher.experience || "10+ वर्ष"}</span>
                     </p>
+                    {teacher.phone && (
+                      <p className="flex items-center gap-1.5 text-emerald-800 font-semibold pt-0.5">
+                        <Phone className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <a href={`tel:${teacher.phone}`} className="hover:underline">{teacher.phone}</a>
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

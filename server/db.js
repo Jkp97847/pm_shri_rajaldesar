@@ -199,35 +199,26 @@ function initDB() {
         name: "MOHAN LAL",
         designation: "प्रधानाचार्य (Principal)",
         department: "Administration",
-        qualification: "M.A., M.Ed., Ph.D. (Education)",
-        experience: "24+ Years",
-        photo: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&q=80",
-        phone: "+91 1567294010"
-      },
-      {
-        name: "SUCHITRA MANJHU",
-        designation: "प्राध्यापक (Lecturer I Gr.) - Physics (Science Stream)",
-        department: "Science",
-        qualification: "M.Sc. (Physics), B.Ed.",
-        experience: "10+ Years",
-        photo: "/uploads/staff/blank-teacher.png",
-        phone: ""
+        qualification: "B.A., M.A., BSTC, B.Ed, RSCIT",
+        experience: "24+ वर्ष",
+        photo: "/uploads/staff/1.jpeg",
+        phone: "9414894845"
       },
       {
         name: "RIKHA RAM",
         designation: "प्राध्यापक (Lecturer I Gr.) - Political Science",
         department: "Arts",
-        qualification: "M.A. (Political Science), B.Ed.",
-        experience: "12+ Years",
+        qualification: "B.A., B.Ed",
+        experience: "12+ वर्ष",
         photo: "/uploads/staff/2.jpeg",
-        phone: ""
+        phone: "9950695755"
       },
       {
         name: "VIMLA CHOUDHARY",
         designation: "प्राध्यापक (Lecturer I Gr.) - Hindi Literature",
         department: "Arts",
-        qualification: "M.A. (Hindi Literature), B.Ed.",
-        experience: "14+ Years",
+        qualification: "स्नातकोत्तर (M.A./M.Sc.), बी.एड",
+        experience: "12+ वर्ष",
         photo: "/uploads/staff/3.jpeg",
         phone: ""
       },
@@ -235,17 +226,17 @@ function initDB() {
         name: "MAHESH KUMAR SANKHOLIA",
         designation: "प्राध्यापक (Lecturer I Gr.) - Sanskrit Literature",
         department: "Arts",
-        qualification: "M.A. (Sanskrit Literature), B.Ed.",
-        experience: "15+ Years",
+        qualification: "M.A., M.Phil., NET, RSCIT",
+        experience: "12+ वर्ष",
         photo: "/uploads/staff/blank-teacher.png",
-        phone: ""
+        phone: "9024347777"
       },
       {
         name: "TILOKA RAM DUDI",
         designation: "प्राध्यापक (Lecturer I Gr.) - Hindi Literature",
         department: "Arts",
-        qualification: "M.A. (Hindi Literature), B.Ed.",
-        experience: "11+ Years",
+        qualification: "स्नातकोत्तर (M.A./M.Sc.), बी.एड",
+        experience: "12+ वर्ष",
         photo: "/uploads/staff/5.jpeg",
         phone: ""
       },
@@ -253,98 +244,98 @@ function initDB() {
         name: "RAMESH KUMAR",
         designation: "प्राध्यापक (Lecturer I Gr.) - Physics (Science Stream)",
         department: "Science",
-        qualification: "M.Sc. (Physics), B.Ed.",
-        experience: "10+ Years",
+        qualification: "B.Sc., M.Sc., B.Ed",
+        experience: "12+ वर्ष",
         photo: "/uploads/staff/blank-teacher.png",
-        phone: ""
+        phone: "8963892319"
       },
       {
         name: "SARITA SHARMA",
-        designation: "प्राध्यापक (Lecturer I Gr.) - Hindi (Compulsory)",
+        designation: "प्राध्यापक (Lecturer I Gr.) - Hindi (Compulsary)",
         department: "Arts",
-        qualification: "M.A. (Hindi), B.Ed.",
-        experience: "12+ Years",
+        qualification: "स्नातकोत्तर (M.A./M.Sc.), बी.एड",
+        experience: "12+ वर्ष",
         photo: "/uploads/staff/blank-teacher.png",
         phone: ""
       },
       {
         name: "INDER SINGH",
-        designation: "प्राध्यापक (Lecturer I Gr.) - Sanskrit Literature",
-        department: "Arts",
-        qualification: "M.A. (Sanskrit Literature), B.Ed.",
-        experience: "13+ Years",
+        designation: "उप-प्रधानाचार्य (Vice Principal)",
+        department: "Administration",
+        qualification: "B.A., M.A",
+        experience: "10+ वर्ष",
         photo: "/uploads/staff/8.jpeg",
-        phone: ""
+        phone: "9057295392"
       },
       {
         name: "RAM KISHOR MEGHWAL",
         designation: "प्राध्यापक (Lecturer I Gr.) - Sanskrit Literature",
         department: "Arts",
-        qualification: "M.A. (Sanskrit Literature), B.Ed.",
-        experience: "10+ Years",
+        qualification: "B.A., M.A., B.Ed",
+        experience: "12+ वर्ष",
         photo: "/uploads/staff/9.jpeg",
-        phone: ""
+        phone: "9929189014"
       },
       {
         name: "MANOJ KUMAR SARSWAT",
         designation: "प्राध्यापक (Lecturer I Gr.) - Biology (Science Stream)",
         department: "Science",
-        qualification: "M.Sc. (Biology/Botany), B.Ed.",
-        experience: "15+ Years",
+        qualification: "B.Sc., M.Sc., B.Ed",
+        experience: "12+ वर्ष",
         photo: "/uploads/staff/10.jpeg",
-        phone: ""
+        phone: "9928267724"
       },
       {
         name: "RASHMI MAHARSHI",
         designation: "प्राध्यापक (Lecturer I Gr.) - Political Science",
         department: "Arts",
-        qualification: "M.A. (Political Science), B.Ed.",
-        experience: "12+ Years",
+        qualification: "B.A., M.A., B.Ed",
+        experience: "12+ वर्ष",
         photo: "/uploads/staff/11.jpeg",
-        phone: ""
+        phone: "9079682607"
       },
       {
         name: "KANHAIYA LAL SHARMA",
         designation: "प्राध्यापक (Lecturer I Gr.) - Chemistry (Science Stream)",
         department: "Science",
-        qualification: "M.Sc. (Chemistry), B.Ed.",
-        experience: "14+ Years",
+        qualification: "B.Sc., M.Sc., B.Ed., RSCIT",
+        experience: "12+ वर्ष",
         photo: "/uploads/staff/12.jpeg",
-        phone: ""
+        phone: "9887653869"
       },
       {
         name: "LOHITA JHAJHARIA",
-        designation: "प्राध्यापक (Lecturer I Gr.) - English (Compulsory)",
+        designation: "प्राध्यापक (Lecturer I Gr.) - English",
         department: "Arts",
-        qualification: "M.A. (English), B.Ed.",
-        experience: "10+ Years",
+        qualification: "B.A., M.A., B.Ed., RSCIT",
+        experience: "12+ वर्ष",
         photo: "/uploads/staff/13.jpeg",
-        phone: ""
+        phone: "9602203999"
       },
       {
         name: "ANAND SINGH",
         designation: "वरिष्ठ अध्यापक (Senior Teacher) - Mathematics",
         department: "Science",
-        qualification: "B.Sc., M.Sc. (Mathematics), B.Ed.",
-        experience: "11+ Years",
+        qualification: "B.Sc., M.A., B.Ed",
+        experience: "10+ वर्ष",
         photo: "/uploads/staff/14.jpeg",
-        phone: ""
+        phone: "9829990632"
       },
       {
         name: "ANITA",
-        designation: "वरिष्ठ अध्यापिका (Senior Teacher) - Urdu",
+        designation: "वरिष्ठ अध्यापक (Senior Teacher) - Urdu",
         department: "Arts",
-        qualification: "M.A. (Urdu), B.Ed.",
-        experience: "10+ Years",
+        qualification: "B.A., B.Ed",
+        experience: "10+ वर्ष",
         photo: "/uploads/staff/15.jpeg",
-        phone: ""
+        phone: "9950361008"
       },
       {
         name: "SHISHPAL",
         designation: "वरिष्ठ अध्यापक (Senior Teacher) - Sanskrit",
         department: "Arts",
-        qualification: "M.A. (Sanskrit), B.Ed.",
-        experience: "9+ Years",
+        qualification: "स्नातक, बी.एड",
+        experience: "10+ वर्ष",
         photo: "/uploads/staff/blank-teacher.png",
         phone: ""
       },
@@ -352,19 +343,190 @@ function initDB() {
         name: "JAGDISH PRAJAPAT",
         designation: "बेसिक कंप्यूटर अनुदेशक (Basic Computer Instructor)",
         department: "ICT",
-        qualification: "B.Tech (CS) / PGDCA / MCA",
-        experience: "6+ Years",
+        qualification: "BCA, MCA",
+        experience: "7+ वर्ष",
         photo: "/uploads/staff/18.jpeg",
-        phone: ""
+        phone: "9784730824"
       },
       {
         name: "MANISH SHARMA",
         designation: "वरिष्ठ कंप्यूटर अनुदेशक (Senior Computer Instructor)",
         department: "ICT",
-        qualification: "MCA / M.Tech (Computer Science)",
-        experience: "8+ Years",
+        qualification: "BCA, MCA",
+        experience: "7+ वर्ष",
+        photo: "/uploads/staff/blank-teacher.png",
+        phone: "8562868641"
+      },
+      {
+        name: "ANITA MARU",
+        designation: "अध्यापक लेवल-2 (Teacher Level-2) - ENGLISH",
+        department: "Arts",
+        qualification: "B.A., B.Ed",
+        experience: "10+ वर्ष",
+        photo: "/uploads/staff/20.jpeg",
+        phone: "9571894862"
+      },
+      {
+        name: "ARTI SHARMA",
+        designation: "प्रयोगशाला सहायक (Lab Assistant)",
+        department: "Science",
+        qualification: "B.A",
+        experience: "8+ वर्ष",
+        photo: "/uploads/staff/21.jpeg",
+        phone: "7240106557"
+      },
+      {
+        name: "ASHOK KUMAR JAT",
+        designation: "कनिष्ठ सहायक (Junior Assistant)",
+        department: "Administration",
+        qualification: "B.A., RSCIT",
+        experience: "8+ वर्ष",
+        photo: "/uploads/staff/22.jpeg",
+        phone: "7877845982"
+      },
+      {
+        name: "DHARMPAL BUGALIA",
+        designation: "अध्यापक लेवल-2 (Teacher Level-2) - Mathematics/ Science",
+        department: "Science",
+        qualification: "B.Sc., B.Ed",
+        experience: "10+ वर्ष",
+        photo: "/uploads/staff/blank-teacher.png",
+        phone: "9982823574"
+      },
+      {
+        name: "DIPANKAR SHARMA",
+        designation: "प्रयोगशाला सहायक (Lab Assistant)",
+        department: "Science",
+        qualification: "B.Sc., B.Ed",
+        experience: "8+ वर्ष",
+        photo: "/uploads/staff/24.jpeg",
+        phone: "8619212002"
+      },
+      {
+        name: "IFTEKHAR ALI",
+        designation: "अतिरिक्त प्रशासनिक अधिकारी (Addl. Admin Officer)",
+        department: "Administration",
+        qualification: "स्नातक, बी.एड",
+        experience: "10+ वर्ष",
+        photo: "/uploads/staff/blank-teacher.png",
+        phone: "9887128681"
+      },
+      {
+        name: "KANCHAN LATA PUROHIT",
+        designation: "अध्यापक लेवल-1 (Teacher Level-1)",
+        department: "Primary / Elementary",
+        qualification: "S.T.C",
+        experience: "10+ वर्ष",
+        photo: "/uploads/staff/blank-teacher.png",
+        phone: "7568392031"
+      },
+      {
+        name: "KANHAIYA LAL JANGID",
+        designation: "अध्यापक लेवल-2 (Teacher Level-2) - HINDI",
+        department: "Arts",
+        qualification: "B.A., M.A., B.Ed",
+        experience: "10+ वर्ष",
+        photo: "/uploads/staff/blank-teacher.png",
+        phone: "9887340355"
+      },
+      {
+        name: "KAPIL MEENA",
+        designation: "अध्यापक लेवल-1 (Teacher Level-1)",
+        department: "Primary / Elementary",
+        qualification: "B.Com., M.A., B.Ed",
+        experience: "10+ वर्ष",
+        photo: "/uploads/staff/blank-teacher.png",
+        phone: "9982845457"
+      },
+      {
+        name: "MEENA KUMARI",
+        designation: "अध्यापक लेवल-2 (Teacher Level-2) - HINDI",
+        department: "Arts",
+        qualification: "B.A., M.A., NET, B.Ed., RSCIT",
+        experience: "10+ वर्ष",
+        photo: "/uploads/staff/29.jpeg",
+        phone: "7737062475"
+      },
+      {
+        name: "MONIKA BARUPAL",
+        designation: "अध्यापक लेवल-1 (Teacher Level-1)",
+        department: "Primary / Elementary",
+        qualification: "S.T.C",
+        experience: "10+ वर्ष",
+        photo: "/uploads/staff/30.jpeg",
+        phone: "9460505720"
+      },
+      {
+        name: "MUNNI DEVI",
+        designation: "चतुर्थ श्रेणी कर्मचारी (Class IV)",
+        department: "Administration",
+        qualification: "माध्यमिक (Secondary)",
+        experience: "15+ वर्ष",
+        photo: "/uploads/staff/31.jpeg",
+        phone: "9145836326"
+      },
+      {
+        name: "NANU RAM",
+        designation: "अध्यापक लेवल-2 (Teacher Level-2) - Mathematics/ Science",
+        department: "Science",
+        qualification: "B.Sc., B.Ed",
+        experience: "10+ वर्ष",
+        photo: "/uploads/staff/blank-teacher.png",
+        phone: "9784431932"
+      },
+      {
+        name: "RISHIKA SAHARAN",
+        designation: "शिक्षक (Teacher)",
+        department: "Primary / Elementary",
+        qualification: "स्नातक, बी.एड",
+        experience: "10+ वर्ष",
         photo: "/uploads/staff/blank-teacher.png",
         phone: ""
+      },
+      {
+        name: "ROSHANI",
+        designation: "शिक्षक (Teacher)",
+        department: "Primary / Elementary",
+        qualification: "स्नातक, बी.एड",
+        experience: "10+ वर्ष",
+        photo: "/uploads/staff/34.jpeg",
+        phone: ""
+      },
+      {
+        name: "SEEMA KAJLA",
+        designation: "शिक्षक (Teacher)",
+        department: "Primary / Elementary",
+        qualification: "स्नातक, बी.एड",
+        experience: "10+ वर्ष",
+        photo: "/uploads/staff/blank-teacher.png",
+        phone: ""
+      },
+      {
+        name: "YOGESHWERY SHARMA",
+        designation: "शिक्षक (Teacher)",
+        department: "Primary / Elementary",
+        qualification: "स्नातक, बी.एड",
+        experience: "10+ वर्ष",
+        photo: "/uploads/staff/36.jpeg",
+        phone: ""
+      },
+      {
+        name: "YOGITA PUROHIT",
+        designation: "शिक्षक (Teacher)",
+        department: "Primary / Elementary",
+        qualification: "स्नातक, बी.एड",
+        experience: "10+ वर्ष",
+        photo: "/uploads/staff/37.png",
+        phone: ""
+      },
+      {
+        name: "DEVKI NANDAN SHARMA",
+        designation: "चतुर्थ श्रेणी कर्मचारी (Class IV)",
+        department: "Administration",
+        qualification: "B.A",
+        experience: "15+ वर्ष",
+        photo: "/uploads/staff/38.jpeg",
+        phone: "9887607170"
       }
     ];
 

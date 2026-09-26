@@ -148,7 +148,8 @@ export default function Home() {
               <div className="flex items-center gap-4">
                 <div className="relative">
                   <img
-                    src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&q=80"
+                    src="/uploads/staff/1.jpeg"
+                    onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&q=80"; }}
                     alt="Principal"
                     className="w-20 h-20 rounded-full object-cover border-3 border-orange-500 shadow-lg p-0.5 bg-white"
                   />
