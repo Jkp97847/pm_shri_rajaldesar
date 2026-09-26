@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Search, Award, GraduationCap, Phone, Mail, BookOpen } from 'lucide-react';
+import { Users, Search, Award, GraduationCap, Phone, Mail, BookOpen, ZoomIn, X } from 'lucide-react';
 
 export default function Teachers() {
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedDept, setSelectedDept] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeModalTeacher, setActiveModalTeacher] = useState(null);
 
   const departments = ['All', 'Administration', 'Science', 'Arts', 'ICT', 'Primary / Elementary'];
 
@@ -105,17 +106,44 @@ export default function Teachers() {
               className="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col justify-between group"
             >
               <div>
-                {/* Photo container */}
-                <div className="h-56 bg-slate-100 overflow-hidden relative">
+                {/* Photo container - 100% Full Uncropped Photo on Mobile & PC */}
+                <div 
+                  onClick={() => setActiveModalTeacher(teacher)}
+                  className="h-64 sm:h-72 w-full bg-gradient-to-b from-slate-100 via-slate-50 to-slate-200 relative overflow-hidden flex items-center justify-center p-3 cursor-pointer group/photo"
+                  title="पूरी फोटो देखने के लिए क्लिक करें"
+                >
+                  {/* Subtle blurred ambient backdrop to fill aspect ratio naturally */}
+                  <img
+                    src={teacher.photo || "/uploads/staff/blank-teacher.png"}
+                    alt=""
+                    aria-hidden="true"
+                    className="absolute inset-0 w-full h-full object-cover blur-xl opacity-25 scale-125 pointer-events-none"
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
+                  
+                  {/* 100% Uncropped Full Photo */}
                   <img
                     src={teacher.photo || "/uploads/staff/blank-teacher.png"}
                     alt={teacher.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                    className="relative z-10 max-h-full max-w-full object-contain rounded-xl drop-shadow-md transition-transform duration-300 group-hover/photo:scale-105"
                     onError={(e) => { e.currentTarget.src = "/uploads/staff/blank-teacher.png"; }}
                   />
-                  <span className="absolute bottom-2 left-2 bg-blue-950/80 backdrop-blur-md text-amber-400 text-[11px] font-bold px-2.5 py-0.5 rounded">
+
+                  {/* Zoom hint on hover */}
+                  <div className="absolute inset-0 z-20 bg-blue-950/20 opacity-0 group-hover/photo:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                    <span className="bg-blue-950/80 text-white text-[11px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-lg">
+                      <ZoomIn className="w-3.5 h-3.5 text-amber-400" />
+                      <span>बड़ा देखें</span>
+                    </span>
+                  </div>
+
+                  {/* Department Badge */}
+                  <span className="absolute bottom-2 left-2 z-20 bg-blue-950/90 backdrop-blur-md text-amber-400 text-[11px] font-bold px-2.5 py-0.5 rounded shadow">
                     {teacher.department}
                   </span>
+
+                  {/* Tiranga Top Rim */}
+                  <div className="absolute top-0 left-0 right-0 h-1 tiranga-bar z-20"></div>
                 </div>
 
                 {/* Details */}
@@ -127,14 +155,14 @@ export default function Teachers() {
                     {teacher.designation}
                   </p>
 
-                  <div className="pt-2 space-y-1 text-xs text-slate-600 border-t border-slate-100">
+                  <div className="pt-2 space-y-1.5 text-xs text-slate-600 border-t border-slate-100">
                     <p className="flex items-center gap-1.5">
                       <GraduationCap className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                       <span>{teacher.qualification || "स्नातकोत्तर, बी.एड."}</span>
                     </p>
                     <p className="flex items-center gap-1.5">
                       <Award className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                      <span>अनुभव: {teacher.experience || "10+ वर्ष"}</span>
+                      <span>अनुभव: {teacher.experience}</span>
                     </p>
                     {teacher.phone && (
                       <p className="flex items-center gap-1.5 text-emerald-800 font-semibold pt-0.5">
@@ -148,7 +176,13 @@ export default function Teachers() {
 
               <div className="p-4 bg-slate-50 border-t border-slate-100 text-xs text-slate-500 flex items-center justify-between">
                 <span>पीएम श्री संकाय</span>
-                <span className="text-emerald-700 font-bold">सक्रिय शिक्षक</span>
+                <button
+                  onClick={() => setActiveModalTeacher(teacher)}
+                  className="text-orange-600 font-bold hover:underline flex items-center gap-1"
+                >
+                  <span>फोटो देखें</span>
+                  <span>→</span>
+                </button>
               </div>
             </div>
           ))}
@@ -162,6 +196,70 @@ export default function Teachers() {
           >
             सभी शिक्षक देखें
           </button>
+        </div>
+      )}
+
+      {/* Photo Enlarge / Lightbox Modal */}
+      {activeModalTeacher && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setActiveModalTeacher(null)}
+        >
+          <div 
+            className="bg-white rounded-2xl max-w-md w-full overflow-hidden shadow-2xl relative border-2 border-orange-500"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="h-1.5 tiranga-bar w-full"></div>
+            <button
+              onClick={() => setActiveModalTeacher(null)}
+              className="absolute top-3 right-3 z-30 bg-slate-900/80 hover:bg-slate-900 text-white p-1.5 rounded-full transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Modal Full Photo - 100% Uncropped */}
+            <div className="bg-slate-900 flex items-center justify-center p-4 max-h-[65vh] overflow-hidden">
+              <img
+                src={activeModalTeacher.photo || "/uploads/staff/blank-teacher.png"}
+                alt={activeModalTeacher.name}
+                className="max-h-[60vh] max-w-full object-contain rounded-lg shadow-xl"
+              />
+            </div>
+
+            {/* Modal Teacher Details */}
+            <div className="p-5 space-y-3 bg-white">
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-orange-600 bg-orange-50 px-2 py-0.5 rounded">
+                  {activeModalTeacher.department}
+                </span>
+                <h3 className="text-xl font-black text-slate-900 mt-1">
+                  {activeModalTeacher.name}
+                </h3>
+                <p className="text-sm font-bold text-blue-950">
+                  {activeModalTeacher.designation}
+                </p>
+              </div>
+
+              <div className="space-y-1.5 text-xs text-slate-600 border-t border-slate-100 pt-3">
+                <p className="flex items-center gap-2">
+                  <GraduationCap className="w-4 h-4 text-slate-400 shrink-0" />
+                  <span><strong>शैक्षणिक योग्यता:</strong> {activeModalTeacher.qualification || "स्नातकोत्तर, बी.एड."}</span>
+                </p>
+                <p className="flex items-center gap-2">
+                  <Award className="w-4 h-4 text-amber-500 shrink-0" />
+                  <span><strong>वर्तमान पद अनुभव:</strong> {activeModalTeacher.experience}</span>
+                </p>
+                {activeModalTeacher.phone && (
+                  <p className="flex items-center gap-2 text-emerald-800 font-bold">
+                    <Phone className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <a href={`tel:${activeModalTeacher.phone}`} className="hover:underline">
+                      {activeModalTeacher.phone}
+                    </a>
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

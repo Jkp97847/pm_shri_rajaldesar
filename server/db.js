@@ -200,7 +200,7 @@ function initDB() {
         designation: "प्रधानाचार्य (Principal)",
         department: "Administration",
         qualification: "B.A., M.A., BSTC, B.Ed, RSCIT",
-        experience: "24+ वर्ष",
+        experience: "24+ वर्ष (वर्तमान पदभार: 3 वर्ष 5 माह)",
         photo: "/uploads/staff/1.jpeg",
         phone: "9414894845"
       },
@@ -209,61 +209,61 @@ function initDB() {
         designation: "प्राध्यापक (Lecturer I Gr.) - Political Science",
         department: "Arts",
         qualification: "B.A., B.Ed",
-        experience: "12+ वर्ष",
+        experience: "8 वर्ष 3 माह (पदभार: 11/06/2018)",
         photo: "/uploads/staff/2.jpeg",
         phone: "9950695755"
       },
       {
         name: "VIMLA CHOUDHARY",
-        designation: "प्राध्यापक (Lecturer I Gr.) - Hindi Literature",
-        department: "Arts",
-        qualification: "स्नातकोत्तर (M.A./M.Sc.), बी.एड",
-        experience: "12+ वर्ष",
+        designation: "उप-प्रधानाचार्य (Vice Principal)",
+        department: "Administration",
+        qualification: "B.A., M.A., B.Ed.BSTC",
+        experience: "14+ वर्ष (वरिष्ठ उप-प्रधानाचार्य)",
         photo: "/uploads/staff/3.jpeg",
-        phone: ""
+        phone: "9460927989"
       },
       {
         name: "MAHESH KUMAR SANKHOLIA",
         designation: "प्राध्यापक (Lecturer I Gr.) - Sanskrit Literature",
         department: "Arts",
-        qualification: "M.A., M.Phil., NET, RSCIT",
-        experience: "12+ वर्ष",
+        qualification: "M.A., M.P, NET, RSCIT",
+        experience: "10 वर्ष (पदभार: 03/09/2016)",
         photo: "/uploads/staff/blank-teacher.png",
         phone: "9024347777"
       },
       {
         name: "TILOKA RAM DUDI",
-        designation: "प्राध्यापक (Lecturer I Gr.) - Hindi Literature",
+        designation: "प्राध्यापक (Lecturer I Gr.) - Hindi",
         department: "Arts",
-        qualification: "स्नातकोत्तर (M.A./M.Sc.), बी.एड",
-        experience: "12+ वर्ष",
+        qualification: "B.A., M.A., B.Ed",
+        experience: "9 माह (पदभार: 18/12/2025)",
         photo: "/uploads/staff/5.jpeg",
-        phone: ""
+        phone: "9610817102"
       },
       {
         name: "RAMESH KUMAR",
         designation: "प्राध्यापक (Lecturer I Gr.) - Physics (Science Stream)",
         department: "Science",
         qualification: "B.Sc., M.Sc., B.Ed",
-        experience: "12+ वर्ष",
+        experience: "9 वर्ष 3 माह (पदभार: 28/06/2017)",
         photo: "/uploads/staff/blank-teacher.png",
         phone: "8963892319"
       },
       {
         name: "SARITA SHARMA",
-        designation: "प्राध्यापक (Lecturer I Gr.) - Hindi (Compulsary)",
+        designation: "प्राध्यापक (Lecturer I Gr.) - Hindi",
         department: "Arts",
-        qualification: "स्नातकोत्तर (M.A./M.Sc.), बी.एड",
-        experience: "12+ वर्ष",
-        photo: "/uploads/staff/blank-teacher.png",
-        phone: ""
+        qualification: "B.A., M.A., B.Ed., RSCIT",
+        experience: "9 वर्ष 2 माह (पदभार: 04/07/2017)",
+        photo: "/uploads/staff/7.jpeg",
+        phone: "8118893102"
       },
       {
         name: "INDER SINGH",
         designation: "उप-प्रधानाचार्य (Vice Principal)",
         department: "Administration",
         qualification: "B.A., M.A",
-        experience: "10+ वर्ष",
+        experience: "10 वर्ष 2 माह (पदभार: 30/07/2016)",
         photo: "/uploads/staff/8.jpeg",
         phone: "9057295392"
       },
@@ -272,7 +272,7 @@ function initDB() {
         designation: "प्राध्यापक (Lecturer I Gr.) - Sanskrit Literature",
         department: "Arts",
         qualification: "B.A., M.A., B.Ed",
-        experience: "12+ वर्ष",
+        experience: "1 वर्ष 9 माह (पदभार: 18/12/2024)",
         photo: "/uploads/staff/9.jpeg",
         phone: "9929189014"
       },
@@ -281,7 +281,7 @@ function initDB() {
         designation: "प्राध्यापक (Lecturer I Gr.) - Biology (Science Stream)",
         department: "Science",
         qualification: "B.Sc., M.Sc., B.Ed",
-        experience: "12+ वर्ष",
+        experience: "1 वर्ष 4 माह (पदभार: 05/05/2025)",
         photo: "/uploads/staff/10.jpeg",
         phone: "9928267724"
       },
@@ -290,7 +290,7 @@ function initDB() {
         designation: "प्राध्यापक (Lecturer I Gr.) - Political Science",
         department: "Arts",
         qualification: "B.A., M.A., B.Ed",
-        experience: "12+ वर्ष",
+        experience: "9 वर्ष 8 माह (पदभार: 21/01/2017)",
         photo: "/uploads/staff/11.jpeg",
         phone: "9079682607"
       },
@@ -299,7 +299,7 @@ function initDB() {
         designation: "प्राध्यापक (Lecturer I Gr.) - Chemistry (Science Stream)",
         department: "Science",
         qualification: "B.Sc., M.Sc., B.Ed., RSCIT",
-        experience: "12+ वर्ष",
+        experience: "5 वर्ष 7 माह (पदभार: 10/02/2021)",
         photo: "/uploads/staff/12.jpeg",
         phone: "9887653869"
       },
@@ -308,7 +308,7 @@ function initDB() {
         designation: "प्राध्यापक (Lecturer I Gr.) - English",
         department: "Arts",
         qualification: "B.A., M.A., B.Ed., RSCIT",
-        experience: "12+ वर्ष",
+        experience: "5 वर्ष 6 माह (पदभार: 20/03/2021)",
         photo: "/uploads/staff/13.jpeg",
         phone: "9602203999"
       },
@@ -317,7 +317,7 @@ function initDB() {
         designation: "वरिष्ठ अध्यापक (Senior Teacher) - Mathematics",
         department: "Science",
         qualification: "B.Sc., M.A., B.Ed",
-        experience: "10+ वर्ष",
+        experience: "7 वर्ष 2 माह (पदभार: 05/07/2019)",
         photo: "/uploads/staff/14.jpeg",
         phone: "9829990632"
       },
@@ -326,7 +326,7 @@ function initDB() {
         designation: "वरिष्ठ अध्यापक (Senior Teacher) - Urdu",
         department: "Arts",
         qualification: "B.A., B.Ed",
-        experience: "10+ वर्ष",
+        experience: "9 वर्ष 8 माह (पदभार: 25/01/2017)",
         photo: "/uploads/staff/15.jpeg",
         phone: "9950361008"
       },
@@ -334,17 +334,17 @@ function initDB() {
         name: "SHISHPAL",
         designation: "वरिष्ठ अध्यापक (Senior Teacher) - Sanskrit",
         department: "Arts",
-        qualification: "स्नातक, बी.एड",
-        experience: "10+ वर्ष",
+        qualification: "B.A., B.Ed",
+        experience: "8 वर्ष 3 माह (पदभार: 05/06/2018)",
         photo: "/uploads/staff/blank-teacher.png",
-        phone: ""
+        phone: "9950541321"
       },
       {
         name: "JAGDISH PRAJAPAT",
         designation: "बेसिक कंप्यूटर अनुदेशक (Basic Computer Instructor)",
         department: "ICT",
         qualification: "BCA, MCA",
-        experience: "7+ वर्ष",
+        experience: "3 वर्ष 5 माह (पदभार: 18/04/2023)",
         photo: "/uploads/staff/18.jpeg",
         phone: "9784730824"
       },
@@ -353,7 +353,7 @@ function initDB() {
         designation: "वरिष्ठ कंप्यूटर अनुदेशक (Senior Computer Instructor)",
         department: "ICT",
         qualification: "BCA, MCA",
-        experience: "7+ वर्ष",
+        experience: "3 वर्ष 7 माह (पदभार: 24/02/2023)",
         photo: "/uploads/staff/blank-teacher.png",
         phone: "8562868641"
       },
@@ -362,7 +362,7 @@ function initDB() {
         designation: "अध्यापक लेवल-2 (Teacher Level-2) - ENGLISH",
         department: "Arts",
         qualification: "B.A., B.Ed",
-        experience: "10+ वर्ष",
+        experience: "18 वर्ष 8 माह (पदभार: 18/01/2008)",
         photo: "/uploads/staff/20.jpeg",
         phone: "9571894862"
       },
@@ -371,7 +371,7 @@ function initDB() {
         designation: "प्रयोगशाला सहायक (Lab Assistant)",
         department: "Science",
         qualification: "B.A",
-        experience: "8+ वर्ष",
+        experience: "4 वर्ष 12 माह (पदभार: 29/09/2021)",
         photo: "/uploads/staff/21.jpeg",
         phone: "7240106557"
       },
@@ -380,7 +380,7 @@ function initDB() {
         designation: "कनिष्ठ सहायक (Junior Assistant)",
         department: "Administration",
         qualification: "B.A., RSCIT",
-        experience: "8+ वर्ष",
+        experience: "4 वर्ष 3 माह (पदभार: 21/06/2022)",
         photo: "/uploads/staff/22.jpeg",
         phone: "7877845982"
       },
@@ -389,7 +389,7 @@ function initDB() {
         designation: "अध्यापक लेवल-2 (Teacher Level-2) - Mathematics/ Science",
         department: "Science",
         qualification: "B.Sc., B.Ed",
-        experience: "10+ वर्ष",
+        experience: "21 वर्ष 6 माह (पदभार: 28/03/2005)",
         photo: "/uploads/staff/blank-teacher.png",
         phone: "9982823574"
       },
@@ -398,7 +398,7 @@ function initDB() {
         designation: "प्रयोगशाला सहायक (Lab Assistant)",
         department: "Science",
         qualification: "B.Sc., B.Ed",
-        experience: "8+ वर्ष",
+        experience: "4 वर्ष (पदभार: 24/09/2022)",
         photo: "/uploads/staff/24.jpeg",
         phone: "8619212002"
       },
@@ -406,8 +406,8 @@ function initDB() {
         name: "IFTEKHAR ALI",
         designation: "अतिरिक्त प्रशासनिक अधिकारी (Addl. Admin Officer)",
         department: "Administration",
-        qualification: "स्नातक, बी.एड",
-        experience: "10+ वर्ष",
+        qualification: "स्नातक, बी.एड.",
+        experience: "11 वर्ष 11 माह (पदभार: 31/10/2014)",
         photo: "/uploads/staff/blank-teacher.png",
         phone: "9887128681"
       },
@@ -416,7 +416,7 @@ function initDB() {
         designation: "अध्यापक लेवल-1 (Teacher Level-1)",
         department: "Primary / Elementary",
         qualification: "S.T.C",
-        experience: "10+ वर्ष",
+        experience: "33 वर्ष (पदभार: 20/09/1993)",
         photo: "/uploads/staff/blank-teacher.png",
         phone: "7568392031"
       },
@@ -425,7 +425,7 @@ function initDB() {
         designation: "अध्यापक लेवल-2 (Teacher Level-2) - HINDI",
         department: "Arts",
         qualification: "B.A., M.A., B.Ed",
-        experience: "10+ वर्ष",
+        experience: "30 वर्ष 8 माह (पदभार: 02/02/1996)",
         photo: "/uploads/staff/blank-teacher.png",
         phone: "9887340355"
       },
@@ -434,7 +434,7 @@ function initDB() {
         designation: "अध्यापक लेवल-1 (Teacher Level-1)",
         department: "Primary / Elementary",
         qualification: "B.Com., M.A., B.Ed",
-        experience: "10+ वर्ष",
+        experience: "20 वर्ष 3 माह (पदभार: 03/07/2006)",
         photo: "/uploads/staff/blank-teacher.png",
         phone: "9982845457"
       },
@@ -443,7 +443,7 @@ function initDB() {
         designation: "अध्यापक लेवल-2 (Teacher Level-2) - HINDI",
         department: "Arts",
         qualification: "B.A., M.A., NET, B.Ed., RSCIT",
-        experience: "10+ वर्ष",
+        experience: "29 वर्ष 3 माह (पदभार: 03/07/1997)",
         photo: "/uploads/staff/29.jpeg",
         phone: "7737062475"
       },
@@ -452,7 +452,7 @@ function initDB() {
         designation: "अध्यापक लेवल-1 (Teacher Level-1)",
         department: "Primary / Elementary",
         qualification: "S.T.C",
-        experience: "10+ वर्ष",
+        experience: "33 वर्ष 6 माह (पदभार: 31/03/1993)",
         photo: "/uploads/staff/30.jpeg",
         phone: "9460505720"
       },
@@ -461,7 +461,7 @@ function initDB() {
         designation: "चतुर्थ श्रेणी कर्मचारी (Class IV)",
         department: "Administration",
         qualification: "माध्यमिक (Secondary)",
-        experience: "15+ वर्ष",
+        experience: "21 वर्ष 2 माह (पदभार: 28/07/2005)",
         photo: "/uploads/staff/31.jpeg",
         phone: "9145836326"
       },
@@ -470,61 +470,61 @@ function initDB() {
         designation: "अध्यापक लेवल-2 (Teacher Level-2) - Mathematics/ Science",
         department: "Science",
         qualification: "B.Sc., B.Ed",
-        experience: "10+ वर्ष",
+        experience: "18 वर्ष 1 माह (पदभार: 02/08/2008)",
         photo: "/uploads/staff/blank-teacher.png",
         phone: "9784431932"
       },
       {
         name: "RISHIKA SAHARAN",
-        designation: "शिक्षक (Teacher)",
-        department: "Primary / Elementary",
-        qualification: "स्नातक, बी.एड",
-        experience: "10+ वर्ष",
+        designation: "अध्यापक लेवल-2 (Teacher Level-2) - ENGLISH",
+        department: "Arts",
+        qualification: "B.A., B.Ed",
+        experience: "19 वर्ष 5 माह (पदभार: 26/04/2007)",
         photo: "/uploads/staff/blank-teacher.png",
-        phone: ""
+        phone: "9887124545"
       },
       {
         name: "ROSHANI",
-        designation: "शिक्षक (Teacher)",
+        designation: "अध्यापक लेवल-1 (Teacher Level-1)",
         department: "Primary / Elementary",
-        qualification: "स्नातक, बी.एड",
-        experience: "10+ वर्ष",
+        qualification: "B.A., BSTC",
+        experience: "11 वर्ष 6 माह (पदभार: 23/03/2015)",
         photo: "/uploads/staff/34.jpeg",
-        phone: ""
+        phone: "8094023875"
       },
       {
         name: "SEEMA KAJLA",
-        designation: "शिक्षक (Teacher)",
+        designation: "अध्यापक लेवल-1 (Teacher Level-1)",
         department: "Primary / Elementary",
-        qualification: "स्नातक, बी.एड",
-        experience: "10+ वर्ष",
-        photo: "/uploads/staff/blank-teacher.png",
-        phone: ""
+        qualification: "B.A., M.A., BSTC",
+        experience: "11 वर्ष 6 माह (पदभार: 23/03/2015)",
+        photo: "/uploads/staff/35.jpeg",
+        phone: "9950731013"
       },
       {
         name: "YOGESHWERY SHARMA",
-        designation: "शिक्षक (Teacher)",
-        department: "Primary / Elementary",
-        qualification: "स्नातक, बी.एड",
-        experience: "10+ वर्ष",
+        designation: "अध्यापक लेवल-2 (Teacher Level-2) - Sanskrit",
+        department: "Arts",
+        qualification: "B.A., M.A., B.Ed., RSCIT",
+        experience: "21 वर्ष 5 माह (पदभार: 05/04/2005)",
         photo: "/uploads/staff/36.jpeg",
-        phone: ""
+        phone: "9928511626"
       },
       {
         name: "YOGITA PUROHIT",
-        designation: "शिक्षक (Teacher)",
-        department: "Primary / Elementary",
-        qualification: "स्नातक, बी.एड",
-        experience: "10+ वर्ष",
+        designation: "प्रयोगशाला सहायक (Lab Assistant)",
+        department: "Science",
+        qualification: "B.Sc., M.Sc",
+        experience: "3 वर्ष 4 माह (पदभार: 23/05/2023)",
         photo: "/uploads/staff/37.png",
-        phone: ""
+        phone: "8290730037"
       },
       {
         name: "DEVKI NANDAN SHARMA",
         designation: "चतुर्थ श्रेणी कर्मचारी (Class IV)",
         department: "Administration",
         qualification: "B.A",
-        experience: "15+ वर्ष",
+        experience: "4 वर्ष 3 माह (पदभार: 21/06/2022)",
         photo: "/uploads/staff/38.jpeg",
         phone: "9887607170"
       }

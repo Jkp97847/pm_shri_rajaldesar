@@ -151,7 +151,7 @@ export default function Home() {
                     src="/uploads/staff/1.jpeg"
                     onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&q=80"; }}
                     alt="Principal"
-                    className="w-20 h-20 rounded-full object-cover border-3 border-orange-500 shadow-lg p-0.5 bg-white"
+                    className="w-20 h-20 rounded-full object-cover object-top border-3 border-orange-500 shadow-lg p-0.5 bg-white"
                   />
                   <span className="absolute bottom-0 right-0 text-base">🇮🇳</span>
                 </div>
