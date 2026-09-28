@@ -85,14 +85,19 @@ export default function Teachers() {
               href="https://rajshaladarpan.nic.in/"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-gradient-to-r from-blue-900 to-indigo-950 hover:from-blue-800 hover:to-indigo-900 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition shadow-md flex items-center gap-2 border border-blue-700 group shrink-0"
+              className="bg-white hover:bg-slate-50 text-blue-950 font-bold px-4 py-2 rounded-xl text-xs transition shadow-md flex items-center gap-2.5 border-2 border-amber-400 group shrink-0"
             >
-              <Globe className="w-4 h-4 text-amber-400 group-hover:rotate-12 transition-transform" />
+              <img
+                src="/shaladarpan-logo.png"
+                alt="शाला दर्पण"
+                className="h-8 object-contain group-hover:scale-105 transition-transform"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
               <div className="text-left">
-                <div className="text-[10px] text-amber-300 leading-none">राजस्थान शिक्षा विभाग</div>
-                <div className="text-xs font-black">शाला दर्पण (Shala Darpan)</div>
+                <div className="text-[10px] text-slate-500 font-semibold leading-none">राजस्थान शिक्षा विभाग</div>
+                <div className="text-xs font-black text-blue-950">शाला दर्पण (Shala Darpan)</div>
               </div>
-              <ExternalLink className="w-3.5 h-3.5 text-slate-300 ml-1" />
+              <ExternalLink className="w-3.5 h-3.5 text-slate-400 ml-1" />
             </a>
 
             {/* Rajasthan SSO Button */}
@@ -100,14 +105,19 @@ export default function Teachers() {
               href="https://sso.rajasthan.gov.in/"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition shadow-md flex items-center gap-2 border border-orange-400 group shrink-0"
+              className="bg-white hover:bg-slate-50 text-slate-900 font-bold px-4 py-2 rounded-xl text-xs transition shadow-md flex items-center gap-2.5 border-2 border-orange-400 group shrink-0"
             >
-              <KeyRound className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
+              <img
+                src="/sso-logo.jpeg"
+                alt="राजस्थान SSO"
+                className="h-8 w-8 rounded-full object-contain group-hover:scale-105 transition-transform"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
               <div className="text-left">
-                <div className="text-[10px] text-orange-100 leading-none">Government of Rajasthan</div>
-                <div className="text-xs font-black">राजस्थान SSO लॉगिन</div>
+                <div className="text-[10px] text-slate-500 font-semibold leading-none">Government of Rajasthan</div>
+                <div className="text-xs font-black text-orange-950">राजस्थान SSO लॉगिन</div>
               </div>
-              <ExternalLink className="w-3.5 h-3.5 text-white/80 ml-1" />
+              <ExternalLink className="w-3.5 h-3.5 text-slate-400 ml-1" />
             </a>
           </div>
         </div>
