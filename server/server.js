@@ -260,6 +260,102 @@ app.get('/api/library', (req, res) => {
   }
 });
 
+// 11. Students List & Filters
+app.get('/api/students', (req, res) => {
+  try {
+    const { class_name, gender, category, search } = req.query;
+    let query = 'SELECT * FROM students WHERE 1=1';
+    const params = [];
+
+    if (class_name && class_name !== 'All') {
+      query += ' AND class_name = ?';
+      params.push(class_name);
+    }
+    if (gender && gender !== 'All') {
+      query += ' AND gender = ?';
+      params.push(gender);
+    }
+    if (category && category !== 'All') {
+      query += ' AND category = ?';
+      params.push(category);
+    }
+    if (search && search.trim()) {
+      const q = `%${search.trim()}%`;
+      query += ' AND (name LIKE ? OR roll_no LIKE ? OR sr_no LIKE ? OR father_name LIKE ?)';
+      params.push(q, q, q, q);
+    }
+
+    query += ' ORDER BY class_name ASC, roll_no ASC, id ASC';
+    const students = db.prepare(query).all(...params);
+    res.json({ success: true, students });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 12. Students Aggregated Stats (Total, Boys, Girls, Categories, Class-wise)
+app.get('/api/students/stats', (req, res) => {
+  try {
+    const total = db.prepare('SELECT COUNT(*) as count FROM students').get().count;
+    const boys = db.prepare("SELECT COUNT(*) as count FROM students WHERE gender = 'Boy' OR gender = 'बालक'").get().count;
+    const girls = db.prepare("SELECT COUNT(*) as count FROM students WHERE gender = 'Girl' OR gender = 'बालिका'").get().count;
+
+    const catRows = db.prepare('SELECT category, COUNT(*) as count FROM students GROUP BY category').all();
+    const categories = { GEN: 0, OBC: 0, SC: 0, ST: 0, EWS: 0, MBC: 0 };
+    catRows.forEach(r => {
+      const key = (r.category || 'GEN').toUpperCase();
+      categories[key] = (categories[key] || 0) + r.count;
+    });
+
+    const classOrder = [
+      'Nursery', 'LKG', 'UKG',
+      'Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5',
+      'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10',
+      'Class 11 Arts', 'Class 11 Science', 'Class 11 Commerce',
+      'Class 12 Arts', 'Class 12 Science', 'Class 12 Commerce'
+    ];
+
+    const classRows = db.prepare(`
+      SELECT class_name, 
+             COUNT(*) as total,
+             SUM(CASE WHEN gender = 'Boy' OR gender = 'बालक' THEN 1 ELSE 0 END) as boys,
+             SUM(CASE WHEN gender = 'Girl' OR gender = 'बालिका' THEN 1 ELSE 0 END) as girls
+      FROM students 
+      GROUP BY class_name
+    `).all();
+
+    const classMap = {};
+    classRows.forEach(r => { classMap[r.class_name] = r; });
+
+    const class_wise = classOrder.map(cName => ({
+      class_name: cName,
+      total: classMap[cName]?.total || 0,
+      boys: classMap[cName]?.boys || 0,
+      girls: classMap[cName]?.girls || 0
+    }));
+
+    // Add any classes in DB not in the standard list
+    classRows.forEach(r => {
+      if (!classOrder.includes(r.class_name)) {
+        class_wise.push(r);
+      }
+    });
+
+    res.json({
+      success: true,
+      stats: {
+        total,
+        boys,
+        girls,
+        categories,
+        class_wise
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // ----------------------------------------------------
 // ADMIN ROUTES
 // ----------------------------------------------------
@@ -501,6 +597,40 @@ app.delete('/api/admin/teachers/:id', adminAuth, (req, res) => {
   }
 });
 
+// Bulk Import Teachers (accepts array of teacher objects)
+app.post('/api/admin/teachers/bulk', adminAuth, (req, res) => {
+  try {
+    const { teachers } = req.body;
+    if (!Array.isArray(teachers) || teachers.length === 0) {
+      return res.status(400).json({ success: false, message: "आयात करने के लिए वैध शिक्षक डेटा सूची प्रदान करें।" });
+    }
+    const insertStmt = db.prepare(`
+      INSERT INTO teachers (name, designation, department, qualification, experience, photo, phone)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    let importedCount = 0;
+    for (const t of teachers) {
+      const name = t.name || t['Name'] || t['शिक्षक का नाम'];
+      if (name) {
+        insertStmt.run(
+          name,
+          t.designation || t['Designation'] || t['पद'] || 'शिक्षक',
+          t.department || t['Department'] || t['संकाय'] || 'General',
+          t.qualification || t['Qualification'] || t['योग्यता'] || '',
+          t.experience || t['Experience'] || t['अनुभव'] || '',
+          t.photo || t['Photo'] || '/uploads/staff/blank-teacher.png',
+          t.phone || t['Phone'] || t['मोबाइल'] || ''
+        );
+        importedCount++;
+      }
+    }
+    res.json({ success: true, count: importedCount, message: `सफलतापूर्वक ${importedCount} शिक्षकों का डेटा आयात (Import) किया गया।` });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // --- ADMIN GALLERY CRUD (with photo upload & video support) ---
 app.post('/api/admin/gallery', adminAuth, upload.single('image_file'), (req, res) => {
   try {
@@ -634,6 +764,52 @@ app.delete('/api/admin/results/:id', adminAuth, (req, res) => {
   }
 });
 
+// Bulk Import Results (accepts array of result objects)
+app.post('/api/admin/results/bulk', adminAuth, (req, res) => {
+  try {
+    const { results } = req.body;
+    if (!Array.isArray(results) || results.length === 0) {
+      return res.status(400).json({ success: false, message: "आयात करने के लिए वैध परिणाम डेटा सूची प्रदान करें।" });
+    }
+    const upsertStmt = db.prepare(`
+      INSERT INTO results (roll_no, student_name, father_name, class_name, year, percentage, grade, status, marks_details)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(roll_no) DO UPDATE SET
+        student_name = excluded.student_name,
+        father_name = excluded.father_name,
+        class_name = excluded.class_name,
+        year = excluded.year,
+        percentage = excluded.percentage,
+        grade = excluded.grade,
+        status = excluded.status,
+        marks_details = excluded.marks_details
+    `);
+
+    let importedCount = 0;
+    for (const r of results) {
+      const roll_no = r.roll_no || r['Roll No'] || r['roll_no'] || r['रोल नंबर'];
+      const student_name = r.student_name || r['Student Name'] || r['student_name'] || r['नाम'];
+      if (roll_no && student_name) {
+        upsertStmt.run(
+          String(roll_no).trim(),
+          student_name,
+          r.father_name || r['Father Name'] || r['father_name'] || r['पिता का नाम'] || '',
+          r.class_name || r['Class'] || r['कक्षा'] || 'Class 10',
+          r.year || r['Year'] || r['सत्र'] || '2025-2026',
+          parseFloat(r.percentage || r['Percentage'] || r['प्रतिशत'] || 0),
+          r.grade || r['Grade'] || r['श्रेणी'] || 'First Division',
+          r.status || r['Status'] || r['स्थिति'] || 'PASS',
+          typeof r.marks_details === 'object' ? JSON.stringify(r.marks_details) : (r.marks_details || '{}')
+        );
+        importedCount++;
+      }
+    }
+    res.json({ success: true, count: importedCount, message: `सफलतापूर्वक ${importedCount} छात्र परिणामों का डेटा आयात (Import) किया गया। छात्र अब तुरंत अपना रिजल्ट देख सकते हैं।` });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // --- ADMIN TIMETABLES CRUD ---
 app.post('/api/admin/timetables', adminAuth, upload.single('file'), (req, res) => {
   try {
@@ -689,17 +865,27 @@ app.put('/api/admin/timetables/:id', adminAuth, upload.single('file'), (req, res
 // --- ADMIN SPORTS CRUD ---
 app.post('/api/admin/sports', adminAuth, upload.single('image_file'), (req, res) => {
   try {
-    const { title, sport_name, level, date, description, image_url } = req.body;
+    const { title, sport_name, level, date, description, image_url, winner_details, news_content, video_url } = req.body;
     let img = image_url;
     if (req.file) {
       img = `/uploads/${req.file.filename}`;
     }
     const stmt = db.prepare(`
-      INSERT INTO sports_events (title, sport_name, level, date, description, image_url)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO sports_events (title, sport_name, level, date, description, image_url, winner_details, news_content, video_url)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
-    const info = stmt.run(title, sport_name || 'Sports', level || 'जिला स्तर', date || new Date().toISOString().split('T')[0], description || '', img || '');
-    res.json({ success: true, id: info.lastInsertRowid, message: "खेल गतिविधि/उपलब्धि जोड़ी गई।" });
+    const info = stmt.run(
+      title,
+      sport_name || 'Sports',
+      level || 'जिला स्तर',
+      date || new Date().toISOString().split('T')[0],
+      description || '',
+      img || '',
+      winner_details || '',
+      news_content || '',
+      video_url || ''
+    );
+    res.json({ success: true, id: info.lastInsertRowid, message: "खेल गतिविधि व विजेता विवरण सफलतापूर्वक जोड़ा गया।" });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -707,7 +893,7 @@ app.post('/api/admin/sports', adminAuth, upload.single('image_file'), (req, res)
 
 app.put('/api/admin/sports/:id', adminAuth, upload.single('image_file'), (req, res) => {
   try {
-    const { title, sport_name, level, date, description, image_url } = req.body;
+    const { title, sport_name, level, date, description, image_url, winner_details, news_content, video_url } = req.body;
     let img = image_url;
     if (req.file) {
       img = `/uploads/${req.file.filename}`;
@@ -719,11 +905,22 @@ app.put('/api/admin/sports/:id', adminAuth, upload.single('image_file'), (req, r
 
     const stmt = db.prepare(`
       UPDATE sports_events 
-      SET title = ?, sport_name = ?, level = ?, date = ?, description = ?, image_url = ?
+      SET title = ?, sport_name = ?, level = ?, date = ?, description = ?, image_url = ?, winner_details = ?, news_content = ?, video_url = ?
       WHERE id = ?
     `);
-    stmt.run(title, sport_name || 'Sports', level || 'जिला स्तर', date || new Date().toISOString().split('T')[0], description || '', img || '', req.params.id);
-    res.json({ success: true, message: "खेलकूद रिकॉर्ड सफलतापूर्वक अपडेट हो गया!" });
+    stmt.run(
+      title,
+      sport_name || 'Sports',
+      level || 'जिला स्तर',
+      date || new Date().toISOString().split('T')[0],
+      description || '',
+      img || '',
+      winner_details || '',
+      news_content || '',
+      video_url || '',
+      req.params.id
+    );
+    res.json({ success: true, message: "खेलकूद व विजेता रिकॉर्ड सफलतापूर्वक अपडेट हो गया!" });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -733,6 +930,98 @@ app.delete('/api/admin/sports/:id', adminAuth, (req, res) => {
   try {
     db.prepare('DELETE FROM sports_events WHERE id = ?').run(req.params.id);
     res.json({ success: true, message: "खेल गतिविधि हटाई गई।" });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// --- ADMIN STUDENTS CRUD & BULK ---
+app.post('/api/admin/students', adminAuth, (req, res) => {
+  try {
+    const { sr_no, roll_no, name, father_name, mother_name, class_name, section, gender, category, dob, phone, address, admission_date, status } = req.body;
+    if (!name || !class_name || !gender) {
+      return res.status(400).json({ success: false, message: "विद्यार्थी का नाम, कक्षा और लिंग अनिवार्य हैं।" });
+    }
+    const stmt = db.prepare(`
+      INSERT INTO students (sr_no, roll_no, name, father_name, mother_name, class_name, section, gender, category, dob, phone, address, admission_date, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const info = stmt.run(
+      sr_no || '', roll_no || '', name.trim(), father_name || '', mother_name || '',
+      class_name, section || 'A', gender, category || 'GEN', dob || '', phone || '',
+      address || 'राजलदेसर', admission_date || new Date().toISOString().split('T')[0], status || 'Active'
+    );
+    res.json({ success: true, id: info.lastInsertRowid, message: "विद्यार्थी रिकॉर्ड सफलतापूर्वक जोड़ा गया।" });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.put('/api/admin/students/:id', adminAuth, (req, res) => {
+  try {
+    const { sr_no, roll_no, name, father_name, mother_name, class_name, section, gender, category, dob, phone, address, admission_date, status } = req.body;
+    const stmt = db.prepare(`
+      UPDATE students 
+      SET sr_no = ?, roll_no = ?, name = ?, father_name = ?, mother_name = ?, class_name = ?, section = ?, gender = ?, category = ?, dob = ?, phone = ?, address = ?, admission_date = ?, status = ?
+      WHERE id = ?
+    `);
+    stmt.run(
+      sr_no || '', roll_no || '', name.trim(), father_name || '', mother_name || '',
+      class_name, section || 'A', gender, category || 'GEN', dob || '', phone || '',
+      address || 'राजलदेसर', admission_date || '', status || 'Active', req.params.id
+    );
+    res.json({ success: true, message: "विद्यार्थी विवरण सफलतापूर्वक अपडेट हो गया!" });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.delete('/api/admin/students/:id', adminAuth, (req, res) => {
+  try {
+    db.prepare('DELETE FROM students WHERE id = ?').run(req.params.id);
+    res.json({ success: true, message: "विद्यार्थी रिकॉर्ड हटा दिया गया।" });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Bulk Import Students (accepts array of student objects from CSV/Excel parsing)
+app.post('/api/admin/students/bulk', adminAuth, (req, res) => {
+  try {
+    const { students } = req.body;
+    if (!Array.isArray(students) || students.length === 0) {
+      return res.status(400).json({ success: false, message: "आयात करने के लिए वैध विद्यार्थी डेटा सूची प्रदान करें।" });
+    }
+    const insertStmt = db.prepare(`
+      INSERT INTO students (sr_no, roll_no, name, father_name, mother_name, class_name, section, gender, category, dob, phone, address, admission_date, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    let importedCount = 0;
+    for (const s of students) {
+      const name = s.name || s['Name'] || s['नाम'] || s['Student Name'];
+      const className = s.class_name || s['Class'] || s['कक्षा'] || 'Class 1';
+      if (name) {
+        insertStmt.run(
+          s.sr_no || s['SR No'] || s['sr_no'] || s['एसआर नंबर'] || '',
+          s.roll_no || s['Roll No'] || s['roll_no'] || s['रोल नंबर'] || '',
+          String(name).trim(),
+          s.father_name || s["Father's Name"] || s['father_name'] || s['पिता का नाम'] || '',
+          s.mother_name || s["Mother's Name"] || s['mother_name'] || s['माता का नाम'] || '',
+          className,
+          s.section || s['Section'] || s['सेक्शन'] || 'A',
+          s.gender || s['Gender'] || s['लिंग'] || 'Girl',
+          s.category || s['Category'] || s['वर्ग'] || 'GEN',
+          s.dob || s['DOB'] || s['जन्म तिथि'] || '',
+          s.phone || s['Phone'] || s['मोबाइल'] || '',
+          s.address || s['Address'] || s['पता'] || 'राजलदेसर',
+          s.admission_date || s['Admission Date'] || s['प्रवेश तिथि'] || new Date().toISOString().split('T')[0],
+          s.status || s['Status'] || 'Active'
+        );
+        importedCount++;
+      }
+    }
+    res.json({ success: true, count: importedCount, message: `सफलतापूर्वक ${importedCount} विद्यार्थियों का डेटा आयात (Import) किया गया।` });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Search, Award, GraduationCap, Phone, Mail, BookOpen, ZoomIn, X } from 'lucide-react';
+import { Users, Search, Award, GraduationCap, Phone, Mail, BookOpen, ZoomIn, X, ExternalLink, Globe, KeyRound } from 'lucide-react';
 
 export default function Teachers() {
   const [teachers, setTeachers] = useState([]);
@@ -60,6 +60,56 @@ export default function Teachers() {
           <p className="text-slate-300 text-sm leading-relaxed">
             पीएम श्री यूनियन क्लब विद्यालय में उच्च योग्यताधारी, समर्पित एवं नवाचारी शिक्षकों की टीम है जो प्रत्येक छात्रा के सर्वांगीण विकास हेतु निरंतर प्रयासरत हैं।
           </p>
+        </div>
+      </div>
+
+      {/* Faculty Quick Portal Access: Shala Darpan & SSO Rajasthan Direct Links */}
+      <div className="bg-gradient-to-r from-orange-50 via-white to-emerald-50 rounded-2xl p-5 sm:p-6 shadow-md border-2 border-orange-200/70">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <span className="text-[11px] font-black text-orange-600 uppercase tracking-widest flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-orange-600 animate-ping"></span>
+              <span>शिक्षक त्वरित लॉगिन पोर्टल (Faculty Quick Access Links)</span>
+            </span>
+            <h3 className="text-base sm:text-lg font-black text-blue-950">
+              शाला दर्पण (Shala Darpan) एवं राजस्थान SSO सीधे लॉगिन
+            </h3>
+            <p className="text-xs text-slate-600">
+              शिक्षकगण दैनिक कार्य, स्टाफ कॉर्नर, ऑनलाइन उपस्थिति एवं प्रशासनिक कार्यों हेतु नीचे दिए गए लिंक से सीधे लॉगिन कर सकते हैं।
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Shala Darpan Button */}
+            <a
+              href="https://rajshaladarpan.nic.in/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-gradient-to-r from-blue-900 to-indigo-950 hover:from-blue-800 hover:to-indigo-900 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition shadow-md flex items-center gap-2 border border-blue-700 group shrink-0"
+            >
+              <Globe className="w-4 h-4 text-amber-400 group-hover:rotate-12 transition-transform" />
+              <div className="text-left">
+                <div className="text-[10px] text-amber-300 leading-none">राजस्थान शिक्षा विभाग</div>
+                <div className="text-xs font-black">शाला दर्पण (Shala Darpan)</div>
+              </div>
+              <ExternalLink className="w-3.5 h-3.5 text-slate-300 ml-1" />
+            </a>
+
+            {/* Rajasthan SSO Button */}
+            <a
+              href="https://sso.rajasthan.gov.in/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition shadow-md flex items-center gap-2 border border-orange-400 group shrink-0"
+            >
+              <KeyRound className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
+              <div className="text-left">
+                <div className="text-[10px] text-orange-100 leading-none">Government of Rajasthan</div>
+                <div className="text-xs font-black">राजस्थान SSO लॉगिन</div>
+              </div>
+              <ExternalLink className="w-3.5 h-3.5 text-white/80 ml-1" />
+            </a>
+          </div>
         </div>
       </div>
 

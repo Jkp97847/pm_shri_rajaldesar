@@ -96,11 +96,34 @@ function initDB() {
       date TEXT NOT NULL,
       status TEXT DEFAULT 'unread'
     );
+
+    CREATE TABLE IF NOT EXISTS students (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      sr_no TEXT,
+      roll_no TEXT,
+      name TEXT NOT NULL,
+      father_name TEXT,
+      mother_name TEXT,
+      class_name TEXT NOT NULL,
+      section TEXT DEFAULT 'A',
+      gender TEXT NOT NULL,
+      category TEXT DEFAULT 'GEN',
+      dob TEXT,
+      phone TEXT,
+      address TEXT,
+      admission_date TEXT,
+      status TEXT DEFAULT 'Active'
+    );
   `);
 
   // Migrate gallery columns for video support if not existing
   try { db.exec("ALTER TABLE gallery ADD COLUMN media_type TEXT DEFAULT 'image'"); } catch (e) {}
   try { db.exec("ALTER TABLE gallery ADD COLUMN video_url TEXT DEFAULT ''"); } catch (e) {}
+
+  // Migrate sports_events columns for winner details, news, and video
+  try { db.exec("ALTER TABLE sports_events ADD COLUMN winner_details TEXT DEFAULT ''"); } catch (e) {}
+  try { db.exec("ALTER TABLE sports_events ADD COLUMN news_content TEXT DEFAULT ''"); } catch (e) {}
+  try { db.exec("ALTER TABLE sports_events ADD COLUMN video_url TEXT DEFAULT ''"); } catch (e) {}
 
   // Seed sample inquiries if empty
   const countInquiries = db.prepare('SELECT count(*) as count FROM inquiries').get().count;
@@ -139,9 +162,24 @@ function initDB() {
     db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run('school_name', 'PM SHRI UNION CLUB GOVT GIRLS SENIOR SECONDARY SCHOOL');
     db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run('school_location', 'Rajaldesar, Churu, Rajasthan - 331801');
     db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run('udise_code', '08040700105');
-    db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run('principal_name', 'Dr. Saroj Sharma (Principal)');
+    db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run('principal_name', 'MOHAN LAL (Principal)');
     db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run('contact_phone', '+91 1564 220145');
     db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run('contact_email', 'ggsss.rajaldesar@gmail.com');
+  }
+
+  // Default Library Settings
+  const defaultLibrarySettings = [
+    ['library_photo', 'https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=1000&q=80'],
+    ['librarian_name', 'श्रीमती विमला शर्मा (Librarian / पुस्तकालयाध्यक्ष)'],
+    ['librarian_photo', 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=500&q=80'],
+    ['librarian_message', 'पुस्तकालय ज्ञान और विद्या का जीवंत स्रोत है। अध्ययन और स्वाध्याय की आदत छात्राओं के दृष्टिकोण को व्यापक बनाकर उन्हें जीवन के प्रत्येक क्षेत्र में आत्मनिर्भर और सफल बनाती है। हमारे विद्यालय का समृद्ध वाचनालय एवं डिजिटल लाइब्रेरी सभी बालिकाओं के सर्वांगीण विकास हेतु सदैव तत्पर है।'],
+    ['library_total_books', '5,420+ पुस्तकें']
+  ];
+  for (const [k, v] of defaultLibrarySettings) {
+    const ex = db.prepare('SELECT value FROM settings WHERE key = ?').get(k);
+    if (!ex) {
+      db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run(k, v);
+    }
   }
 
   // Seed Notices if empty
@@ -759,6 +797,105 @@ function initDB() {
     insertLib.run("NEET भौतिकी एवं रसायन विज्ञान गाइड", "Dr. H.C. Verma", "Competitive", 12, "https://ndl.iitkgp.ac.in", "चिकित्सा प्रवेश परीक्षा हेतु संदर्भ सामग्री");
     insertLib.run("गोदान एवं कर्मभूमि", "मुंशी प्रेमचंद", "Literature", 8, "", "हिंदी साहित्य के कालजयी उपन्यास");
     insertLib.run("अग्नि की उड़ान (Wings of Fire)", "डॉ. ए.पी.जे. अब्दुल कलाम", "Literature", 10, "", "छात्राओं के लिए प्रेरणादायी आत्मकथा");
+  }
+
+  // Update existing sports_events with winner details, news, and video if empty
+  try {
+    db.prepare(`
+      UPDATE sports_events 
+      SET winner_details = ?, news_content = ?, video_url = ?
+      WHERE sport_name = 'Kho-Kho' AND (winner_details IS NULL OR winner_details = '')
+    `).run(
+      'स्वर्ण पदक विजेता टीम (जिला चैंपियन): मनीषा प्रजापत (कप्तान), पूजा कंवर, सरिता मेघवाल, सुमन शर्मा, रेखा चौधरी, कोमल सैनी, वर्षा पारीक',
+      'चूरू जिला विद्यालयी क्रीड़ा प्रतियोगिता में पीएम श्री विद्यालय राजलदेसर की टीम ने सरदारशहर को रोमांचक मुकाबले में 14-8 अंकों से हराकर जिला खिताब अपने नाम किया।',
+      'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+    );
+    db.prepare(`
+      UPDATE sports_events 
+      SET winner_details = ?, news_content = ?, video_url = ?
+      WHERE sport_name = 'Kabaddi' AND (winner_details IS NULL OR winner_details = '')
+    `).run(
+      'रजत पदक विजेता एवं राज्य चयन: प्रियंका पारीक, अनीता जाट, खुशबू शेखावत, ज्योति स्वामी',
+      'राज्य स्तरीय 67वीं शालेय कबड्डी चयन ट्रायल में उत्कृष्ट प्रदर्शन पर विद्यालय की 4 बालिकाओं का चयन राज्य स्तरीय प्रशिक्षण शिविर हेतु किया गया।',
+      ''
+    );
+  } catch (e) {}
+
+  // Seed Students if empty
+  const studentsCount = db.prepare('SELECT COUNT(*) as c FROM students').get().c;
+  if (studentsCount === 0) {
+    const defaultStudents = [
+      // Nursery
+      { sr_no: 'SR-1001', roll_no: 'NUR-01', name: 'आरव प्रजापत', father_name: 'सुरेश कुमार प्रजापत', mother_name: 'कमला देवी', class_name: 'Nursery', section: 'A', gender: 'Boy', category: 'OBC', dob: '2022-04-12', phone: '9829100101', address: 'वार्ड 12, राजलदेसर' },
+      { sr_no: 'SR-1002', roll_no: 'NUR-02', name: 'दीया शर्मा', father_name: 'राकेश शर्मा', mother_name: 'सुनीता देवी', class_name: 'Nursery', section: 'A', gender: 'Girl', category: 'GEN', dob: '2022-06-25', phone: '9414200202', address: 'स्टेशन रोड, राजलदेसर' },
+      // LKG
+      { sr_no: 'SR-1003', roll_no: 'LKG-01', name: 'लक्ष्य मेघवाल', father_name: 'ओमप्रकाश मेघवाल', mother_name: 'शांति देवी', class_name: 'LKG', section: 'A', gender: 'Boy', category: 'SC', dob: '2021-03-15', phone: '9950300303', address: 'वार्ड 05, राजलदेसर' },
+      { sr_no: 'SR-1004', roll_no: 'LKG-02', name: 'अनाया बानो', father_name: 'मोहम्मद आरिफ', mother_name: 'शबाना', class_name: 'LKG', section: 'A', gender: 'Girl', category: 'OBC', dob: '2021-07-20', phone: '9784400404', address: 'किला बास, राजलदेसर' },
+      // UKG
+      { sr_no: 'SR-1005', roll_no: 'UKG-01', name: 'खुशी कंवर', father_name: 'भंवर सिंह', mother_name: 'मंजू कंवर', class_name: 'UKG', section: 'A', gender: 'Girl', category: 'GEN', dob: '2020-05-10', phone: '9460500505', address: 'राजपूत मौहल्ला, राजलदेसर' },
+      { sr_no: 'SR-1006', roll_no: 'UKG-02', name: 'रोहित मीणा', father_name: 'रामलाल मीणा', mother_name: 'सीता देवी', class_name: 'UKG', section: 'A', gender: 'Boy', category: 'ST', dob: '2020-09-08', phone: '9610600606', address: 'वार्ड 18, राजलदेसर' },
+      // Class 1
+      { sr_no: 'SR-1007', roll_no: '101', name: 'प्रिया प्रजापत', father_name: 'जगदीश प्रसाद', mother_name: 'संतोष देवी', class_name: 'Class 1', section: 'A', gender: 'Girl', category: 'OBC', dob: '2019-02-14', phone: '9784730824', address: 'कुम्हार बास, राजलदेसर' },
+      { sr_no: 'SR-1008', roll_no: '102', name: 'अमन खान', father_name: 'फारूक खान', mother_name: 'नसीमा', class_name: 'Class 1', section: 'A', gender: 'Boy', category: 'OBC', dob: '2019-08-19', phone: '9828800808', address: 'मदीना मस्जिद रोड, राजलदेसर' },
+      // Class 2
+      { sr_no: 'SR-1009', roll_no: '201', name: 'कविता स्वामी', father_name: 'महावीर प्रसाद स्वामी', mother_name: 'सुमन देवी', class_name: 'Class 2', section: 'A', gender: 'Girl', category: 'OBC', dob: '2018-03-22', phone: '9413900909', address: 'वार्ड 08, राजलदेसर' },
+      { sr_no: 'SR-1010', roll_no: '202', name: 'राहुल गुर्जर', father_name: 'धर्मपाल गुर्जर', mother_name: 'कौशल्या', class_name: 'Class 2', section: 'A', gender: 'Boy', category: 'MBC', dob: '2018-11-05', phone: '9461100110', address: 'गुर्जर बस्ती, राजलदेसर' },
+      // Class 3
+      { sr_no: 'SR-1011', roll_no: '301', name: 'आरती पारीक', father_name: 'घनश्याम पारीक', mother_name: 'भगवती देवी', class_name: 'Class 3', section: 'A', gender: 'Girl', category: 'EWS', dob: '2017-01-30', phone: '9928120120', address: 'ब्राह्मण बास, राजलदेसर' },
+      { sr_no: 'SR-1012', roll_no: '302', name: 'विकास नायक', father_name: 'कालूराम नायक', mother_name: 'रतन देवी', class_name: 'Class 3', section: 'A', gender: 'Boy', category: 'SC', dob: '2017-07-11', phone: '9672130130', address: 'नायक मौहल्ला, राजलदेसर' },
+      // Class 4
+      { sr_no: 'SR-1013', roll_no: '401', name: 'संगीता जाट', father_name: 'हनुमान राम जाट', mother_name: 'कृष्णा देवी', class_name: 'Class 4', section: 'A', gender: 'Girl', category: 'OBC', dob: '2016-04-18', phone: '9414140140', address: 'वार्ड 14, राजलदेसर' },
+      { sr_no: 'SR-1014', roll_no: '402', name: 'सुमित टेलर', father_name: 'बाबूलाल टेलर', mother_name: 'विमला देवी', class_name: 'Class 4', section: 'A', gender: 'Boy', category: 'OBC', dob: '2016-10-09', phone: '9783150150', address: 'बाजार रोड, राजलदेसर' },
+      // Class 5
+      { sr_no: 'SR-1015', roll_no: '501', name: 'मनीषा सैनी', father_name: 'गजानंद सैनी', mother_name: 'तारा देवी', class_name: 'Class 5', section: 'A', gender: 'Girl', category: 'OBC', dob: '2015-05-25', phone: '9462160160', address: 'सैनी बास, राजलदेसर' },
+      { sr_no: 'SR-1016', roll_no: '502', name: 'योगेश कुमार', father_name: 'विनोद कुमार', mother_name: 'सविता देवी', class_name: 'Class 5', section: 'A', gender: 'Boy', category: 'GEN', dob: '2015-12-14', phone: '9829170170', address: 'वार्ड 02, राजलदेसर' },
+      // Class 6
+      { sr_no: 'SR-1017', roll_no: '601', name: 'पूजा कंवर', father_name: 'सज्जन सिंह', mother_name: 'पार्वती देवी', class_name: 'Class 6', section: 'A', gender: 'Girl', category: 'GEN', dob: '2014-06-03', phone: '9982180180', address: 'वार्ड 07, राजलदेसर' },
+      { sr_no: 'SR-1018', roll_no: '602', name: 'अंजलि मेघवाल', father_name: 'मदनलाल मेघवाल', mother_name: 'गीता देवी', class_name: 'Class 6', section: 'A', gender: 'Girl', category: 'SC', dob: '2014-09-17', phone: '9785190190', address: 'वार्ड 11, राजलदेसर' },
+      // Class 7
+      { sr_no: 'SR-1019', roll_no: '701', name: 'भावना दाधीच', father_name: 'सत्यनारायण दाधीच', mother_name: 'उमा देवी', class_name: 'Class 7', section: 'A', gender: 'Girl', category: 'GEN', dob: '2013-03-28', phone: '9414200210', address: 'दाधीच मौहल्ला, राजलदेसर' },
+      { sr_no: 'SR-1020', roll_no: '702', name: 'सुरभि शर्मा', father_name: 'पवन कुमार शर्मा', mother_name: 'गायत्री देवी', class_name: 'Class 7', section: 'A', gender: 'Girl', category: 'EWS', dob: '2013-11-12', phone: '9610210220', address: 'स्टेशन रोड, राजलदेसर' },
+      // Class 8
+      { sr_no: 'SR-1021', roll_no: '801', name: 'रितिका प्रजापत', father_name: 'भगवानाराम प्रजापत', mother_name: 'विद्या देवी', class_name: 'Class 8', section: 'A', gender: 'Girl', category: 'OBC', dob: '2012-01-19', phone: '9460220230', address: 'वार्ड 15, राजलदेसर' },
+      { sr_no: 'SR-1022', roll_no: '802', name: 'मुस्कान बानो', father_name: 'सलीम अहमद', mother_name: 'रुकसाना', class_name: 'Class 8', section: 'A', gender: 'Girl', category: 'OBC', dob: '2012-08-04', phone: '9929230240', address: 'वार्ड 03, राजलदेसर' },
+      // Class 9
+      { sr_no: 'SR-1023', roll_no: '901', name: 'सुमन चौधरी', father_name: 'रामेश्वरलाल चौधरी', mother_name: 'कमलेश देवी', class_name: 'Class 9', section: 'A', gender: 'Girl', category: 'OBC', dob: '2011-04-09', phone: '9828240250', address: 'वार्ड 21, राजलदेसर' },
+      { sr_no: 'SR-1024', roll_no: '902', name: 'मोनिका सोनी', father_name: 'कैलाश चंद सोनी', mother_name: 'सरोज देवी', class_name: 'Class 9', section: 'A', gender: 'Girl', category: 'OBC', dob: '2011-10-23', phone: '9784250260', address: 'सोनी बास, राजलदेसर' },
+      // Class 10
+      { sr_no: 'SR-1025', roll_no: '1001', name: 'तन्वी पारीक', father_name: 'राजेन्द्र कुमार पारीक', mother_name: 'मंजू देवी', class_name: 'Class 10', section: 'A', gender: 'Girl', category: 'GEN', dob: '2010-02-15', phone: '9413260270', address: 'वार्ड 09, राजलदेसर' },
+      { sr_no: 'SR-1026', roll_no: '1002', name: 'पूजा कंवर शेखावत', father_name: 'विजय सिंह शेखावत', mother_name: 'सुमन कंवर', class_name: 'Class 10', section: 'A', gender: 'Girl', category: 'GEN', dob: '2010-07-29', phone: '9672270280', address: 'वार्ड 16, राजलदेसर' },
+      { sr_no: 'SR-1027', roll_no: '1003', name: 'किरण मेघवाल', father_name: 'सुरेंद्र कुमार', mother_name: 'लक्ष्मी देवी', class_name: 'Class 10', section: 'A', gender: 'Girl', category: 'SC', dob: '2010-11-11', phone: '9461280290', address: 'वार्ड 04, राजलदेसर' },
+      // Class 11 Arts
+      { sr_no: 'SR-1028', roll_no: '1101', name: 'अनिता बिश्नोई', father_name: 'भागीरथ बिश्नोई', mother_name: 'शांति देवी', class_name: 'Class 11 Arts', section: 'A', gender: 'Girl', category: 'OBC', dob: '2009-03-05', phone: '9950290300', address: 'वार्ड 13, राजलदेसर' },
+      { sr_no: 'SR-1029', roll_no: '1102', name: 'नेहा सैन', father_name: 'सुरेश सैन', mother_name: 'लीला देवी', class_name: 'Class 11 Arts', section: 'A', gender: 'Girl', category: 'OBC', dob: '2009-08-16', phone: '9829300310', address: 'वार्ड 01, राजलदेसर' },
+      // Class 11 Science
+      { sr_no: 'SR-1030', roll_no: '1111', name: 'प्रियंका शर्मा', father_name: 'दिनेश कुमार शर्मा', mother_name: 'सुनीता शर्मा', class_name: 'Class 11 Science', section: 'A', gender: 'Girl', category: 'GEN', dob: '2009-01-20', phone: '9414310320', address: 'स्टेशन रोड, राजलदेसर' },
+      { sr_no: 'SR-1031', roll_no: '1112', name: 'दिव्या प्रजापत', father_name: 'गोपाल राम प्रजापत', mother_name: 'कृष्णा देवी', class_name: 'Class 11 Science', section: 'A', gender: 'Girl', category: 'OBC', dob: '2009-06-30', phone: '9784320330', address: 'वार्ड 10, राजलदेसर' },
+      // Class 11 Commerce
+      { sr_no: 'SR-1032', roll_no: '1121', name: 'खुशबू अग्रवाल', father_name: 'अनिल अग्रवाल', mother_name: 'रेखा अग्रवाल', class_name: 'Class 11 Commerce', section: 'A', gender: 'Girl', category: 'GEN', dob: '2009-05-14', phone: '9460330340', address: 'मुख्य बाजार, राजलदेसर' },
+      { sr_no: 'SR-1033', roll_no: '1122', name: 'मीनाक्षी सारस्वत', father_name: 'नरेश सारस्वत', mother_name: 'अनुराधा देवी', class_name: 'Class 11 Commerce', section: 'A', gender: 'Girl', category: 'EWS', dob: '2009-12-08', phone: '9610340350', address: 'वार्ड 17, राजलदेसर' },
+      // Class 12 Arts
+      { sr_no: 'SR-1034', roll_no: '1201', name: 'मोनिका कंवर', father_name: 'भेरू सिंह', mother_name: 'कमलेश कंवर', class_name: 'Class 12 Arts', section: 'A', gender: 'Girl', category: 'GEN', dob: '2008-04-10', phone: '9928350360', address: 'वार्ड 20, राजलदेसर' },
+      { sr_no: 'SR-1035', roll_no: '1202', name: 'सीमा नायक', father_name: 'भंवरलाल नायक', mother_name: 'धापू देवी', class_name: 'Class 12 Arts', section: 'A', gender: 'Girl', category: 'SC', dob: '2008-09-24', phone: '9783360370', address: 'नायक बास, राजलदेसर' },
+      // Class 12 Science
+      { sr_no: 'SR-1036', roll_no: '260101', name: 'पूजा स्वामी', father_name: 'सुरेश कुमार स्वामी', mother_name: 'सरोज देवी', class_name: 'Class 12 Science', section: 'A', gender: 'Girl', category: 'OBC', dob: '2008-02-18', phone: '9414370380', address: 'वार्ड 06, राजलदेसर' },
+      { sr_no: 'SR-1037', roll_no: '260102', name: 'मनीषा शर्मा', father_name: 'रमेश चंद्र शर्मा', mother_name: 'प्रेमलता देवी', class_name: 'Class 12 Science', section: 'A', gender: 'Girl', category: 'GEN', dob: '2008-07-07', phone: '9828380390', address: 'स्टेशन रोड, राजलदेसर' },
+      // Class 12 Commerce
+      { sr_no: 'SR-1038', roll_no: '1221', name: 'रिया सिंघल', father_name: 'सुभाष सिंघल', mother_name: 'रंजना सिंघल', class_name: 'Class 12 Commerce', section: 'A', gender: 'Girl', category: 'GEN', dob: '2008-05-12', phone: '9462390400', address: 'बाजार चौक, राजलदेसर' },
+      { sr_no: 'SR-1039', roll_no: '1222', name: 'सलोनी भाटी', father_name: 'प्रहलाद भाटी', mother_name: 'संतोष भाटी', class_name: 'Class 12 Commerce', section: 'A', gender: 'Girl', category: 'OBC', dob: '2008-11-20', phone: '9672400410', address: 'वार्ड 19, राजलदेसर' }
+    ];
+
+    const insertStudent = db.prepare(`
+      INSERT INTO students (sr_no, roll_no, name, father_name, mother_name, class_name, section, gender, category, dob, phone, address, admission_date, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    for (const s of defaultStudents) {
+      insertStudent.run(
+        s.sr_no, s.roll_no, s.name, s.father_name, s.mother_name, s.class_name,
+        s.section || 'A', s.gender, s.category || 'GEN', s.dob || '', s.phone || '',
+        s.address || 'राजलदेसर', '2025-07-01', 'Active'
+      );
+    }
   }
 
   console.log("Database initialized successfully with PM SHRI Rajaldesar data.");

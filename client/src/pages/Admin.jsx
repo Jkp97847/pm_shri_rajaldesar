@@ -5,9 +5,11 @@ import {
   Plus, Trash2, Upload, CheckCircle2, AlertCircle, RefreshCw, Eye,
   Building, Settings, Save, MapPin, Calendar, Video, Trophy, BookOpen, Clock, FileText,
   MessageSquare, Mail, PhoneCall, CheckCheck, MessageCircle, Pencil, X,
-  KeyRound, HelpCircle, GraduationCap
+  KeyRound, HelpCircle, GraduationCap, UserCheck, Printer, Download
 } from 'lucide-react';
 import { useSchool } from '../context/SchoolContext';
+import AdminStudentsTab from '../components/admin/AdminStudentsTab';
+import AdminLibraryTab from '../components/admin/AdminLibraryTab';
 
 export default function Admin() {
   const { settings, refreshSettings } = useSchool();
@@ -95,8 +97,27 @@ export default function Admin() {
   const [newTimetable, setNewTimetable] = useState({ title: '', class_name: 'All Classes', type: 'Exam', date: new Date().toISOString().split('T')[0], schedule_details: '' });
   const [timetableFile, setTimetableFile] = useState(null);
 
-  const [newSport, setNewSport] = useState({ title: '', sport_name: 'Kho-Kho', level: 'जिला स्तर', date: new Date().toISOString().split('T')[0], description: '', image_url: '' });
+  const [newSport, setNewSport] = useState({ 
+    title: '', 
+    sport_name: 'Kho-Kho', 
+    level: 'जिला स्तर', 
+    date: new Date().toISOString().split('T')[0], 
+    description: '', 
+    image_url: '', 
+    winner_details: '', 
+    news_content: '', 
+    video_url: '' 
+  });
   const [sportFile, setSportFile] = useState(null);
+
+  // Additional Admin states for Students, Teachers & Results bulk/print
+  const [studentsCount, setStudentsCount] = useState(0);
+  const [isTeacherBulkModalOpen, setIsTeacherBulkModalOpen] = useState(false);
+  const [teacherBulkCsvText, setTeacherBulkCsvText] = useState('');
+  const [isTeacherPrintModalOpen, setIsTeacherPrintModalOpen] = useState(false);
+
+  const [isResultBulkModalOpen, setIsResultBulkModalOpen] = useState(false);
+  const [resultBulkCsvText, setResultBulkCsvText] = useState('');
 
   const [newBook, setNewBook] = useState({ title: '', author: '', category: 'NCERT', total_copies: 1, digital_link: '', description: '' });
 
@@ -248,6 +269,11 @@ export default function Admin() {
     fetch('/api/library')
       .then(res => res.json())
       .then(d => { if (d.success) setLibrary(d.books); });
+
+    fetch('/api/students/stats')
+      .then(res => res.json())
+      .then(d => { if (d.success && d.stats) setStudentsCount(d.stats.total); })
+      .catch(() => {});
 
     if (token) {
       fetch('/api/admin/inquiries', {
@@ -800,6 +826,9 @@ export default function Admin() {
     formData.append('date', newSport.date);
     formData.append('description', newSport.description);
     formData.append('image_url', newSport.image_url);
+    formData.append('winner_details', newSport.winner_details || '');
+    formData.append('news_content', newSport.news_content || '');
+    formData.append('video_url', newSport.video_url || '');
     if (sportFile) {
       formData.append('image_file', sportFile);
     }
@@ -817,7 +846,7 @@ export default function Admin() {
         setUploading(false);
         if (data.success) {
           showMsg(editingSportId ? "खेलकूद रिकॉर्ड सफलतापूर्वक अपडेट हो गया!" : "खेलकूद गतिविधि / पदक विवरण सफलतापूर्वक जुड़ गया!");
-          setNewSport({ title: '', sport_name: 'Kho-Kho', level: 'जिला स्तर', date: new Date().toISOString().split('T')[0], description: '', image_url: '' });
+          setNewSport({ title: '', sport_name: 'Kho-Kho', level: 'जिला स्तर', date: new Date().toISOString().split('T')[0], description: '', image_url: '', winner_details: '', news_content: '', video_url: '' });
           setSportFile(null);
           setEditingSportId(null);
           loadAllData();
@@ -839,7 +868,10 @@ export default function Admin() {
       level: s.level,
       date: s.date,
       description: s.description || '',
-      image_url: s.image_url || ''
+      image_url: s.image_url || '',
+      winner_details: s.winner_details || '',
+      news_content: s.news_content || '',
+      video_url: s.video_url || ''
     });
     setSportFile(null);
     showMsg(`खेलकूद रिकॉर्ड '${s.title}' संपादित कर रहे हैं।`, "info");
@@ -847,7 +879,7 @@ export default function Admin() {
 
   const cancelEditSport = () => {
     setEditingSportId(null);
-    setNewSport({ title: '', sport_name: 'Kho-Kho', level: 'जिला स्तर', date: new Date().toISOString().split('T')[0], description: '', image_url: '' });
+    setNewSport({ title: '', sport_name: 'Kho-Kho', level: 'जिला स्तर', date: new Date().toISOString().split('T')[0], description: '', image_url: '', winner_details: '', news_content: '', video_url: '' });
     setSportFile(null);
   };
 
@@ -959,6 +991,250 @@ export default function Admin() {
       .then(data => {
         showMsg("संदेश हटा दिया गया।");
         loadAllData();
+      });
+  };
+
+  // 9. TEACHER BULK IMPORT & EXPORT HANDLERS
+  const handleExportTeachersCSV = () => {
+    if (teachers.length === 0) {
+      showMsg("एक्सपोर्ट करने के लिए शिक्षक डेटा उपलब्ध नहीं है।", "error");
+      return;
+    }
+    const headers = ["Name", "Designation", "Department", "Qualification", "Experience", "Phone", "Photo"];
+    const rows = teachers.map(t => [
+      `"${t.name || ''}"`,
+      `"${t.designation || ''}"`,
+      `"${t.department || ''}"`,
+      `"${t.qualification || ''}"`,
+      `"${t.experience || ''}"`,
+      `"${t.phone || ''}"`,
+      `"${t.photo || ''}"`
+    ]);
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `PM_SHRI_Teachers_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showMsg("शिक्षक डेटा CSV फ़ाइल में सफलतापूर्वक डाउनलोड हुआ!");
+  };
+
+  const handleDownloadTeacherSampleCSV = () => {
+    const headers = ["Name", "Designation", "Department", "Qualification", "Experience", "Phone"];
+    const sampleRows = [
+      ["श्री मोहन लाल", "प्रधानाचार्य (Principal)", "Administration", "M.A., B.Ed, RSCIT", "24 वर्ष", "9414894845"],
+      ["श्रीमती विमला चौधरी", "उप-प्रधानाचार्य (Vice Principal)", "Administration", "B.A., M.A., B.Ed.", "14 वर्ष", "9460927989"]
+    ];
+    const csvContent = "\uFEFF" + [headers.join(","), ...sampleRows.map(r => r.map(c => `"${c}"`).join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "Sample_Teachers_Import_Template.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleProcessTeacherBulkImport = () => {
+    if (!teacherBulkCsvText.trim()) {
+      showMsg("कृपया CSV डेटा दर्ज करें।", "error");
+      return;
+    }
+    const lines = teacherBulkCsvText.trim().split(/\r\n|\n/);
+    if (lines.length < 2) {
+      showMsg("CSV फ़ाइल में कम से कम एक शीर्षक पंक्ति और एक डेटा पंक्ति होनी चाहिए।", "error");
+      return;
+    }
+    const parseCSVLine = (text) => {
+      const result = [];
+      let cur = '';
+      let inQuotes = false;
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        if (c === '"') inQuotes = !inQuotes;
+        else if (c === ',' && !inQuotes) { result.push(cur.trim()); cur = ''; }
+        else cur += c;
+      }
+      result.push(cur.trim());
+      return result;
+    };
+    const headers = parseCSVLine(lines[0]).map(h => h.replace(/^"|"$/g, '').trim().toLowerCase());
+    const teachersToImport = [];
+    for (let i = 1; i < lines.length; i++) {
+      if (!lines[i].trim()) continue;
+      const values = parseCSVLine(lines[i]).map(v => v.replace(/^"|"$/g, '').trim());
+      const row = {};
+      headers.forEach((h, idx) => { row[h] = values[idx] || ''; });
+      const name = row['name'] || row['शिक्षक का नाम'] || row['teacher name'] || '';
+      if (name) {
+        teachersToImport.push({
+          name,
+          designation: row['designation'] || row['पद'] || 'शिक्षक',
+          department: row['department'] || row['संकाय'] || 'General',
+          qualification: row['qualification'] || row['योग्यता'] || '',
+          experience: row['experience'] || row['अनुभव'] || '',
+          phone: row['phone'] || row['मोबाइल'] || '',
+          photo: row['photo'] || '/uploads/staff/blank-teacher.png'
+        });
+      }
+    }
+    if (teachersToImport.length === 0) {
+      showMsg("कोई वैध शिक्षक डेटा नहीं मिला।", "error");
+      return;
+    }
+    setUploading(true);
+    fetch('/api/admin/teachers/bulk', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-token': token },
+      body: JSON.stringify({ teachers: teachersToImport })
+    })
+      .then(res => res.json())
+      .then(data => {
+        setUploading(false);
+        if (data.success) {
+          showMsg(data.message || `${teachersToImport.length} शिक्षक रिकॉर्ड सफलतापूर्वक आयात किए गए!`);
+          setIsTeacherBulkModalOpen(false);
+          setTeacherBulkCsvText('');
+          loadAllData();
+        } else {
+          showMsg(data.message || "आयात में त्रुटि हुई", "error");
+        }
+      })
+      .catch(() => {
+        setUploading(false);
+        showMsg("सर्वर से संपर्क करने में समस्या आई।", "error");
+      });
+  };
+
+  // 10. RESULTS BULK IMPORT & EXPORT HANDLERS
+  const handleExportResultsCSV = () => {
+    if (results.length === 0) {
+      showMsg("एक्सपोर्ट करने के लिए परिणाम डेटा उपलब्ध नहीं है।", "error");
+      return;
+    }
+    const headers = ["Roll No", "Student Name", "Father Name", "Class", "Year", "Percentage", "Grade", "Status"];
+    const rows = results.map(r => [
+      `"${r.roll_no || ''}"`,
+      `"${r.student_name || ''}"`,
+      `"${r.father_name || ''}"`,
+      `"${r.class_name || ''}"`,
+      `"${r.year || '2025-2026'}"`,
+      `"${r.percentage || ''}"`,
+      `"${r.grade || ''}"`,
+      `"${r.status || 'PASS'}"`
+    ]);
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `PM_SHRI_Results_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showMsg("परीक्षा परिणाम डेटा CSV में सफलतापूर्वक डाउनलोड हुआ!");
+  };
+
+  const handleDownloadResultSampleCSV = () => {
+    const headers = ["Roll No", "Student Name", "Father Name", "Class", "Year", "Percentage", "Grade", "Status", "Hindi", "English", "Science", "Maths"];
+    const sampleRows = [
+      ["260105", "अंजू शर्मा", "दिनेश कुमार शर्मा", "10th Board", "2025-2026", "94.50", "Merit", "PASS", "95", "92", "96", "95"],
+      ["260106", "सुनीता प्रजापत", "रामगोपाल प्रजापत", "12th Science", "2025-2026", "91.80", "First Div", "PASS", "90", "88", "94", "95"]
+    ];
+    const csvContent = "\uFEFF" + [headers.join(","), ...sampleRows.map(r => r.map(c => `"${c}"`).join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "Sample_Results_Import_Template.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleProcessResultBulkImport = () => {
+    if (!resultBulkCsvText.trim()) {
+      showMsg("कृपया परिणाम CSV डेटा दर्ज करें।", "error");
+      return;
+    }
+    const lines = resultBulkCsvText.trim().split(/\r\n|\n/);
+    if (lines.length < 2) {
+      showMsg("CSV फ़ाइल में कम से कम एक शीर्षक पंक्ति और एक डेटा पंक्ति होनी चाहिए।", "error");
+      return;
+    }
+    const parseCSVLine = (text) => {
+      const result = [];
+      let cur = '';
+      let inQuotes = false;
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        if (c === '"') inQuotes = !inQuotes;
+        else if (c === ',' && !inQuotes) { result.push(cur.trim()); cur = ''; }
+        else cur += c;
+      }
+      result.push(cur.trim());
+      return result;
+    };
+    const headers = parseCSVLine(lines[0]).map(h => h.replace(/^"|"$/g, '').trim().toLowerCase());
+    const resultsToImport = [];
+    for (let i = 1; i < lines.length; i++) {
+      if (!lines[i].trim()) continue;
+      const values = parseCSVLine(lines[i]).map(v => v.replace(/^"|"$/g, '').trim());
+      const row = {};
+      headers.forEach((h, idx) => { row[h] = values[idx] || ''; });
+      const roll_no = row['roll no'] || row['roll_no'] || row['roll'] || row['रोल नंबर'] || '';
+      const name = row['student name'] || row['name'] || row['छात्र का नाम'] || '';
+      if (roll_no && name) {
+        const marksObj = {};
+        headers.forEach((h, idx) => {
+          if (!['roll no', 'roll_no', 'roll', 'student name', 'name', 'father name', "father's name", 'class', 'class name', 'year', 'percentage', 'grade', 'status'].includes(h)) {
+            if (values[idx]) {
+              marksObj[h] = values[idx];
+            }
+          }
+        });
+        resultsToImport.push({
+          roll_no: String(roll_no).trim(),
+          student_name: name,
+          father_name: row['father name'] || row["father's name"] || '',
+          class_name: row['class'] || row['class name'] || 'Class 10',
+          year: row['year'] || '2025-2026',
+          percentage: parseFloat(row['percentage'] || 0),
+          grade: row['grade'] || 'First Division',
+          status: row['status'] || 'PASS',
+          marks_details: marksObj
+        });
+      }
+    }
+    if (resultsToImport.length === 0) {
+      showMsg("कोई वैध परिणाम डेटा नहीं मिला।", "error");
+      return;
+    }
+    setUploading(true);
+    fetch('/api/admin/results/bulk', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-token': token },
+      body: JSON.stringify({ results: resultsToImport })
+    })
+      .then(res => res.json())
+      .then(data => {
+        setUploading(false);
+        if (data.success) {
+          showMsg(data.message || `${resultsToImport.length} परिणाम सफलतापूर्वक आयात किए गए! छात्र अब तुरंत परिणाम देख सकते हैं।`);
+          setIsResultBulkModalOpen(false);
+          setResultBulkCsvText('');
+          loadAllData();
+        } else {
+          showMsg(data.message || "आयात में त्रुटि हुई", "error");
+        }
+      })
+      .catch(() => {
+        setUploading(false);
+        showMsg("सर्वर से संपर्क करने में समस्या आई।", "error");
       });
   };
 
@@ -1294,14 +1570,15 @@ export default function Admin() {
       <div className="flex items-center gap-2 flex-wrap border-b border-slate-200 pb-2">
         {[
           { id: 'school_details', label: 'विद्यालय विवरण (Profile & Contact)', icon: Building },
-          { id: 'inquiries', label: `संदेश व पूछताछ (${inquiries.length})`, icon: MessageSquare, badge: inquiries.filter(i => i.status === 'unread').length },
-          { id: 'timetables', label: `समय सारणी (${timetables.length})`, icon: Calendar },
+          { id: 'students', label: `विद्यार्थी (${studentsCount})`, icon: UserCheck },
           { id: 'teachers', label: `शिक्षक (${teachers.length})`, icon: Users },
           { id: 'results', label: `परिणाम (${results.length})`, icon: Award },
-          { id: 'gallery', label: `फोटो व वीडियो (${gallery.length})`, icon: ImageIcon },
+          { id: 'library', label: 'पुस्तकालय (Library)', icon: BookOpen },
           { id: 'sports', label: `खेलकूद (${sports.length})`, icon: Trophy },
-          { id: 'library', label: `पुस्तकालय (${library.length})`, icon: BookOpen },
-          { id: 'notices', label: `सूचना पट्ट (${notices.length})`, icon: Bell }
+          { id: 'notices', label: `सूचना पट्ट (${notices.length})`, icon: Bell },
+          { id: 'gallery', label: `फोटो व वीडियो (${gallery.length})`, icon: ImageIcon },
+          { id: 'timetables', label: `समय सारणी (${timetables.length})`, icon: Calendar },
+          { id: 'inquiries', label: `संदेश व पूछताछ (${inquiries.length})`, icon: MessageSquare, badge: inquiries.filter(i => i.status === 'unread').length }
         ].map(tab => {
           const Icon = tab.icon;
           return (
@@ -1325,6 +1602,13 @@ export default function Admin() {
           );
         })}
       </div>
+
+      {/* ==================================================== */}
+      {/* TAB: STUDENTS MANAGER */}
+      {/* ==================================================== */}
+      {activeTab === 'students' && (
+        <AdminStudentsTab token={token} showMsg={showMsg} />
+      )}
 
       {/* ==================================================== */}
       {/* TAB 0: SCHOOL PROFILE & DETAILS MANAGER */}
@@ -2029,7 +2313,35 @@ export default function Admin() {
 
           {/* Existing Teachers List */}
           <div className="lg:col-span-7 bg-white p-6 rounded-2xl shadow-md border border-slate-200 space-y-4">
-            <h3 className="text-base font-bold text-blue-950">शिक्षक सूची ({teachers.length})</h3>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <h3 className="text-base font-bold text-blue-950">शिक्षक सूची ({teachers.length})</h3>
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => setIsTeacherBulkModalOpen(true)}
+                  className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition shadow-sm"
+                  title="CSV फ़ाइल से बल्क शिक्षक डेटा जोड़ें"
+                >
+                  <Upload className="w-3.5 h-3.5" /> बल्क इंपोर्ट (CSV)
+                </button>
+                <button
+                  type="button"
+                  onClick={handleExportTeachersCSV}
+                  className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-900 hover:bg-blue-950 text-white rounded-lg text-xs font-bold transition shadow-sm"
+                  title="सभी शिक्षक डेटा CSV डाउनलोड करें"
+                >
+                  <Download className="w-3.5 h-3.5" /> CSV एक्सपोर्ट
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsTeacherPrintModalOpen(true)}
+                  className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold transition shadow-sm"
+                  title="शिक्षक विवरणिका प्रिंट करें"
+                >
+                  <Printer className="w-3.5 h-3.5" /> प्रिंट
+                </button>
+              </div>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[500px] overflow-y-auto">
               {teachers.map(t => (
                 <div key={t.id} className="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between gap-3 text-xs">
@@ -2418,7 +2730,27 @@ export default function Admin() {
 
           {/* Existing Results List */}
           <div className="lg:col-span-7 bg-white p-6 rounded-2xl shadow-md border border-slate-200 space-y-4">
-            <h3 className="text-base font-bold text-blue-950">रिकॉर्डेड परिणाम ({results.length})</h3>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <h3 className="text-base font-bold text-blue-950">रिकॉर्डेड परिणाम ({results.length})</h3>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsResultBulkModalOpen(true)}
+                  className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition shadow-sm"
+                  title="CSV फ़ाइल से बल्क परिणाम अपलोड करें"
+                >
+                  <Upload className="w-3.5 h-3.5" /> बल्क परिणाम (CSV)
+                </button>
+                <button
+                  type="button"
+                  onClick={handleExportResultsCSV}
+                  className="flex items-center gap-1 px-2.5 py-1.5 bg-purple-700 hover:bg-purple-800 text-white rounded-lg text-xs font-bold transition shadow-sm"
+                  title="सभी परीक्षा परिणाम CSV डाउनलोड करें"
+                >
+                  <Download className="w-3.5 h-3.5" /> CSV एक्सपोर्ट
+                </button>
+              </div>
+            </div>
             <div className="space-y-2 max-h-[500px] overflow-y-auto text-xs">
               {results.map(r => (
                 <div key={r.id} className="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between gap-3">
@@ -2699,13 +3031,46 @@ export default function Admin() {
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">विवरण / पदक विजेता छात्राओं के नाम</label>
+                <label className="block font-bold text-slate-700 mb-1">विवरण (Description)</label>
                 <textarea
-                  rows={3}
-                  placeholder="विजेता छात्राओं के नाम और मैच का विवरण..."
+                  rows={2}
+                  placeholder="प्रतियोगिता या मैच का विवरण..."
                   value={newSport.description}
                   onChange={(e) => setNewSport({ ...newSport, description: e.target.value })}
                   className="w-full px-3 py-2 rounded-lg border border-slate-300"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">विजेता छात्राओं के नाम व पदक (Winners & Medals)</label>
+                <textarea
+                  rows={2}
+                  placeholder="उदा. स्वर्ण पदक: पूजा कड़वासरा, मनीषा, अंकिता; रजत पदक: सुमन..."
+                  value={newSport.winner_details || ''}
+                  onChange={(e) => setNewSport({ ...newSport, winner_details: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">समाचार / प्रेस विज्ञप्ति (News / Press Release)</label>
+                <textarea
+                  rows={2}
+                  placeholder="समाचार पत्र कवरेज या विशेष मुख्य बातें..."
+                  value={newSport.news_content || ''}
+                  onChange={(e) => setNewSport({ ...newSport, news_content: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">यूट्यूब वीडियो लिंक (YouTube / Video URL)</label>
+                <input
+                  type="url"
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  value={newSport.video_url || ''}
+                  onChange={(e) => setNewSport({ ...newSport, video_url: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 font-mono text-xs"
                 />
               </div>
 
@@ -2759,6 +3124,22 @@ export default function Admin() {
                       </div>
                       <p className="font-bold text-slate-900">{s.title}</p>
                       {s.description && <p className="text-slate-600 text-[11px] leading-relaxed">{s.description}</p>}
+                      {s.winner_details && (
+                        <div className="bg-amber-50 border border-amber-200 rounded p-1.5 text-[10px] text-amber-900 flex items-start gap-1">
+                          <Trophy className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                          <span><strong>विजेता:</strong> {s.winner_details}</span>
+                        </div>
+                      )}
+                      {s.news_content && (
+                        <p className="text-slate-500 text-[10px] line-clamp-1 italic">
+                          <strong>समाचार:</strong> {s.news_content}
+                        </p>
+                      )}
+                      {s.video_url && (
+                        <a href={s.video_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[10px] text-red-600 font-bold hover:underline">
+                          <Video className="w-3 h-3" /> वीडियो लिंक ↗
+                        </a>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
@@ -2787,151 +3168,282 @@ export default function Admin() {
       {/* ==================================================== */}
       {/* TAB 7: LIBRARY BOOKS & RESOURCES MANAGER */}
       {/* ==================================================== */}
+      {/* ==================================================== */}
+      {/* TAB 7: LIBRARY SETTINGS & DIGITAL PORTAL */}
+      {/* ==================================================== */}
       {activeTab === 'library' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Add / Edit Book Form */}
-          <div className="lg:col-span-5 bg-white p-6 rounded-2xl shadow-md border border-slate-200 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-blue-950 flex items-center gap-2">
-                {editingBookId ? <Pencil className="w-4 h-4 text-emerald-600" /> : <BookOpen className="w-4 h-4 text-emerald-600" />}
-                <span>{editingBookId ? "पुस्तक विवरण संपादित करें (Edit Book)" : "पुस्तकालय में नई पुस्तक / संदर्भ जोड़ें"}</span>
-              </h3>
-              {editingBookId && (
-                <button
-                  type="button"
-                  onClick={cancelEditBook}
-                  className="text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg transition"
-                >
-                  <X className="w-3.5 h-3.5" /> रद्द करें
-                </button>
-              )}
+        <AdminLibraryTab settings={settings} refreshSettings={refreshSettings} token={token} showMsg={showMsg} />
+      )}
+
+      {/* ==================================================== */}
+      {/* MODAL: TEACHER BULK IMPORT (CSV) */}
+      {/* ==================================================== */}
+      {isTeacherBulkModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 max-w-2xl w-full space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                  <Upload className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-base">शिक्षक डेटा बल्क इंपोर्ट (Bulk Import Teachers via CSV)</h3>
+                  <p className="text-[11px] text-slate-500">CSV फ़ाइल से एक साथ सभी शिक्षकों का डेटा जोड़ें</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsTeacherBulkModalOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            <form onSubmit={handleAddBook} className="space-y-3 text-xs">
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">पुस्तक का शीर्षक *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="जैसे: एनसीईआरटी कक्षा 10 विज्ञान गाइड"
-                  value={newBook.title}
-                  onChange={(e) => setNewBook({ ...newBook, title: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 font-semibold"
-                />
+            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-950 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="font-bold">CSV फ़ॉर्मेट निर्देश (CSV Format Guide):</span>
+                <button
+                  type="button"
+                  onClick={handleDownloadTeacherSampleCSV}
+                  className="inline-flex items-center gap-1 text-[11px] text-emerald-800 bg-white border border-emerald-300 font-bold px-2 py-0.5 rounded shadow-sm hover:bg-emerald-100 transition"
+                >
+                  <Download className="w-3 h-3" /> नमूना (Sample CSV) डाउनलोड करें
+                </button>
               </div>
+              <p className="text-[11px] text-emerald-800">
+                कॉलम क्रम: <code>Name, Designation, Department, Qualification, Experience, Phone</code>
+              </p>
+            </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">लेखक / प्रकाशक</label>
-                  <input
-                    type="text"
-                    placeholder="जैसे: NCERT / मुंशी प्रेमचंद"
-                    value={newBook.author}
-                    onChange={(e) => setNewBook({ ...newBook, author: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300"
-                  />
-                </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">CSV फ़ाइल चुनें (Choose CSV File)</label>
+              <input
+                type="file"
+                accept=".csv"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => setTeacherBulkCsvText(event.target.result);
+                    reader.readAsText(file);
+                  }
+                }}
+                className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 cursor-pointer"
+              />
+            </div>
 
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">श्रेणी (Category) *</label>
-                  <select
-                    value={newBook.category}
-                    onChange={(e) => setNewBook({ ...newBook, category: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300"
-                  >
-                    <option value="NCERT">पाठ्यपुस्तक (NCERT/RBSE)</option>
-                    <option value="Competitive">प्रतियोगी परीक्षा (NEET/JEE/REET)</option>
-                    <option value="Literature">साहित्य एवं उपन्यास</option>
-                    <option value="General">सामान्य ज्ञान एवं संदर्भ</option>
-                  </select>
-                </div>
-              </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">या CSV डेटा यहाँ पेस्ट करें (Paste CSV Data)</label>
+              <textarea
+                rows={7}
+                placeholder={`Name,Designation,Department,Qualification,Experience,Phone\nश्री मोहन लाल,प्रधानाचार्य,Administration,"M.A., B.Ed",24 वर्ष,9414894845`}
+                value={teacherBulkCsvText}
+                onChange={(e) => setTeacherBulkCsvText(e.target.value)}
+                className="w-full p-2.5 rounded-lg border border-slate-300 font-mono text-xs focus:ring-2 focus:ring-emerald-600"
+              />
+            </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">उपलब्ध प्रतियां (Copies)</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={newBook.total_copies}
-                    onChange={(e) => setNewBook({ ...newBook, total_copies: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">डिजिटल ई-बुक लिंक (वैकल्पिक)</label>
-                  <input
-                    type="url"
-                    placeholder="https://..."
-                    value={newBook.digital_link}
-                    onChange={(e) => setNewBook({ ...newBook, digital_link: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">संक्षिप्त विवरण</label>
-                <textarea
-                  rows={2}
-                  placeholder="पुस्तक की उपयोगिता या विषय का संक्षिप्त परिचय..."
-                  value={newBook.description}
-                  onChange={(e) => setNewBook({ ...newBook, description: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300"
-                />
-              </div>
-
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
               <button
-                type="submit"
-                disabled={uploading}
-                className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2.5 rounded-lg transition"
+                type="button"
+                onClick={() => setIsTeacherBulkModalOpen(false)}
+                className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition"
               >
-                {uploading ? "अपडेट हो रहा है..." : (editingBookId ? "बदलाव सुरक्षित करें (Update Book)" : "पुस्तक सूची में जोड़ें")}
+                रद्द करें
               </button>
-            </form>
+              <button
+                type="button"
+                disabled={uploading}
+                onClick={handleProcessTeacherBulkImport}
+                className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow"
+              >
+                {uploading ? "अपलोड हो रहा है..." : "डेटा इंपोर्ट करें (Import Teachers)"}
+              </button>
+            </div>
           </div>
+        </div>
+      )}
 
-          {/* Existing Books List */}
-          <div className="lg:col-span-7 bg-white p-6 rounded-2xl shadow-md border border-slate-200 space-y-4">
-            <h3 className="text-base font-bold text-blue-950">पुस्तकालय संग्रह ({library.length})</h3>
-            <div className="space-y-2 max-h-[500px] overflow-y-auto text-xs">
-              {library.map(b => (
-                <div key={b.id} className="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between gap-3">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="bg-emerald-100 text-emerald-900 font-bold px-2 py-0.5 rounded text-[10px]">
-                        {b.category}
-                      </span>
-                      <span className="font-bold text-slate-900 text-sm">{b.title}</span>
-                    </div>
-                    <p className="text-[11px] text-slate-600 mt-1">
-                      लेखक: {b.author || "N/A"} | कुल प्रतियां: <strong className="text-blue-950">{b.total_copies}</strong>
-                      {b.digital_link && (
-                        <a href={b.digital_link} target="_blank" rel="noreferrer" className="ml-2 text-emerald-700 font-bold hover:underline">
-                          [ई-बुक लिंक ↗]
-                        </a>
-                      )}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      onClick={() => startEditBook(b)}
-                      className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition shrink-0"
-                      title="Edit"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteBook(b.id)}
-                      className="p-1.5 text-red-600 hover:bg-red-50 rounded transition shrink-0"
-                      title="Delete"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+      {/* ==================================================== */}
+      {/* MODAL: TEACHER DIRECTORY PRINTABLE */}
+      {/* ==================================================== */}
+      {isTeacherPrintModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-4xl w-full my-8 p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3 print:hidden">
+              <div className="flex items-center gap-2">
+                <Printer className="w-5 h-5 text-blue-900" />
+                <h3 className="font-bold text-slate-900 text-base">शिक्षक विवरणिका प्रिंट प्रिव्यू (Staff Directory Print Preview)</h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-blue-900 hover:bg-blue-950 text-white rounded-lg text-xs font-bold transition shadow"
+                >
+                  <Printer className="w-4 h-4" /> प्रिंट निकालें (Print)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsTeacherPrintModalOpen(false)}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Printable Content Sheet */}
+            <div className="p-6 bg-white border border-slate-200 rounded-xl space-y-4 font-sans text-xs">
+              <div className="text-center border-b-2 border-blue-900 pb-3 space-y-1">
+                <p className="text-[10px] tracking-widest text-slate-500 font-bold uppercase">शिक्षा विभाग • राजस्थान सरकार</p>
+                <h2 className="text-base sm:text-lg font-black text-blue-950">
+                  {settings?.school_name_hi || "पीएम श्री राजकीय बालिका उच्च माध्यमिक विद्यालय, राजलदेसर"}
+                </h2>
+                <p className="text-xs font-bold text-slate-700">{settings?.school_name || "PM SHRI GOVT GIRLS SENIOR SECONDARY SCHOOL, RAJALDESAR (CHURU)"}</p>
+                <div className="flex items-center justify-center gap-4 text-[11px] text-slate-600 font-medium">
+                  <span>UDISE: <strong>{settings?.udise_code || "08040700105"}</strong></span>
+                  <span>•</span>
+                  <span>पिन कोड: {settings?.pin_code || "331402"}</span>
+                  <span>•</span>
+                  <span>संपर्क: {settings?.contact_phone || "01564-240212"}</span>
                 </div>
-              ))}
+                <div className="inline-block bg-blue-100 text-blue-950 font-bold px-3 py-0.5 rounded-full text-[11px] mt-1">
+                  समस्त शिक्षक एवं कार्मिक विवरणिका (Staff Directory)
+                </div>
+              </div>
+
+              {/* Staff Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse border border-slate-300 text-[11px]">
+                  <thead>
+                    <tr className="bg-slate-100 text-slate-900 font-bold border-b border-slate-300">
+                      <th className="border border-slate-300 px-2 py-1.5 w-8 text-center">क्र.सं.</th>
+                      <th className="border border-slate-300 px-3 py-1.5">शिक्षक / कार्मिक का नाम</th>
+                      <th className="border border-slate-300 px-3 py-1.5">पदनाम (Designation)</th>
+                      <th className="border border-slate-300 px-2 py-1.5">संकाय (Dept)</th>
+                      <th className="border border-slate-300 px-3 py-1.5">योग्यता</th>
+                      <th className="border border-slate-300 px-2 py-1.5 text-center">अनुभव</th>
+                      <th className="border border-slate-300 px-2 py-1.5 text-center">मोबाइल नंबर</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {teachers.map((t, idx) => (
+                      <tr key={t.id || idx} className={idx % 2 === 0 ? "bg-white" : "bg-slate-50/50"}>
+                        <td className="border border-slate-300 px-2 py-1 text-center font-bold text-slate-700">{idx + 1}</td>
+                        <td className="border border-slate-300 px-3 py-1 font-bold text-slate-900">{t.name}</td>
+                        <td className="border border-slate-300 px-3 py-1 text-blue-900 font-semibold">{t.designation}</td>
+                        <td className="border border-slate-300 px-2 py-1 text-slate-700">{t.department}</td>
+                        <td className="border border-slate-300 px-3 py-1 text-slate-600">{t.qualification || "-"}</td>
+                        <td className="border border-slate-300 px-2 py-1 text-center text-slate-700">{t.experience || "-"}</td>
+                        <td className="border border-slate-300 px-2 py-1 text-center font-mono text-slate-800">{t.phone || "-"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Print Footer / Signatures */}
+              <div className="flex justify-between items-end pt-8 text-[11px] text-slate-700 border-t border-slate-200">
+                <div>
+                  <p>दिनांक: <strong>{new Date().toLocaleDateString('hi-IN')}</strong></p>
+                  <p className="text-[10px] text-slate-500">कुल कार्मिक संख्या: {teachers.length}</p>
+                </div>
+                <div className="text-center space-y-1">
+                  <div className="w-32 border-b border-dashed border-slate-400 mb-1"></div>
+                  <p className="font-bold text-slate-900">हस्ताक्षर एवं सील संस्था प्रधान</p>
+                  <p className="text-[10px] text-slate-500">{settings?.school_name_hi || "रा.बा.उ.मा.वि. राजलदेसर"}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==================================================== */}
+      {/* MODAL: RESULTS BULK IMPORT (CSV) */}
+      {/* ==================================================== */}
+      {isResultBulkModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 max-w-2xl w-full space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center">
+                  <Upload className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-base">परीक्षा परिणाम बल्क इंपोर्ट (Bulk Import Results via CSV)</h3>
+                  <p className="text-[11px] text-slate-500">CSV फ़ाइल से कक्षावार छात्राओं के अंक व परिणाम जोड़ें</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsResultBulkModalOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="bg-purple-50 border border-purple-200 rounded-xl p-3 text-xs text-purple-950 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="font-bold">CSV फ़ॉर्मेट निर्देश (CSV Format Guide):</span>
+                <button
+                  type="button"
+                  onClick={handleDownloadResultSampleCSV}
+                  className="inline-flex items-center gap-1 text-[11px] text-purple-800 bg-white border border-purple-300 font-bold px-2 py-0.5 rounded shadow-sm hover:bg-purple-100 transition"
+                >
+                  <Download className="w-3 h-3" /> नमूना (Sample CSV) डाउनलोड करें
+                </button>
+              </div>
+              <p className="text-[11px] text-purple-800">
+                कॉलम क्रम: <code>Roll No, Student Name, Father Name, Class, Year, Percentage, Grade, Status</code>
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">CSV फ़ाइल चुनें (Choose CSV File)</label>
+              <input
+                type="file"
+                accept=".csv"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => setResultBulkCsvText(event.target.result);
+                    reader.readAsText(file);
+                  }
+                }}
+                className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-purple-700 file:text-white hover:file:bg-purple-800 cursor-pointer"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">या CSV डेटा यहाँ पेस्ट करें (Paste CSV Data)</label>
+              <textarea
+                rows={7}
+                placeholder={`Roll No,Student Name,Father Name,Class,Year,Percentage,Grade,Status\n260105,अंजू शर्मा,दिनेश कुमार शर्मा,10th Board,2025-2026,94.50,Merit,PASS\n260106,सुनीता प्रजापत,रामगोपाल प्रजापत,12th Science,2025-2026,91.80,First Div,PASS`}
+                value={resultBulkCsvText}
+                onChange={(e) => setResultBulkCsvText(e.target.value)}
+                className="w-full p-2.5 rounded-lg border border-slate-300 font-mono text-xs focus:ring-2 focus:ring-purple-700"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setIsResultBulkModalOpen(false)}
+                className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition"
+              >
+                रद्द करें
+              </button>
+              <button
+                type="button"
+                disabled={uploading}
+                onClick={handleProcessResultBulkImport}
+                className="px-5 py-2 rounded-lg bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold transition shadow"
+              >
+                {uploading ? "अपलोड हो रहा है..." : "डेटा इंपोर्ट करें (Import Results)"}
+              </button>
             </div>
           </div>
         </div>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   Home, Users, Award, BookOpen, Library, Trophy, Monitor, GraduationCap, 
-  Image, Info, ShieldCheck, Menu, X, Phone, Mail, MapPin, Sparkles
+  Image, Info, ShieldCheck, Menu, X, Phone, Mail, MapPin, Sparkles, UserCheck
 } from 'lucide-react';
 import { useSchool } from '../context/SchoolContext';
 import NoticeTicker from './NoticeTicker';
@@ -15,6 +15,7 @@ export default function Navbar() {
   const navLinks = [
     { name: "मुख्य पृष्ठ (Home)", path: "/", icon: Home },
     { name: "शिक्षक (Teachers)", path: "/teachers", icon: Users },
+    { name: "विद्यार्थी (Students)", path: "/students", icon: UserCheck },
     { name: "परिणाम (Result)", path: "/result", icon: Award },
     { name: "कक्षाएं (Classes)", path: "/classes", icon: BookOpen },
     { name: "पुस्तकालय (Library)", path: "/library", icon: Library },

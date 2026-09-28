@@ -135,11 +135,9 @@ export default function Footer() {
 
       {/* Bottom Bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-8 mt-10 pt-6 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
-        <p>© {new Date().getFullYear()} पीएम श्री यूनियन क्लब राजकीय बालिका उच्च माध्यमिक विद्यालय, राजलदेसर (चूरू). सर्वाधिकार सुरक्षित।</p>
-        <p className="flex items-center gap-1.5 text-orange-300 font-semibold">
-          <span>★ एक भारत, श्रेष्ठ भारत</span>
-          <span className="text-white">|</span>
-          <span className="text-emerald-400">सशक्त बालिका, समृद्ध राष्ट्र ★</span>
+        <p>© {new Date().getFullYear()} पीएम श्री यूनियन क्लब रा.बा.उ.मा.वि., राजलदेसर (चूरू). सर्वाधिकार सुरक्षित।</p>
+        <p className="text-amber-400 font-bold bg-slate-900/90 px-3 py-1 rounded-full border border-amber-500/30">
+          Develop by Jagdish Prajapat Mo.9784730824 (Basic computer instructor)
         </p>
       </div>
     </footer>

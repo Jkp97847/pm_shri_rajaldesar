@@ -17,6 +17,7 @@ import Courses from './pages/Courses';
 import Gallery from './pages/Gallery';
 import About from './pages/About';
 import Admin from './pages/Admin';
+import Students from './pages/Students';
 
 // Helper to scroll to top on page change
 function ScrollToTop() {
@@ -88,6 +89,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/teachers" element={<Teachers />} />
+            <Route path="/students" element={<Students />} />
             <Route path="/result" element={<Result />} />
             <Route path="/classes" element={<Classes />} />
             <Route path="/library" element={<Library />} />

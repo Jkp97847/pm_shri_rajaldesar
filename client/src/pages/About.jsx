@@ -413,6 +413,22 @@ export default function About() {
 
       </div>
 
+      {/* Developer Credit Banner requested by User */}
+      <div className="bg-gradient-to-r from-orange-500 via-amber-500 to-emerald-600 p-0.5 rounded-2xl shadow-xl">
+        <div className="bg-slate-950 text-white rounded-2xl p-6 sm:p-8 text-center space-y-2">
+          <div className="inline-flex items-center gap-2 bg-white/10 px-4 py-1 rounded-full text-xs font-bold text-amber-300">
+            <span>🇮🇳</span>
+            <span>वेबसाइट निर्माण एवं तकनीकी प्रबंधन (Technical In-charge)</span>
+          </div>
+          <h3 className="text-lg sm:text-2xl font-black text-amber-400 tracking-wide">
+            Develop by Jagdish Prajapat Mo.9784730824 (Basic computer instructor)
+          </h3>
+          <p className="text-xs text-slate-300 font-semibold">
+            पीएम श्री यूनियन क्लब राजकीय बालिका उच्च माध्यमिक विद्यालय, राजलदेसर (चूरू), राजस्थान
+          </p>
+        </div>
+      </div>
+
     </div>
   );
 }

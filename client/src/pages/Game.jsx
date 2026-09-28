@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Trophy, Medal, Award, Flame, Users, HeartHandshake, CheckCircle, Calendar, PlusCircle } from 'lucide-react';
+import { 
+  Trophy, Medal, Award, Flame, Users, Calendar, Video, Newspaper, 
+  ExternalLink, Sparkles, CheckCircle2, ZoomIn, X, PlayCircle 
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function Game() {
   const [liveSports, setLiveSports] = useState([]);
   const [loadingSports, setLoadingSports] = useState(true);
+  const [photoModal, setPhotoModal] = useState(null);
 
   useEffect(() => {
     fetch('/api/sports')
@@ -21,196 +25,263 @@ export default function Game() {
       });
   }, []);
 
-  const sports = [
-    {
-      name: "खो-खो (Kho-Kho)",
-      level: "जिला चैंपियन टीम (District Champions)",
-      desc: "विद्यालय की खो-खो बालिका टीम चूरू जिला स्तरीय विद्यालयी खेलकूद प्रतियोगिता में लगातार 3 वर्षों से विजेता रही है।",
-      image: "https://images.unsplash.com/photo-1526676037777-05a232554f77?w=600&q=80",
-      badge: "स्वर्ण पदक विजेता"
-    },
-    {
-      name: "कबड्डी (Kabaddi)",
-      level: "राज्य स्तर पर सहभागिता (State Level)",
-      desc: "शारीरिक शक्ति, चपलता और रणनीति का उत्कृष्ट प्रदर्शन। 4 छात्राओं का चयन राज्य स्तरीय कबड्डी शिविर में हुआ।",
-      image: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=600&q=80",
-      badge: "सिल्वर मेडलिस्ट"
-    },
-    {
-      name: "एथलेटिक्स व धावक (Athletics)",
-      level: "100m, 200m, रिले व लंबी कूद",
-      desc: "ट्रैक एवं फील्ड इवेंट्स में बालिकाओं ने ब्लॉक एवं जिला स्तर पर व्यक्तिगत स्पर्धाओं में उत्कृष्ट रिकॉर्ड बनाए।",
-      image: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=600&q=80",
-      badge: "उत्कृष्ट धाविका"
-    },
-    {
-      name: "वॉलीबॉल व बैडमिंटन (Volleyball & Badminton)",
-      level: "कोर्ट सुविधाएं उपलब्ध",
-      desc: "विद्यालय प्रांगण में सुसज्जित आउटडोर वॉलीबॉल कोर्ट तथा बैडमिंटन कोर्ट छात्राओं के दैनिक अभ्यास हेतु उपलब्ध है।",
-      image: "https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?w=600&q=80",
-      badge: "दैनिक प्रशिक्षण"
-    }
-  ];
+  // Helper to extract YouTube video ID if URL is from YouTube
+  const getYouTubeEmbedUrl = (url) => {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}` : null;
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-8 py-10 space-y-10">
       
-      {/* Header Banner */}
+      {/* 1. Header Banner */}
       <div className="bg-gradient-to-r from-amber-900 via-orange-950 to-slate-900 text-white rounded-2xl p-8 sm:p-10 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="absolute top-0 left-0 right-0 h-1.5 tiranga-bar"></div>
         <div className="max-w-2xl space-y-3 relative z-10">
-          <span className="bg-amber-500 text-slate-950 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider">
-            खेलकूद एवं शारीरिक शिक्षा (Game & Sports Wing)
+          <span className="bg-amber-500 text-slate-950 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider inline-flex items-center gap-1.5 shadow">
+            <Trophy className="w-3.5 h-3.5" />
+            <span>खेलकूद एवं शारीरिक शिक्षा (Sports & Games Wing)</span>
           </span>
           <h2 className="text-2xl sm:text-4xl font-black">
-            खेलकूद, योग एवं आत्मरक्षा
+            खेल प्रतियोगिताएं, विजेता विवरण एवं उपलब्धियां
           </h2>
           <p className="text-slate-300 text-sm leading-relaxed">
-            "स्वस्थ शरीर में ही स्वस्थ मस्तिष्क का वास होता है।" हमारे विद्यालय में बालिकाओं के शारीरिक सामर्थ्य, खेल भावना और आत्मरक्षा पर विशेष ध्यान दिया जाता है।
+            "स्वस्थ शरीर में ही स्वस्थ मस्तिष्क का वास होता है।" हमारे विद्यालय की बालिकाओं द्वारा जिला एवं राज्य स्तर पर अर्जित की गई खेलकूद उपलब्धियां, विजेता विवरण, समाचार एवं वीडियो।
           </p>
         </div>
 
         <Link
           to="/admin"
-          className="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold px-4 py-2.5 rounded-lg transition flex items-center gap-1.5 shrink-0 shadow"
+          className="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shrink-0 shadow-md"
         >
           <Trophy className="w-4 h-4" />
-          <span>खेल रिकॉर्ड अपडेट करें (Admin)</span>
+          <span>खेल रिकॉर्ड व विजेता जोड़ें (Admin)</span>
         </Link>
       </div>
 
-      {/* Live Sports Events & Medalists from Admin */}
-      {liveSports.length > 0 && (
-        <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-md border border-slate-200 space-y-6">
-          <div className="flex items-center gap-2 border-b border-slate-100 pb-4">
-            <Trophy className="w-6 h-6 text-amber-500" />
-            <div>
-              <span className="text-xs font-bold text-amber-700 uppercase">हालिया उपलब्धियां</span>
-              <h3 className="text-xl sm:text-2xl font-black text-blue-950">
-                नवीनतम खेलकूद प्रतियोगिताएं एवं पदक विजेता
-              </h3>
-            </div>
+      {/* 2. Admin Live Sports & Winner List (Strictly only Admin data) */}
+      {loadingSports ? (
+        <div className="text-center py-16 bg-white rounded-2xl shadow text-slate-500 font-semibold">
+          खेलकूद विवरण लोड हो रहा है...
+        </div>
+      ) : liveSports.length === 0 ? (
+        <div className="bg-white rounded-2xl p-12 text-center shadow-md border border-slate-200 space-y-4">
+          <div className="w-16 h-16 rounded-full bg-amber-100 text-amber-700 mx-auto flex items-center justify-center">
+            <Trophy className="w-8 h-8" />
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {liveSports.map((evt) => (
-              <div key={evt.id} className="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden hover:shadow-lg transition flex flex-col justify-between">
-                {evt.image_url ? (
-                  <div className="h-48 overflow-hidden relative">
-                    <img
-                      src={evt.image_url}
-                      alt={evt.title}
-                      className="w-full h-full object-cover"
-                    />
-                    <span className="absolute top-3 left-3 bg-amber-500 text-slate-950 text-[10px] font-black px-2.5 py-1 rounded shadow">
-                      {evt.level}
-                    </span>
-                  </div>
-                ) : (
-                  <div className="p-4 bg-gradient-to-r from-amber-600 to-orange-600 text-white flex items-center justify-between">
-                    <span className="text-xs font-bold">{evt.sport_name}</span>
-                    <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded font-bold">{evt.level}</span>
-                  </div>
-                )}
-
-                <div className="p-5 space-y-2">
-                  <div className="flex items-center justify-between text-xs text-slate-500">
-                    <span className="font-bold text-blue-950">{evt.sport_name}</span>
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3 text-slate-400" />
-                      {evt.date}
-                    </span>
-                  </div>
-
-                  <h4 className="text-base font-bold text-slate-900">{evt.title}</h4>
-
-                  {evt.description && (
-                    <p className="text-xs text-slate-600 leading-relaxed">
-                      {evt.description}
-                    </p>
-                  )}
-                </div>
-
-                <div className="px-5 pb-4 pt-2 border-t border-slate-200 text-xs font-semibold text-emerald-700 flex items-center gap-1">
-                  <Medal className="w-3.5 h-3.5" />
-                  <span>प्रमाणित खेल उपलब्धि</span>
-                </div>
+          <h3 className="text-lg font-bold text-slate-900">वर्तमान में कोई खेलकूद रिकॉर्ड उपलब्ध नहीं है</h3>
+          <p className="text-xs text-slate-500 max-w-md mx-auto">
+            विद्यालय प्रशासन द्वारा खेल प्रतियोगिताओं, विजेताओं की सूची, समाचार कतरन एवं वीडियो अपलोड किए जाने के बाद वे यहाँ प्रदर्शित होंगे।
+          </p>
+          <Link
+            to="/admin"
+            className="inline-flex items-center gap-2 bg-blue-950 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow hover:bg-blue-900 transition"
+          >
+            <Trophy className="w-4 h-4 text-amber-400" />
+            <span>एडमिन पैनल में खेल रिकॉर्ड जोड़ें</span>
+          </Link>
+        </div>
+      ) : (
+        <div className="space-y-8">
+          
+          <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+            <div className="flex items-center gap-2">
+              <Trophy className="w-6 h-6 text-amber-500" />
+              <div>
+                <h3 className="text-xl sm:text-2xl font-black text-blue-950">
+                  प्रतियोगिताएं, पदक विजेता एवं समाचार
+                </h3>
+                <p className="text-xs text-slate-500">विद्यालय की खेलकूद उपलब्धियों का प्रामाणिक विवरण</p>
               </div>
-            ))}
+            </div>
+            <span className="text-xs bg-amber-100 text-amber-900 font-bold px-3 py-1 rounded-full">
+              कुल {liveSports.length} खेल रिकॉर्ड
+            </span>
           </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {liveSports.map((evt) => {
+              const youtubeEmbed = getYouTubeEmbedUrl(evt.video_url);
+
+              return (
+                <div 
+                  key={evt.id} 
+                  className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden flex flex-col justify-between hover:shadow-xl transition"
+                >
+                  <div>
+                    {/* Top Media: Photo or Video Embed */}
+                    {evt.image_url ? (
+                      <div 
+                        className="relative h-64 sm:h-72 bg-slate-900 overflow-hidden group cursor-pointer"
+                        onClick={() => setPhotoModal({ url: evt.image_url, title: evt.title })}
+                      >
+                        <div 
+                          className="absolute inset-0 bg-cover bg-center filter blur-md opacity-35 scale-105"
+                          style={{ backgroundImage: `url(${evt.image_url})` }}
+                        ></div>
+                        <img
+                          src={evt.image_url}
+                          alt={evt.title}
+                          className="relative w-full h-full object-contain p-2 group-hover:scale-105 transition-transform"
+                        />
+                        <div className="absolute top-3 left-3 bg-amber-500 text-slate-950 text-xs font-black px-3 py-1 rounded-full shadow flex items-center gap-1">
+                          <Medal className="w-3.5 h-3.5" />
+                          <span>{evt.level || "जिला स्तर"}</span>
+                        </div>
+                        <div className="absolute top-3 right-3 bg-black/60 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition shadow">
+                          <ZoomIn className="w-4 h-4" />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-4 bg-gradient-to-r from-amber-700 to-orange-700 text-white flex items-center justify-between">
+                        <span className="text-sm font-bold flex items-center gap-1.5">
+                          <Trophy className="w-4 h-4 text-amber-300" />
+                          <span>{evt.sport_name}</span>
+                        </span>
+                        <span className="text-xs bg-white/20 px-2.5 py-0.5 rounded-full font-bold">
+                          {evt.level || "खेल प्रतियोगिता"}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Content Section */}
+                    <div className="p-6 space-y-4">
+                      
+                      {/* Meta Tags */}
+                      <div className="flex items-center justify-between text-xs text-slate-500 flex-wrap gap-2">
+                        <span className="bg-blue-100 text-blue-950 font-bold px-2.5 py-1 rounded-lg">
+                          खेल: {evt.sport_name}
+                        </span>
+                        {evt.date && (
+                          <span className="flex items-center gap-1 text-slate-600 font-semibold font-mono">
+                            <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                            <span>{evt.date}</span>
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Title */}
+                      <h4 className="text-lg sm:text-xl font-black text-blue-950 leading-snug">
+                        {evt.title}
+                      </h4>
+
+                      {/* Description */}
+                      {evt.description && (
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                          {evt.description}
+                        </p>
+                      )}
+
+                      {/* 1. WINNER DETAILS (विजेता छात्राएं / टीम का विवरण) */}
+                      {evt.winner_details && (
+                        <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border-l-4 border-amber-500 space-y-1">
+                          <div className="flex items-center gap-1.5 text-amber-900 font-bold text-xs uppercase tracking-wider">
+                            <Award className="w-4 h-4 text-amber-600 shrink-0" />
+                            <span>विजेता छात्राएं / टीम का विवरण (Winners)</span>
+                          </div>
+                          <p className="text-xs text-slate-800 font-medium leading-relaxed whitespace-pre-line pl-5">
+                            {evt.winner_details}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* 2. NEWS CONTENT (समाचार विवरण व प्रेस विज्ञप्ति) */}
+                      {evt.news_content && (
+                        <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-1">
+                          <div className="flex items-center gap-1.5 text-blue-950 font-bold text-xs">
+                            <Newspaper className="w-4 h-4 text-blue-900 shrink-0" />
+                            <span>समाचार एवं मीडिया कवरेज (News & Press)</span>
+                          </div>
+                          <p className="text-xs text-slate-600 leading-relaxed pl-5 whitespace-pre-line">
+                            {evt.news_content}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* 3. VIDEO CONTENT (वीडियो लिंक या YouTube एम्बेड) */}
+                      {evt.video_url && (
+                        <div className="space-y-2 pt-2">
+                          <div className="flex items-center gap-1.5 text-rose-700 font-bold text-xs">
+                            <Video className="w-4 h-4 shrink-0" />
+                            <span>प्रतियोगिता का वीडियो (Competition Video)</span>
+                          </div>
+
+                          {youtubeEmbed ? (
+                            <div className="relative aspect-video rounded-xl overflow-hidden border border-slate-200 shadow">
+                              <iframe
+                                src={youtubeEmbed}
+                                title={evt.title}
+                                className="w-full h-full"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                              ></iframe>
+                            </div>
+                          ) : (
+                            <a
+                              href={evt.video_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition shadow"
+                            >
+                              <PlayCircle className="w-4 h-4" />
+                              <span>वीडियो देखें (Watch Video)</span>
+                              <ExternalLink className="w-3 h-3 ml-1" />
+                            </a>
+                          )}
+                        </div>
+                      )}
+
+                    </div>
+                  </div>
+
+                  {/* Card Footer Badge */}
+                  <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs">
+                    <span className="text-emerald-700 font-bold flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>प्रमाणित खेल उपलब्धि</span>
+                    </span>
+                    <span className="text-slate-400 font-medium">पीएम श्री विद्यालय राजलदेसर</span>
+                  </div>
+
+                </div>
+              );
+            })}
+          </div>
+
         </div>
       )}
 
-      {/* Primary Sports Wings Grid */}
-      <div className="space-y-4">
-        <h3 className="text-xl font-bold text-blue-950">प्रमुख खेल विधाएं एवं सुविधाएं</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {sports.map((item, idx) => (
-            <div key={idx} className="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden flex flex-col sm:flex-row hover:shadow-xl transition group">
-              <div className="sm:w-1/2 h-52 sm:h-auto relative overflow-hidden">
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                />
-                <span className="absolute top-3 left-3 bg-amber-500 text-slate-950 text-[10px] font-black px-2.5 py-1 rounded shadow">
-                  {item.badge}
-                </span>
-              </div>
-              <div className="sm:w-1/2 p-6 flex flex-col justify-between space-y-3">
-                <div>
-                  <h3 className="text-lg font-bold text-blue-950">{item.name}</h3>
-                  <p className="text-xs font-bold text-orange-600 mb-2">{item.level}</p>
-                  <p className="text-xs text-slate-600 leading-relaxed">{item.desc}</p>
-                </div>
-                <div className="pt-2 border-t border-slate-100 flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
-                  <CheckCircle className="w-3.5 h-3.5" />
-                  <span>नियमित दैनिक अभ्यास</span>
-                </div>
-              </div>
+      {/* Lightbox Zoom Modal for Sports Photos */}
+      {photoModal && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm"
+          onClick={() => setPhotoModal(null)}
+        >
+          <div 
+            className="bg-slate-900 text-white rounded-2xl overflow-hidden max-w-4xl w-full border border-slate-700 shadow-2xl relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+              <h3 className="font-bold text-sm text-slate-200">{photoModal.title}</h3>
+              <button
+                onClick={() => setPhotoModal(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Special Highlights: Yoga & Self Defence */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-gradient-to-br from-emerald-900 to-slate-900 text-white p-6 sm:p-8 rounded-2xl space-y-3">
-          <div className="w-10 h-10 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
-            <HeartHandshake className="w-6 h-6" />
+            <div className="p-2 flex items-center justify-center max-h-[75vh] bg-black">
+              <img
+                src={photoModal.url}
+                alt={photoModal.title}
+                className="max-h-[70vh] w-auto object-contain rounded"
+              />
+            </div>
           </div>
-          <h3 className="text-lg font-bold">दैनिक योग एवं प्राणायाम सत्र</h3>
-          <p className="text-xs text-slate-300 leading-relaxed">
-            प्रत्येक सुबह प्रार्थना सभा के पश्चात 15 मिनट का सामूहिक योगाभ्यास व सूर्य नमस्कार कराया जाता है, जिससे छात्राओं की एकाग्रता और मानसिक शांति में वृद्धि होती है।
-          </p>
         </div>
-
-        <div className="bg-gradient-to-br from-orange-900 to-slate-900 text-white p-6 sm:p-8 rounded-2xl space-y-3">
-          <div className="w-10 h-10 rounded-lg bg-orange-500/20 text-orange-400 flex items-center justify-center">
-            <Flame className="w-6 h-6" />
-          </div>
-          <h3 className="text-lg font-bold">रानी लक्ष्मीबाई आत्मरक्षा प्रशिक्षण</h3>
-          <p className="text-xs text-slate-300 leading-relaxed">
-            छात्राओं को आपातकालीन परिस्थितियों में अपनी सुरक्षा स्वयं करने हेतु प्रशिक्षित महिला प्रशिक्षकों द्वारा मार्शल आर्ट्स, कराटे एवं आत्मरक्षा की तकनीकें सिखाई जाती हैं।
-          </p>
-        </div>
-      </div>
-
-      {/* Sports Incharge Profile */}
-      <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-200 flex flex-col sm:flex-row items-center gap-6">
-        <img
-          src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&q=80"
-          alt="PTI Teacher"
-          className="w-24 h-24 rounded-full object-cover border-4 border-amber-400 shadow-md"
-        />
-        <div className="space-y-1 text-center sm:text-left">
-          <span className="text-xs font-bold text-orange-600 uppercase tracking-wider">शारीरिक शिक्षिका (Sports Incharge)</span>
-          <h4 className="text-lg font-bold text-blue-950">श्रीमती कविता मेघवाल</h4>
-          <p className="text-xs text-slate-600 font-semibold">M.P.Ed., NIS (Athletics Coach)</p>
-          <p className="text-xs text-slate-500 max-w-xl">
-            "हमारा उद्देश्य विद्यालय की प्रत्येक छात्रा में खेल भावना, अनुशासन और फिटनेस का संचार करना है ताकि वे राज्य और राष्ट्रीय स्तर पर तिरंगा लहराएं।"
-          </p>
-        </div>
-      </div>
+      )}
 
     </div>
   );

@@ -183,8 +183,24 @@ export default function Result() {
                 className="bg-blue-950 hover:bg-blue-900 text-white text-xs font-bold px-4 py-2.5 rounded-lg transition flex items-center gap-1.5 shadow"
               >
                 <Printer className="w-4 h-4" />
-                <span>प्रिंट निकालें (Print)</span>
+                <span>अंकतालिका प्रिंट करें (Print Marksheet)</span>
               </button>
+            </div>
+          </div>
+
+          {/* Signature Blocks for Printed Marksheet */}
+          <div className="pt-10 grid grid-cols-2 text-center text-xs font-bold text-slate-800 border-t border-slate-200 mt-6">
+            <div>
+              <div className="w-44 mx-auto border-t-2 border-slate-700 pt-1">
+                हस्ताक्षर कक्षा अध्यापक
+              </div>
+              <p className="text-[10px] text-slate-500 font-normal">Class Teacher Signature</p>
+            </div>
+            <div>
+              <div className="w-44 mx-auto border-t-2 border-slate-700 pt-1">
+                हस्ताक्षर एवं सील प्रधानाचार्य
+              </div>
+              <p className="text-[10px] text-slate-500 font-normal">Principal Seal & Signature</p>
             </div>
           </div>
         </div>
