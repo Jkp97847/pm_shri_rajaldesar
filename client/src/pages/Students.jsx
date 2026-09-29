@@ -72,31 +72,44 @@ export default function Students() {
     fetchStudents();
   }, [selectedClass, selectedGender, selectedCategory, searchQuery]);
 
-  // Export current filtered list as CSV
+  // Export current filtered list as CSV matching exact 11 columns
   const handleExportCSV = () => {
     if (students.length === 0) {
       alert("एक्सपोर्ट करने के लिए कोई विद्यार्थी डेटा उपलब्ध नहीं है।");
       return;
     }
-    const headers = ["SR No", "Roll No", "Student Name", "Father Name", "Mother Name", "Class", "Section", "Gender", "Category", "DOB", "Phone"];
+    const headers = [
+      "Class",
+      "Section",
+      "SRNO",
+      "Rollno",
+      "Student Name",
+      "Father/Guardian Name",
+      "Mother Name",
+      "Cast Category",
+      "Gender",
+      "DOB",
+      "Mobile No"
+    ];
     const rows = students.map(s => [
-      `"${s.sr_no || ''}"`,
-      `"${s.roll_no || ''}"`,
-      `"${s.name || ''}"`,
-      `"${s.father_name || ''}"`,
-      `"${s.mother_name || ''}"`,
-      `"${s.class_name || ''}"`,
-      `"${s.section || 'A'}"`,
-      `"${s.gender || ''}"`,
-      `"${s.category || ''}"`,
-      `"${s.dob || ''}"`,
-      `"${s.phone || ''}"`
+      `"${(s.class_name || '').replace(/"/g, '""')}"`,
+      `"${(s.section || 'A').replace(/"/g, '""')}"`,
+      `"${(s.sr_no || '').replace(/"/g, '""')}"`,
+      `"${(s.roll_no || '').replace(/"/g, '""')}"`,
+      `"${(s.name || '').replace(/"/g, '""')}"`,
+      `"${(s.father_name || '').replace(/"/g, '""')}"`,
+      `"${(s.mother_name || '').replace(/"/g, '""')}"`,
+      `"${(s.category || '').replace(/"/g, '""')}"`,
+      `"${(s.gender || '').replace(/"/g, '""')}"`,
+      `"${(s.dob || '').replace(/"/g, '""')}"`,
+      `"${(s.phone || '').replace(/"/g, '""')}"`
     ]);
 
-    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
-    const encodedUri = encodeURI(csvContent);
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
+    link.href = url;
     link.setAttribute("download", `PM_SHRI_Rajaldesar_Students_${selectedClass}_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
@@ -393,38 +406,48 @@ export default function Students() {
             <table className="w-full text-left text-xs border-collapse">
               <thead className="bg-gradient-to-r from-blue-950 via-slate-900 to-blue-950 text-white">
                 <tr>
-                  <th className="p-3.5 font-bold">क्र.सं.</th>
-                  <th className="p-3.5 font-bold">SR नं. / रोल नं.</th>
+                  <th className="p-3.5 font-bold text-center w-12">क्र.सं.</th>
+                  <th className="p-3.5 font-bold text-center">कक्षा</th>
+                  <th className="p-3.5 font-bold text-center">सेक्शन</th>
+                  <th className="p-3.5 font-bold">SR नं.</th>
+                  <th className="p-3.5 font-bold">रोल नं.</th>
                   <th className="p-3.5 font-bold">विद्यार्थी का नाम</th>
-                  <th className="p-3.5 font-bold">पिता का नाम</th>
+                  <th className="p-3.5 font-bold">पिता/अभिभावक का नाम</th>
                   <th className="p-3.5 font-bold">माता का नाम</th>
-                  <th className="p-3.5 font-bold">कक्षा व वर्ग</th>
-                  <th className="p-3.5 font-bold">लिंग</th>
-                  <th className="p-3.5 font-bold">श्रेणी / वर्ग</th>
-                  <th className="p-3.5 font-bold">जन्म तिथि</th>
-                  <th className="p-3.5 font-bold">संपर्क सूत्र (फोन)</th>
+                  <th className="p-3.5 font-bold text-center">जाति वर्ग</th>
+                  <th className="p-3.5 font-bold text-center">लिंग</th>
+                  <th className="p-3.5 font-bold text-center">जन्म तिथि</th>
+                  <th className="p-3.5 font-bold">मोबाइल नं.</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
                 {students.map((s, idx) => (
                   <tr key={s.id || idx} className="hover:bg-slate-50 transition">
-                    <td className="p-3.5 text-slate-400 font-mono">{idx + 1}</td>
-                    <td className="p-3.5">
-                      <div className="font-bold text-blue-950 font-mono">{s.roll_no || '-'}</div>
-                      <div className="text-[10px] text-slate-500 font-mono">SR: {s.sr_no || '-'}</div>
+                    <td className="p-3.5 text-center text-slate-400 font-mono">{idx + 1}</td>
+                    <td className="p-3.5 text-center">
+                      <span className="inline-block bg-blue-100 text-blue-950 font-bold px-2 py-0.5 rounded text-[11px]">
+                        {s.class_name}
+                      </span>
                     </td>
+                    <td className="p-3.5 text-center">
+                      <span className="inline-block bg-slate-100 text-slate-800 font-bold px-2 py-0.5 rounded text-[11px]">
+                        {s.section || 'A'}
+                      </span>
+                    </td>
+                    <td className="p-3.5 font-mono text-slate-600 font-bold">{s.sr_no || '-'}</td>
+                    <td className="p-3.5 font-mono font-bold text-blue-950">{s.roll_no || '-'}</td>
                     <td className="p-3.5">
                       <div className="font-bold text-slate-900 text-sm">{s.name}</div>
                       <div className="text-[10px] text-emerald-700 font-semibold">{s.status || 'Active'}</div>
                     </td>
-                    <td className="p-3.5">{s.father_name || '-'}</td>
-                    <td className="p-3.5">{s.mother_name || '-'}</td>
-                    <td className="p-3.5">
-                      <span className="inline-block bg-blue-100 text-blue-950 font-bold px-2 py-0.5 rounded text-[11px]">
-                        {s.class_name} {s.section ? `(${s.section})` : ''}
+                    <td className="p-3.5 text-slate-700">{s.father_name || '-'}</td>
+                    <td className="p-3.5 text-slate-700">{s.mother_name || '-'}</td>
+                    <td className="p-3.5 text-center">
+                      <span className="inline-block bg-amber-100 text-amber-900 font-black px-2 py-0.5 rounded text-[10px]">
+                        {s.category || 'GEN'}
                       </span>
                     </td>
-                    <td className="p-3.5">
+                    <td className="p-3.5 text-center">
                       <span className={`inline-block px-2 py-0.5 rounded text-[11px] font-bold ${
                         s.gender === 'Girl' || s.gender === 'बालिका'
                           ? 'bg-pink-100 text-pink-700'
@@ -433,12 +456,7 @@ export default function Students() {
                         {s.gender === 'Girl' || s.gender === 'बालिका' ? 'बालिका' : 'बालक'}
                       </span>
                     </td>
-                    <td className="p-3.5">
-                      <span className="inline-block bg-amber-100 text-amber-900 font-black px-2 py-0.5 rounded text-[10px]">
-                        {s.category || 'GEN'}
-                      </span>
-                    </td>
-                    <td className="p-3.5 font-mono text-slate-600">{s.dob || '-'}</td>
+                    <td className="p-3.5 text-center font-mono text-slate-600">{s.dob || '-'}</td>
                     <td className="p-3.5 font-mono text-slate-700">
                       {s.phone ? (
                         <div className="flex items-center gap-1 font-bold text-blue-950">
@@ -532,16 +550,17 @@ export default function Students() {
                   <thead className="bg-slate-100 text-slate-900 border-b border-slate-300 font-bold">
                     <tr>
                       <th className="p-2 border border-slate-300 text-center w-10">क्र.सं.</th>
+                      <th className="p-2 border border-slate-300 text-center">कक्षा</th>
+                      <th className="p-2 border border-slate-300 text-center">सेक्शन</th>
                       <th className="p-2 border border-slate-300 text-center">SR नं.</th>
                       <th className="p-2 border border-slate-300 text-center">रोल नं.</th>
                       <th className="p-2 border border-slate-300">विद्यार्थी का नाम</th>
-                      <th className="p-2 border border-slate-300">पिता का नाम</th>
+                      <th className="p-2 border border-slate-300">पिता/अभिभावक का नाम</th>
                       <th className="p-2 border border-slate-300">माता का नाम</th>
-                      <th className="p-2 border border-slate-300 text-center">कक्षा</th>
+                      <th className="p-2 border border-slate-300 text-center">जाति वर्ग</th>
                       <th className="p-2 border border-slate-300 text-center">लिंग</th>
-                      <th className="p-2 border border-slate-300 text-center">वर्ग</th>
                       <th className="p-2 border border-slate-300 text-center">जन्म तिथि</th>
-                      <th className="p-2 border border-slate-300">मोबाइल</th>
+                      <th className="p-2 border border-slate-300">मोबाइल नं.</th>
                       <th className="p-2 border border-slate-300 text-center">हस्ताक्षर / उपस्थिति</th>
                     </tr>
                   </thead>
@@ -549,14 +568,15 @@ export default function Students() {
                     {studentsForPrint.map((s, i) => (
                       <tr key={s.id || i} className="hover:bg-slate-50">
                         <td className="p-2 border border-slate-300 text-center font-mono">{i + 1}</td>
+                        <td className="p-2 border border-slate-300 text-center font-semibold">{s.class_name}</td>
+                        <td className="p-2 border border-slate-300 text-center font-bold">{s.section || 'A'}</td>
                         <td className="p-2 border border-slate-300 text-center font-mono">{s.sr_no || '-'}</td>
                         <td className="p-2 border border-slate-300 text-center font-mono font-bold">{s.roll_no || '-'}</td>
                         <td className="p-2 border border-slate-300 font-bold">{s.name}</td>
                         <td className="p-2 border border-slate-300">{s.father_name || '-'}</td>
                         <td className="p-2 border border-slate-300">{s.mother_name || '-'}</td>
-                        <td className="p-2 border border-slate-300 text-center font-semibold">{s.class_name}</td>
-                        <td className="p-2 border border-slate-300 text-center">{s.gender === 'Girl' || s.gender === 'बालिका' ? 'बालिका' : 'बालक'}</td>
                         <td className="p-2 border border-slate-300 text-center font-bold">{s.category || 'GEN'}</td>
+                        <td className="p-2 border border-slate-300 text-center">{s.gender === 'Girl' || s.gender === 'बालिका' ? 'बालिका' : 'बालक'}</td>
                         <td className="p-2 border border-slate-300 text-center font-mono">{s.dob || '-'}</td>
                         <td className="p-2 border border-slate-300 font-mono">{s.phone || '-'}</td>
                         <td className="p-2 border border-slate-300 text-center text-slate-300">____________</td>

@@ -1010,43 +1010,100 @@ app.delete('/api/admin/students/:id', adminAuth, (req, res) => {
   }
 });
 
-// Bulk Import Students (accepts array of student objects with exactly the 11 fields)
+// Bulk Import Students (accepts array of student objects with exactly the 11 fields: Class, Section, SRNO, Rollno, Student Name, Father/Guardian Name, Mother Name, Cast Category, Gender, DOB, Mobile No)
 app.post('/api/admin/students/bulk', adminAuth, (req, res) => {
   try {
     const { students } = req.body;
     if (!Array.isArray(students) || students.length === 0) {
       return res.status(400).json({ success: false, message: "आयात करने के लिए वैध विद्यार्थी डेटा सूची प्रदान करें।" });
     }
+
+    const normalizeDOB = (val) => {
+      if (!val) return '';
+      val = String(val).trim();
+      // Excel serial date number (e.g. 40880 -> 2011-12-03)
+      if (/^\d{5}$/.test(val)) {
+        const days = parseInt(val, 10);
+        const d = new Date((days - 25569) * 86400 * 1000);
+        if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
+      }
+      const dmy = val.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
+      if (dmy) {
+        return `${dmy[3]}-${dmy[2].padStart(2, '0')}-${dmy[1].padStart(2, '0')}`;
+      }
+      return val;
+    };
+
     const insertStmt = db.prepare(`
       INSERT INTO students (sr_no, roll_no, name, father_name, mother_name, class_name, section, gender, category, dob, phone, address, admission_date, status)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
+    const updateStmt = db.prepare(`
+      UPDATE students 
+      SET sr_no = ?, roll_no = ?, name = ?, father_name = ?, mother_name = ?, class_name = ?, section = ?, gender = ?, category = ?, dob = ?, phone = ?, status = ?
+      WHERE id = ?
+    `);
+
+    const checkExistingStmt = db.prepare(`
+      SELECT id FROM students 
+      WHERE (roll_no = ? AND roll_no != '') OR (sr_no = ? AND sr_no != '' AND class_name = ?)
+      LIMIT 1
+    `);
+
     let importedCount = 0;
     for (const s of students) {
-      const name = s.name || s['Name'] || s['नाम'] || s['Student Name'];
-      const className = s.class_name || s['Class'] || s['कक्षा'] || 'Class 1';
-      if (name) {
-        insertStmt.run(
-          s.sr_no || s['SR No'] || s['sr_no'] || s['एसआर नंबर'] || '',
-          s.roll_no || s['Roll No'] || s['roll_no'] || s['रोल नंबर'] || '',
-          String(name).trim(),
-          s.father_name || s["Father's Name"] || s['father_name'] || s['पिता का नाम'] || '',
-          s.mother_name || s["Mother's Name"] || s['mother_name'] || s['माता का नाम'] || '',
-          className,
-          s.section || s['Section'] || s['सेक्शन'] || 'A',
-          s.gender || s['Gender'] || s['लिंग'] || 'Girl',
-          s.category || s['Category'] || s['वर्ग'] || 'GEN',
-          s.dob || s['DOB'] || s['जन्म तिथि'] || '',
-          s.phone || s['Phone'] || s['मोबाइल'] || '',
-          '',
-          new Date().toISOString().split('T')[0],
-          s.status || s['Status'] || 'Active'
-        );
+      const name = s.name || s['Student Name'] || s['student_name'] || s['Name'] || s['नाम'] || s['विद्यार्थी का नाम'];
+      const className = s.class_name || s['Class'] || s['class'] || s['कक्षा'] || 'Class 10';
+      const section = s.section || s['Section'] || s['section'] || s['सेक्शन'] || 'A';
+      const sr_no = s.sr_no || s['SRNO'] || s['SR No'] || s['sr_no'] || s['srno'] || s['एसआर नंबर'] || '';
+      const roll_no = s.roll_no || s['Rollno'] || s['Roll No'] || s['roll_no'] || s['rollno'] || s['Student Unique NIC Id'] || s['NIC Id'] || s['रोल नंबर'] || '';
+      const father_name = s.father_name || s['Father/Guardian Name'] || s['Father Name'] || s["Father's Name"] || s['father_name'] || s['पिता का नाम'] || s['पिता/अभिभावक का नाम'] || '';
+      const mother_name = s.mother_name || s['Mother Name'] || s["Mother's Name"] || s['mother_name'] || s['माता का नाम'] || '';
+      const category = (s.category || s['Cast Category'] || s['Category'] || s['cast_category'] || s['वर्ग'] || s['जाति वर्ग'] || 'GEN').toUpperCase();
+      let gender = s.gender || s['Gender'] || s['लिंग'] || 'Girl';
+      if (String(gender).toLowerCase().includes('boy') || gender === 'बालक' || String(gender).toLowerCase() === 'm' || String(gender).toLowerCase() === 'male') {
+        gender = 'Boy';
+      } else {
+        gender = 'Girl';
+      }
+      const dob = normalizeDOB(s.dob || s['DOB'] || s['जन्म तिथि'] || '');
+      const phone = s.phone || s['Mobile No'] || s['Mobile'] || s['Phone'] || s['mobile_no'] || s['मोबाइल'] || s['मोबाइल नं'] || '';
+      const status = s.status || s['Status'] || 'Active';
+
+      if (name && String(name).trim()) {
+        const cleanSr = String(sr_no).trim();
+        const cleanRoll = String(roll_no).trim();
+        const cleanName = String(name).trim();
+        const cleanClass = String(className).trim();
+        const cleanSection = String(section).trim();
+        const cleanFather = String(father_name).trim();
+        const cleanMother = String(mother_name).trim();
+        const cleanCategory = String(category).trim();
+        const cleanGender = String(gender).trim();
+        const cleanDob = String(dob).trim();
+        const cleanPhone = String(phone).trim();
+
+        const existing = (cleanRoll || cleanSr) ? checkExistingStmt.get(cleanRoll, cleanSr, cleanClass) : null;
+        if (existing) {
+          updateStmt.run(
+            cleanSr, cleanRoll, cleanName, cleanFather, cleanMother, cleanClass, cleanSection,
+            cleanGender, cleanCategory, cleanDob, cleanPhone, status, existing.id
+          );
+        } else {
+          insertStmt.run(
+            cleanSr, cleanRoll, cleanName, cleanFather, cleanMother, cleanClass, cleanSection,
+            cleanGender, cleanCategory, cleanDob, cleanPhone, '', new Date().toISOString().split('T')[0], status
+          );
+        }
         importedCount++;
       }
     }
-    res.json({ success: true, count: importedCount, message: `सफलतापूर्वक ${importedCount} विद्यार्थियों का डेटा आयात (Import) किया गया।` });
+    res.json({ 
+      success: true, 
+      count: importedCount, 
+      message: `सफलतापूर्वक ${importedCount} विद्यार्थियों का 11-कॉलम डेटा आयात (Import) किया गया।` 
+    });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

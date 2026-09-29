@@ -168,25 +168,37 @@ export default function AdminStudentsTab({ token, showMsg }) {
       });
   };
 
-  // Export current list to CSV with UTF-8 BOM
+  // Export current list to CSV with UTF-8 BOM matching the exact 11 columns
   const handleExportCSV = () => {
     if (students.length === 0) {
       showMsg("एक्सपोर्ट करने के लिए कोई विद्यार्थी डेटा नहीं है।", "error");
       return;
     }
-    const headers = ["SR No", "Roll No", "Student Name", "Father Name", "Mother Name", "Class", "Section", "Gender", "Category", "DOB", "Phone"];
+    const headers = [
+      "Class",
+      "Section",
+      "SRNO",
+      "Rollno",
+      "Student Name",
+      "Father/Guardian Name",
+      "Mother Name",
+      "Cast Category",
+      "Gender",
+      "DOB",
+      "Mobile No"
+    ];
     const rows = students.map(s => [
-      `"${s.sr_no || ''}"`,
-      `"${s.roll_no || ''}"`,
-      `"${s.name || ''}"`,
-      `"${s.father_name || ''}"`,
-      `"${s.mother_name || ''}"`,
-      `"${s.class_name || ''}"`,
-      `"${s.section || 'A'}"`,
-      `"${s.gender || ''}"`,
-      `"${s.category || ''}"`,
-      `"${s.dob || ''}"`,
-      `"${s.phone || ''}"`
+      `"${(s.class_name || '').replace(/"/g, '""')}"`,
+      `"${(s.section || 'A').replace(/"/g, '""')}"`,
+      `"${(s.sr_no || '').replace(/"/g, '""')}"`,
+      `"${(s.roll_no || '').replace(/"/g, '""')}"`,
+      `"${(s.name || '').replace(/"/g, '""')}"`,
+      `"${(s.father_name || '').replace(/"/g, '""')}"`,
+      `"${(s.mother_name || '').replace(/"/g, '""')}"`,
+      `"${(s.category || '').replace(/"/g, '""')}"`,
+      `"${(s.gender || '').replace(/"/g, '""')}"`,
+      `"${(s.dob || '').replace(/"/g, '""')}"`,
+      `"${(s.phone || '').replace(/"/g, '""')}"`
     ]);
 
     const csvString = "\uFEFF" + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
@@ -201,19 +213,33 @@ export default function AdminStudentsTab({ token, showMsg }) {
     showMsg(`विद्यार्थी डेटा CSV फ़ाइल में सफलतापूर्वक डाउनलोड हुआ!`);
   };
 
-  // Download Sample CSV Template
+  // Download Sample CSV Template matching the exact 11 columns
   const handleDownloadSampleCSV = () => {
-    const headers = ["SR No", "Roll No", "Student Name", "Father Name", "Mother Name", "Class", "Section", "Gender", "Category", "DOB", "Phone"];
+    const headers = [
+      "Class",
+      "Section",
+      "SRNO",
+      "Rollno",
+      "Student Name",
+      "Father/Guardian Name",
+      "Mother Name",
+      "Cast Category",
+      "Gender",
+      "DOB",
+      "Mobile No"
+    ];
     const sampleRows = [
-      ["SR-1051", "101", "कविता शर्मा", "सुरेश कुमार शर्मा", "मंजू देवी", "Class 10", "A", "Girl", "GEN", "2010-04-15", "9829123456"],
-      ["SR-1052", "102", "सुनील प्रजापत", "रामगोपाल प्रजापत", "शांति देवी", "Class 10", "A", "Boy", "OBC", "2010-08-20", "9414567890"]
+      ["Class 10", "A", "5569", "120192329", "Aaina Saini", "Shankar Lal Saini", "Lichhma Devi", "OBC", "Girl", "2011-12-03", "9772325355"],
+      ["Class 10", "A", "6145", "124209424", "Aarti", "Mahendra Maru", "Punam Devi", "OBC", "Girl", "2011-12-08", "7023240704"],
+      ["Class 10", "B", "5890", "120192330", "कविता शर्मा", "सुरेश कुमार शर्मा", "मंजू देवी", "GEN", "Girl", "2010-04-15", "9829123456"],
+      ["Class 10", "B", "6012", "120192331", "सुनील प्रजापत", "रामगोपाल प्रजापत", "शांति देवी", "OBC", "Boy", "2010-08-20", "9414567890"]
     ];
     const csvString = "\uFEFF" + [headers.join(","), ...sampleRows.map(r => r.map(c => `"${c}"`).join(","))].join("\n");
     const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", "Sample_Students_Import_Template.csv");
+    link.setAttribute("download", "PM_SHRI_Students_Sample_11_Columns.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -236,22 +262,43 @@ export default function AdminStudentsTab({ token, showMsg }) {
       return;
     }
 
-    const lines = bulkCsvText.trim().split(/\r\n|\n/);
-    if (lines.length < 2) {
-      showMsg("CSV फ़ाइल में कम से कम एक शीर्षक पंक्ति और एक डेटा पंक्ति होनी चाहिए।", "error");
+    const lines = bulkCsvText.trim().split(/\r\n|\n/).filter(l => l.trim().length > 0);
+    if (lines.length < 1) {
+      showMsg("CSV फ़ाइल में कोई डेटा पंक्ति नहीं मिली।", "error");
       return;
     }
 
-    // Parse CSV headers
-    const parseCSVLine = (text) => {
+    // Helper to format DOB: converts 5-digit Excel serial dates, DD-MM-YYYY, or standard strings
+    const formatDOB = (val) => {
+      if (!val) return '';
+      val = String(val).trim();
+      if (/^\d{5}$/.test(val)) {
+        const days = parseInt(val, 10);
+        const d = new Date((days - 25569) * 86400 * 1000);
+        if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
+      }
+      const dmy = val.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
+      if (dmy) {
+        return `${dmy[3]}-${dmy[2].padStart(2, '0')}-${dmy[1].padStart(2, '0')}`;
+      }
+      return val;
+    };
+
+    // Delimiter aware line parser (handles commas and tabs, quoted fields)
+    const parseDelimitedLine = (line, delimiter) => {
       const result = [];
       let cur = '';
       let inQuotes = false;
-      for (let i = 0; i < text.length; i++) {
-        const c = text[i];
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
         if (c === '"') {
-          inQuotes = !inQuotes;
-        } else if (c === ',' && !inQuotes) {
+          if (inQuotes && line[i + 1] === '"') {
+            cur += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (c === delimiter && !inQuotes) {
           result.push(cur.trim());
           cur = '';
         } else {
@@ -262,40 +309,120 @@ export default function AdminStudentsTab({ token, showMsg }) {
       return result;
     };
 
-    const headers = parseCSVLine(lines[0]).map(h => h.replace(/^"|"$/g, '').trim().toLowerCase());
+    const firstLine = lines[0];
+    const delimiter = firstLine.includes('\t') ? '\t' : ',';
+    const firstRowValues = parseDelimitedLine(firstLine, delimiter).map(v => v.replace(/^["'\s]+|["'\s]+$/g, ''));
+    
+    // Check if line 0 is a header row
+    const normalizedFirstRow = firstRowValues.map(h => h.toLowerCase().replace(/[\s_\/-]+/g, ' '));
+    const isHeaderRow = normalizedFirstRow.some(h => 
+      h.includes('class') || h.includes('student') || h.includes('name') || 
+      h.includes('srno') || h.includes('sr no') || h.includes('roll') || 
+      h.includes('father') || h.includes('category') || h.includes('gender') || 
+      h.includes('dob') || h.includes('mobile') || h.includes('नाम') || h.includes('कक्षा')
+    );
+
+    let dataLines = lines;
+    let headers = [];
+
+    if (isHeaderRow) {
+      headers = normalizedFirstRow;
+      dataLines = lines.slice(1);
+    }
+
     const studentsToImport = [];
 
-    for (let i = 1; i < lines.length; i++) {
-      if (!lines[i].trim()) continue;
-      const values = parseCSVLine(lines[i]).map(v => v.replace(/^"|"$/g, '').trim());
-      const row = {};
-      headers.forEach((h, idx) => {
-        row[h] = values[idx] || '';
-      });
-
-      const name = row['student name'] || row['name'] || row['विद्यार्थी का नाम'] || row['naam'] || '';
-      const className = row['class'] || row['class name'] || row['कक्षा'] || 'Class 10';
+    for (let i = 0; i < dataLines.length; i++) {
+      if (!dataLines[i].trim()) continue;
+      const values = parseDelimitedLine(dataLines[i], delimiter).map(v => v.replace(/^"|"$/g, '').trim());
       
+      let className = '';
+      let section = 'A';
+      let srNo = '';
+      let rollNo = '';
+      let name = '';
+      let fatherName = '';
+      let motherName = '';
+      let category = 'GEN';
+      let gender = 'Girl';
+      let dob = '';
+      let phone = '';
+
+      if (headers.length > 0) {
+        // Map by header names
+        const getVal = (possibleKeys) => {
+          for (const key of possibleKeys) {
+            const idx = headers.findIndex(h => h === key || h.includes(key));
+            if (idx !== -1 && values[idx] !== undefined && values[idx] !== '') {
+              return values[idx];
+            }
+          }
+          return '';
+        };
+
+        className = getVal(['class', 'class name', 'कक्षा', 'standard']);
+        section = getVal(['section', 'सेक्शन', 'sec']) || 'A';
+        srNo = getVal(['srno', 'sr no', 'sr_no', 'sr', 'scholar no', 'एसआर नंबर', 'एसआर']);
+        rollNo = getVal(['rollno', 'roll no', 'roll_no', 'roll', 'student unique nic id', 'nic id', 'unique id', 'रोल नंबर', 'रोल नं']);
+        name = getVal(['student name', 'name', 'विद्यार्थी का नाम', 'विद्यार्थी नाम', 'छात्र नाम', 'naam']);
+        fatherName = getVal(['father guardian name', 'father/guardian name', 'father name', 'father\'s name', 'guardian name', 'पिता का नाम', 'पिता/अभिभावक का नाम', 'पिता']);
+        motherName = getVal(['mother name', 'mother\'s name', 'mother', 'माता का नाम', 'माता']);
+        category = getVal(['cast category', 'caste category', 'category', 'cast', 'caste', 'वर्ग', 'जाति वर्ग', 'जाति']) || 'GEN';
+        gender = getVal(['gender', 'sex', 'लिंग']) || 'Girl';
+        dob = formatDOB(getVal(['dob', 'date of birth', 'birth date', 'जन्म तिथि', 'जन्मतिथि']));
+        phone = getVal(['mobile no', 'mobile number', 'mobile', 'phone', 'phone no', 'phone number', 'contact', 'संपर्क', 'मोबाइल', 'मोबाइल नं']);
+      } else {
+        // Positional fallback to the exact 11 columns:
+        // 0: Class, 1: Section, 2: SRNO, 3: Rollno, 4: Student Name, 5: Father/Guardian Name, 6: Mother Name, 7: Cast Category, 8: Gender, 9: DOB, 10: Mobile No
+        className = values[0] || '';
+        section = values[1] || 'A';
+        srNo = values[2] || '';
+        rollNo = values[3] || '';
+        name = values[4] || '';
+        fatherName = values[5] || '';
+        motherName = values[6] || '';
+        category = values[7] || 'GEN';
+        gender = values[8] || 'Girl';
+        dob = formatDOB(values[9] || '');
+        phone = values[10] || '';
+      }
+
+      // Default class fallback
+      if (!className) {
+        className = selectedClass !== 'All' ? selectedClass : 'Class 10';
+      }
+
+      // Normalize gender
+      const gLower = (gender || '').toLowerCase();
+      if (gLower.includes('boy') || gLower === 'बालक' || gLower === 'm' || gLower === 'male') {
+        gender = 'Boy';
+      } else {
+        gender = 'Girl';
+      }
+
+      // Normalize category
+      category = (category || 'GEN').toUpperCase();
+
       if (name) {
         studentsToImport.push({
-          sr_no: row['sr no'] || row['sr_no'] || row['sr'] || '',
-          roll_no: row['roll no'] || row['roll_no'] || row['roll'] || '',
+          sr_no: srNo,
+          roll_no: rollNo,
           name: name,
-          father_name: row['father name'] || row["father's name"] || row['father'] || '',
-          mother_name: row['mother name'] || row["mother's name"] || row['mother'] || '',
+          father_name: fatherName,
+          mother_name: motherName,
           class_name: className,
-          section: row['section'] || 'A',
-          gender: row['gender'] || row['लिंग'] || 'Girl',
-          category: (row['category'] || row['वर्ग'] || 'GEN').toUpperCase(),
-          dob: row['dob'] || row['date of birth'] || row['जन्म तिथि'] || '',
-          phone: row['phone'] || row['mobile'] || row['मोबाइल'] || '',
+          section: section || 'A',
+          gender: gender,
+          category: category,
+          dob: dob,
+          phone: phone,
           status: 'Active'
         });
       }
     }
 
     if (studentsToImport.length === 0) {
-      showMsg("कोई वैध विद्यार्थी डेटा नहीं मिला। कृपया कॉलम शीर्षकों की जांच करें।", "error");
+      showMsg("कोई वैध विद्यार्थी डेटा नहीं मिला। कृपया सुनिश्चित करें कि 'Student Name' अथवा डेटा पंक्ति सही है।", "error");
       return;
     }
 
@@ -727,18 +854,21 @@ export default function AdminStudentsTab({ token, showMsg }) {
 
             <div className="space-y-3 text-xs">
               <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-200 space-y-2">
-                <p className="font-bold text-emerald-900 flex items-center justify-between">
-                  <span>मानक CSV प्रारूप (Columns Required):</span>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <span className="font-bold text-emerald-950">मानक 11-कॉलम CSV प्रारूप (Required Columns):</span>
                   <button
                     onClick={handleDownloadSampleCSV}
-                    className="text-xs text-blue-900 font-bold hover:underline flex items-center gap-1"
+                    className="text-xs text-blue-900 font-bold hover:underline flex items-center gap-1 shrink-0"
                   >
                     <Download className="w-3.5 h-3.5" />
-                    <span>नमूना CSV डाउनलोड करें</span>
+                    <span>नमूना CSV डाउनलोड करें (Sample CSV)</span>
                   </button>
-                </p>
-                <p className="text-[11px] text-emerald-800 font-mono">
-                  SR No, Roll No, Student Name, Father Name, Mother Name, Class, Section, Gender, Category, DOB, Phone
+                </div>
+                <div className="p-2.5 bg-white rounded-lg border border-emerald-300 font-mono text-[11px] text-emerald-900 overflow-x-auto whitespace-nowrap select-all font-bold">
+                  Class, Section, SRNO, Rollno, Student Name, Father/Guardian Name, Mother Name, Cast Category, Gender, DOB, Mobile No
+                </div>
+                <p className="text-[11px] text-emerald-800">
+                  💡 आप <strong>शाला दर्पण (Shala Darpan)</strong> अथवा Excel से सीधे डेटा कॉपी करके नीचे पेस्ट कर सकते हैं। यह स्वतः 5-अंकों वाली जन्म तिथि (Serial Date) व सभी फ़ील्ड्स को पहचान लेगा।
                 </p>
               </div>
 
@@ -753,10 +883,10 @@ export default function AdminStudentsTab({ token, showMsg }) {
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">-- या यहाँ CSV टेक्स्ट पेस्ट करें: --</label>
+                <label className="block font-bold text-slate-700 mb-1">-- या यहाँ 11-कॉलम CSV / Excel डेटा पेस्ट करें: --</label>
                 <textarea
                   rows={8}
-                  placeholder={`SR No,Roll No,Student Name,Father Name,Mother Name,Class,Section,Gender,Category,DOB,Phone\nSR-1051,101,कविता शर्मा,सुरेश कुमार शर्मा,मंजू देवी,Class 10,A,Girl,GEN,2010-04-15,9829123456`}
+                  placeholder={`Class,Section,SRNO,Rollno,Student Name,Father/Guardian Name,Mother Name,Cast Category,Gender,DOB,Mobile No\nClass 10,A,5569,120192329,Aaina Saini,Shankar Lal Saini,Lichhma Devi,OBC,Girl,2011-12-03,9772325355\nClass 10,A,6145,124209424,Aarti,Mahendra Maru,Punam Devi,OBC,Girl,2011-12-08,7023240704`}
                   value={bulkCsvText}
                   onChange={(e) => setBulkCsvText(e.target.value)}
                   className="w-full p-3 rounded-lg border border-slate-300 font-mono text-[11px] focus:outline-none focus:ring-2 focus:ring-emerald-600"
@@ -789,14 +919,14 @@ export default function AdminStudentsTab({ token, showMsg }) {
       {/* 4. Class-wise Printable Register Modal */}
       {isPrintModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 max-w-4xl w-full space-y-4 my-8 max-h-[90vh] flex flex-col">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 max-w-5xl w-full space-y-4 my-8 max-h-[90vh] flex flex-col">
             
             <div className="flex items-center justify-between border-b border-slate-200 pb-3 shrink-0">
               <div className="flex items-center gap-2">
                 <Printer className="w-5 h-5 text-blue-950" />
                 <div>
                   <h3 className="font-bold text-slate-900 text-base">कक्षा रोल सूची एवं उपस्थिति पत्रक</h3>
-                  <p className="text-xs text-slate-500">विद्यालय के आधिकारिक लेटरहेड के साथ प्रिंट निकालें</p>
+                  <p className="text-xs text-slate-500">विद्यालय के आधिकारिक लेटरहेड के साथ 11-कॉलम रजिस्टर प्रिंट निकालें</p>
                 </div>
               </div>
 
@@ -858,15 +988,17 @@ export default function AdminStudentsTab({ token, showMsg }) {
                   <thead className="bg-slate-100 text-slate-900 border-b border-slate-300 font-bold">
                     <tr>
                       <th className="p-2 border border-slate-300 text-center w-10">क्र.</th>
+                      <th className="p-2 border border-slate-300 text-center">कक्षा</th>
+                      <th className="p-2 border border-slate-300 text-center">सेक्शन</th>
                       <th className="p-2 border border-slate-300 text-center">SR नं.</th>
                       <th className="p-2 border border-slate-300 text-center">रोल नं.</th>
                       <th className="p-2 border border-slate-300">विद्यार्थी का नाम</th>
-                      <th className="p-2 border border-slate-300">पिता का नाम</th>
-                      <th className="p-2 border border-slate-300 text-center">कक्षा</th>
+                      <th className="p-2 border border-slate-300">पिता/अभिभावक का नाम</th>
+                      <th className="p-2 border border-slate-300">माता का नाम</th>
+                      <th className="p-2 border border-slate-300 text-center">जाति वर्ग</th>
                       <th className="p-2 border border-slate-300 text-center">लिंग</th>
-                      <th className="p-2 border border-slate-300 text-center">वर्ग</th>
                       <th className="p-2 border border-slate-300 text-center">जन्म तिथि</th>
-                      <th className="p-2 border border-slate-300">मोबाइल</th>
+                      <th className="p-2 border border-slate-300">मोबाइल नं.</th>
                       <th className="p-2 border border-slate-300 text-center">हस्ताक्षर / उपस्थिति</th>
                     </tr>
                   </thead>
@@ -874,13 +1006,15 @@ export default function AdminStudentsTab({ token, showMsg }) {
                     {studentsForPrint.map((s, i) => (
                       <tr key={s.id || i} className="hover:bg-slate-50">
                         <td className="p-2 border border-slate-300 text-center font-mono">{i + 1}</td>
+                        <td className="p-2 border border-slate-300 text-center font-semibold">{s.class_name}</td>
+                        <td className="p-2 border border-slate-300 text-center font-bold">{s.section || 'A'}</td>
                         <td className="p-2 border border-slate-300 text-center font-mono">{s.sr_no || '-'}</td>
                         <td className="p-2 border border-slate-300 text-center font-mono font-bold">{s.roll_no || '-'}</td>
                         <td className="p-2 border border-slate-300 font-bold">{s.name}</td>
                         <td className="p-2 border border-slate-300">{s.father_name || '-'}</td>
-                        <td className="p-2 border border-slate-300 text-center font-semibold">{s.class_name}</td>
-                        <td className="p-2 border border-slate-300 text-center">{s.gender === 'Girl' || s.gender === 'बालिका' ? 'बालिका' : 'बालक'}</td>
+                        <td className="p-2 border border-slate-300">{s.mother_name || '-'}</td>
                         <td className="p-2 border border-slate-300 text-center font-bold">{s.category || 'GEN'}</td>
+                        <td className="p-2 border border-slate-300 text-center">{s.gender === 'Girl' || s.gender === 'बालिका' ? 'बालिका' : 'बालक'}</td>
                         <td className="p-2 border border-slate-300 text-center font-mono">{s.dob || '-'}</td>
                         <td className="p-2 border border-slate-300 font-mono">{s.phone || '-'}</td>
                         <td className="p-2 border border-slate-300 text-center text-slate-300">____________</td>
