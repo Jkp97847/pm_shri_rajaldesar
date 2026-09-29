@@ -88,8 +88,14 @@ export default function Admin() {
   // Form states
   const [newNotice, setNewNotice] = useState({ title: '', content: '', date: new Date().toISOString().split('T')[0], is_flash: false, category: 'general' });
   
-  const [newTeacher, setNewTeacher] = useState({ name: '', designation: '', department: 'Science', qualification: '', experience: '', phone: '', photo_url: '' });
+  const [newTeacher, setNewTeacher] = useState({ name: '', designation: '', department: 'Science', qualification: '', experience: '', phone: '', photo: '' });
   const [teacherFile, setTeacherFile] = useState(null);
+  const [deleteTeacherPhoto, setDeleteTeacherPhoto] = useState(false);
+  const [teacherPhotoPreview, setTeacherPhotoPreview] = useState('');
+
+  // School Logo states
+  const [logoFile, setLogoFile] = useState(null);
+  const [logoPreview, setLogoPreview] = useState('');
 
   const [newGallery, setNewGallery] = useState({ title: '', category: 'PM SHRI Campus', description: '', image_url: '', date: new Date().toISOString().split('T')[0], media_type: 'image', video_url: '' });
   const [galleryFile, setGalleryFile] = useState(null);
@@ -486,7 +492,7 @@ export default function Admin() {
       });
   };
 
-  // 2. ADD / UPDATE TEACHER WITH PHOTO UPLOAD
+  // 2. ADD / UPDATE TEACHER WITH PHOTO UPLOAD & RESET
   const handleAddTeacher = (e) => {
     e.preventDefault();
     setUploading(true);
@@ -497,7 +503,7 @@ export default function Admin() {
     formData.append('qualification', newTeacher.qualification);
     formData.append('experience', newTeacher.experience);
     formData.append('phone', newTeacher.phone);
-    formData.append('photo_url', newTeacher.photo_url);
+    formData.append('delete_photo', deleteTeacherPhoto ? 'true' : 'false');
     if (teacherFile) {
       formData.append('photo_file', teacherFile);
     }
@@ -515,8 +521,10 @@ export default function Admin() {
         setUploading(false);
         if (data.success) {
           showMsg(editingTeacherId ? "शिक्षक प्रोफाइल सफलतापूर्वक अपडेट हो गई!" : "शिक्षक प्रोफाइल फोटो सहित सफलतापूर्वक जुड़ गई!");
-          setNewTeacher({ name: '', designation: '', department: 'Science', qualification: '', experience: '', phone: '', photo_url: '' });
+          setNewTeacher({ name: '', designation: '', department: 'Science', qualification: '', experience: '', phone: '', photo: '' });
           setTeacherFile(null);
+          setDeleteTeacherPhoto(false);
+          setTeacherPhotoPreview('');
           setEditingTeacherId(null);
           loadAllData();
         } else {
@@ -538,16 +546,56 @@ export default function Admin() {
       qualification: t.qualification || '',
       experience: t.experience || '',
       phone: t.phone || '',
-      photo_url: t.photo || ''
+      photo: t.photo || ''
     });
     setTeacherFile(null);
+    setDeleteTeacherPhoto(false);
+    setTeacherPhotoPreview(t.photo || '/uploads/staff/blank-teacher.png');
     showMsg(`शिक्षक '${t.name}' की प्रोफाइल संपादित कर रहे हैं।`, "info");
   };
 
   const cancelEditTeacher = () => {
     setEditingTeacherId(null);
-    setNewTeacher({ name: '', designation: '', department: 'Science', qualification: '', experience: '', phone: '', photo_url: '' });
+    setNewTeacher({ name: '', designation: '', department: 'Science', qualification: '', experience: '', phone: '', photo: '' });
     setTeacherFile(null);
+    setDeleteTeacherPhoto(false);
+    setTeacherPhotoPreview('');
+  };
+
+  const handleTeacherFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setTeacherFile(file);
+      setDeleteTeacherPhoto(false);
+      setTeacherPhotoPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleRemoveTeacherPhoto = () => {
+    setTeacherFile(null);
+    setDeleteTeacherPhoto(true);
+    setTeacherPhotoPreview('/uploads/staff/blank-teacher.png');
+    showMsg("फोटो हटा दी गई। बदलाव सुरक्षित करने के लिए नीचे 'अपडेट' दबाएं।", "info");
+  };
+
+  const handleResetTeacherPhotoDirect = (teacherId) => {
+    if (!window.confirm("क्या आप इस शिक्षक की फोटो हटाकर डिफॉल्ट फोटो सेट करना चाहते हैं?")) return;
+    const formData = new FormData();
+    formData.append('delete_photo', 'true');
+    fetch(`/api/admin/teachers/${teacherId}`, {
+      method: 'PUT',
+      headers: { 'x-admin-token': token },
+      body: formData
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          showMsg("शिक्षक की फोटो हटा दी गई, डिफॉल्ट लोगो सेट किया गया।");
+          loadAllData();
+        } else {
+          showMsg(data.error || "त्रुटि हुई", "error");
+        }
+      });
   };
 
   const handleDeleteTeacher = (id) => {
@@ -560,6 +608,43 @@ export default function Admin() {
       .then(data => {
         showMsg("शिक्षक प्रोफाइल हटा दी गई।");
         loadAllData();
+      });
+  };
+
+  // 2.1 LOGO UPLOAD HANDLERS
+  const handleLogoSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setLogoFile(file);
+      setLogoPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleUploadLogo = () => {
+    if (!logoFile) return;
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('logo', logoFile);
+
+    fetch('/api/admin/logo', {
+      method: 'POST',
+      headers: { 'x-admin-token': token },
+      body: formData
+    })
+      .then(res => res.json())
+      .then(data => {
+        setUploading(false);
+        if (data.success) {
+          showMsg(data.message || "विद्यालय का लोगो सफलतापूर्वक अपडेट हुआ!");
+          setLogoFile(null);
+          refreshSettings();
+        } else {
+          showMsg(data.error || "त्रुटि हुई", "error");
+        }
+      })
+      .catch(() => {
+        setUploading(false);
+        showMsg("लोगो अपलोड करने में समस्या आई।", "error");
       });
   };
 
@@ -1630,6 +1715,59 @@ export default function Admin() {
             </span>
           </div>
 
+          {/* 0. School Logo Management Section */}
+          <div className="p-4 bg-gradient-to-r from-orange-50 via-white to-blue-50 rounded-2xl border-2 border-orange-200/80 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-sm">
+            <div className="flex items-center gap-4">
+              <div className="relative w-20 h-20 rounded-full border-2 border-orange-500 shadow-md overflow-hidden bg-white flex items-center justify-center shrink-0">
+                <img
+                  src={logoPreview || settings?.school_logo || "/logo.png"}
+                  alt="School Logo"
+                  className="w-full h-full object-contain p-1"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = "/logo.png";
+                  }}
+                />
+              </div>
+              <div className="space-y-1">
+                <h4 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                  <ImageIcon className="w-4 h-4 text-orange-600" />
+                  <span>विद्यालय का मुख्य लोगो (School Emblem / Logo)</span>
+                </h4>
+                <p className="text-slate-600 text-xs">
+                  यह लोगो हेडर, होमपेज, फुटर तथा समस्त प्रिंट प्रारूपों पर स्वतः दिखाई देगा।
+                </p>
+                <div className="pt-1 flex items-center gap-3">
+                  <label className="inline-block px-3 py-1.5 bg-blue-950 hover:bg-blue-900 text-white font-bold rounded-lg cursor-pointer text-xs shadow-sm transition">
+                    नया लोगो चुनें (Browse Logo)
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoSelect}
+                      className="hidden"
+                    />
+                  </label>
+                  {logoFile && (
+                    <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-1 rounded border border-emerald-200">
+                      चयनित: {logoFile.name}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+            {logoFile && (
+              <button
+                type="button"
+                onClick={handleUploadLogo}
+                disabled={uploading}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow transition text-xs shrink-0 flex items-center gap-1.5"
+              >
+                <Upload className="w-3.5 h-3.5" />
+                <span>{uploading ? "अपलोड हो रहा है..." : "लोगो सुरक्षित करें (Save Logo)"}</span>
+              </button>
+            )}
+          </div>
+
           <form onSubmit={handleSaveSchoolDetails} className="space-y-6 text-xs">
             {/* Section 1: Names & UDISE */}
             <div className="space-y-3">
@@ -2282,23 +2420,42 @@ export default function Admin() {
                 </div>
               </div>
 
-              {/* Photo Upload or URL */}
+              {/* Direct Photo File Picker & Preview (No URL input) */}
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                <label className="block font-bold text-slate-800">शिक्षक की फोटो अपलोड करें (Upload Photo)</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setTeacherFile(e.target.files[0])}
-                  className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-900 file:text-white hover:file:bg-blue-800 cursor-pointer"
-                />
-                <p className="text-[10px] text-slate-500 text-center">-- या फोटो URL दर्ज करें --</p>
-                <input
-                  type="url"
-                  placeholder="https://images.unsplash.com/..."
-                  value={newTeacher.photo_url}
-                  onChange={(e) => setNewTeacher({ ...newTeacher, photo_url: e.target.value })}
-                  className="w-full px-3 py-1.5 rounded border border-slate-300 text-xs"
-                />
+                <label className="block font-bold text-slate-800">शिक्षक की फोटो चुनें (Select Photo)</label>
+                <div className="flex items-center gap-3">
+                  <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-slate-300 bg-white shrink-0 shadow-inner flex items-center justify-center">
+                    <img
+                      src={teacherPhotoPreview || newTeacher.photo || "/uploads/staff/blank-teacher.png"}
+                      alt="Teacher Avatar"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = "/uploads/staff/blank-teacher.png";
+                      }}
+                    />
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleTeacherFileSelect}
+                      className="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-900 file:text-white hover:file:bg-blue-800 cursor-pointer"
+                    />
+                    {((teacherPhotoPreview && teacherPhotoPreview !== '/uploads/staff/blank-teacher.png') || 
+                      (newTeacher.photo && newTeacher.photo !== '/uploads/staff/blank-teacher.png') || 
+                      teacherFile) && (
+                      <button
+                        type="button"
+                        onClick={handleRemoveTeacherPhoto}
+                        className="text-[11px] font-bold text-red-600 hover:text-red-700 flex items-center gap-1 cursor-pointer pt-0.5"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        <span>फोटो हटाएं (डिफ़ॉल्ट सेट करें)</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <button
@@ -2347,9 +2504,13 @@ export default function Admin() {
                 <div key={t.id} className="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between gap-3 text-xs">
                   <div className="flex items-center gap-3">
                     <img
-                      src={t.photo || "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&q=80"}
+                      src={t.photo || "/uploads/staff/blank-teacher.png"}
                       alt={t.name}
-                      className="w-12 h-12 rounded-full object-cover border border-slate-300"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = "/uploads/staff/blank-teacher.png";
+                      }}
+                      className="w-12 h-12 rounded-full object-cover border border-slate-300 shrink-0"
                     />
                     <div>
                       <p className="font-bold text-slate-900">{t.name}</p>
@@ -2358,6 +2519,15 @@ export default function Admin() {
                     </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
+                    {t.photo && t.photo !== '/uploads/staff/blank-teacher.png' && (
+                      <button
+                        onClick={() => handleResetTeacherPhotoDirect(t.id)}
+                        className="p-1.5 text-amber-600 hover:bg-amber-50 rounded transition"
+                        title="फोटो हटाएं (डिफ़ॉल्ट सेट करें)"
+                      >
+                        <Trash2 className="w-4 h-4 text-orange-600" />
+                      </button>
+                    )}
                     <button
                       onClick={() => startEditTeacher(t)}
                       className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition"

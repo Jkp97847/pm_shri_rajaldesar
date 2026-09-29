@@ -30,8 +30,6 @@ export default function AdminStudentsTab({ token, showMsg }) {
     category: 'GEN',
     dob: '',
     phone: '',
-    address: 'राजलदेसर',
-    admission_date: new Date().toISOString().split('T')[0],
     status: 'Active'
   });
 
@@ -129,8 +127,6 @@ export default function AdminStudentsTab({ token, showMsg }) {
       category: s.category || 'GEN',
       dob: s.dob || '',
       phone: s.phone || '',
-      address: s.address || 'राजलदेसर',
-      admission_date: s.admission_date || '',
       status: s.status || 'Active'
     });
     window.scrollTo({ top: 350, behavior: 'smooth' });
@@ -151,8 +147,6 @@ export default function AdminStudentsTab({ token, showMsg }) {
       category: 'GEN',
       dob: '',
       phone: '',
-      address: 'राजलदेसर',
-      admission_date: new Date().toISOString().split('T')[0],
       status: 'Active'
     });
   };
@@ -180,7 +174,7 @@ export default function AdminStudentsTab({ token, showMsg }) {
       showMsg("एक्सपोर्ट करने के लिए कोई विद्यार्थी डेटा नहीं है।", "error");
       return;
     }
-    const headers = ["SR No", "Roll No", "Student Name", "Father Name", "Mother Name", "Class", "Section", "Gender", "Category", "DOB", "Phone", "Address", "Status"];
+    const headers = ["SR No", "Roll No", "Student Name", "Father Name", "Mother Name", "Class", "Section", "Gender", "Category", "DOB", "Phone"];
     const rows = students.map(s => [
       `"${s.sr_no || ''}"`,
       `"${s.roll_no || ''}"`,
@@ -192,9 +186,7 @@ export default function AdminStudentsTab({ token, showMsg }) {
       `"${s.gender || ''}"`,
       `"${s.category || ''}"`,
       `"${s.dob || ''}"`,
-      `"${s.phone || ''}"`,
-      `"${s.address || ''}"`,
-      `"${s.status || 'Active'}"`
+      `"${s.phone || ''}"`
     ]);
 
     const csvString = "\uFEFF" + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
@@ -211,10 +203,10 @@ export default function AdminStudentsTab({ token, showMsg }) {
 
   // Download Sample CSV Template
   const handleDownloadSampleCSV = () => {
-    const headers = ["SR No", "Roll No", "Student Name", "Father Name", "Mother Name", "Class", "Section", "Gender", "Category", "DOB", "Phone", "Address"];
+    const headers = ["SR No", "Roll No", "Student Name", "Father Name", "Mother Name", "Class", "Section", "Gender", "Category", "DOB", "Phone"];
     const sampleRows = [
-      ["SR-1051", "101", "कविता शर्मा", "सुरेश कुमार शर्मा", "मंजू देवी", "Class 10", "A", "Girl", "GEN", "2010-04-15", "9829123456", "राजलदेसर"],
-      ["SR-1052", "102", "सुनील प्रजापत", "रामगोपाल प्रजापत", "शांति देवी", "Class 10", "A", "Boy", "OBC", "2010-08-20", "9414567890", "कुम्हार बास, राजलदेसर"]
+      ["SR-1051", "101", "कविता शर्मा", "सुरेश कुमार शर्मा", "मंजू देवी", "Class 10", "A", "Girl", "GEN", "2010-04-15", "9829123456"],
+      ["SR-1052", "102", "सुनील प्रजापत", "रामगोपाल प्रजापत", "शांति देवी", "Class 10", "A", "Boy", "OBC", "2010-08-20", "9414567890"]
     ];
     const csvString = "\uFEFF" + [headers.join(","), ...sampleRows.map(r => r.map(c => `"${c}"`).join(","))].join("\n");
     const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
@@ -297,9 +289,7 @@ export default function AdminStudentsTab({ token, showMsg }) {
           category: (row['category'] || row['वर्ग'] || 'GEN').toUpperCase(),
           dob: row['dob'] || row['date of birth'] || row['जन्म तिथि'] || '',
           phone: row['phone'] || row['mobile'] || row['मोबाइल'] || '',
-          address: row['address'] || row['पता'] || 'राजलदेसर',
-          admission_date: row['admission date'] || new Date().toISOString().split('T')[0],
-          status: row['status'] || 'Active'
+          status: 'Active'
         });
       }
     }
@@ -577,17 +567,6 @@ export default function AdminStudentsTab({ token, showMsg }) {
               </div>
             </div>
 
-            <div>
-              <label className="block font-bold text-slate-700 mb-1">निवास स्थान / पता (Address)</label>
-              <input
-                type="text"
-                placeholder="उदा: वार्ड 12, राजलदेसर"
-                value={studentForm.address}
-                onChange={(e) => setStudentForm({ ...studentForm, address: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg border border-slate-300"
-              />
-            </div>
-
             <div className="pt-2">
               <button
                 type="submit"
@@ -759,7 +738,7 @@ export default function AdminStudentsTab({ token, showMsg }) {
                   </button>
                 </p>
                 <p className="text-[11px] text-emerald-800 font-mono">
-                  SR No, Roll No, Student Name, Father Name, Mother Name, Class, Section, Gender, Category, DOB, Phone, Address
+                  SR No, Roll No, Student Name, Father Name, Mother Name, Class, Section, Gender, Category, DOB, Phone
                 </p>
               </div>
 
@@ -777,7 +756,7 @@ export default function AdminStudentsTab({ token, showMsg }) {
                 <label className="block font-bold text-slate-700 mb-1">-- या यहाँ CSV टेक्स्ट पेस्ट करें: --</label>
                 <textarea
                   rows={8}
-                  placeholder={`SR No,Roll No,Student Name,Father Name,Mother Name,Class,Section,Gender,Category,DOB,Phone,Address\nSR-1051,101,कविता शर्मा,सुरेश कुमार शर्मा,मंजू देवी,Class 10,A,Girl,GEN,2010-04-15,9829123456,राजलदेसर`}
+                  placeholder={`SR No,Roll No,Student Name,Father Name,Mother Name,Class,Section,Gender,Category,DOB,Phone\nSR-1051,101,कविता शर्मा,सुरेश कुमार शर्मा,मंजू देवी,Class 10,A,Girl,GEN,2010-04-15,9829123456`}
                   value={bulkCsvText}
                   onChange={(e) => setBulkCsvText(e.target.value)}
                   className="w-full p-3 rounded-lg border border-slate-300 font-mono text-[11px] focus:outline-none focus:ring-2 focus:ring-emerald-600"

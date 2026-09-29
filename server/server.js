@@ -502,6 +502,24 @@ app.post('/api/admin/settings', adminAuth, (req, res) => {
   }
 });
 
+// Admin Upload School Logo
+app.post('/api/admin/logo', adminAuth, upload.single('logo'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'कृपया लोगो फ़ाइल चुनें।' });
+    }
+    const logoUrl = `/uploads/${req.file.filename}`;
+    const upsertStmt = db.prepare(`
+      INSERT INTO settings (key, value) VALUES ('school_logo', ?)
+      ON CONFLICT(key) DO UPDATE SET value = excluded.value
+    `);
+    upsertStmt.run(logoUrl);
+    res.json({ success: true, message: 'विद्यालय का लोगो सफलतापूर्वक अपडेट हो गया!', logo_url: logoUrl });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // --- ADMIN NOTICES CRUD ---
 app.post('/api/admin/notices', adminAuth, (req, res) => {
   try {
@@ -541,24 +559,21 @@ app.put('/api/admin/notices/:id', adminAuth, (req, res) => {
   }
 });
 
-// --- ADMIN TEACHERS CRUD (with file upload support) ---
+// --- ADMIN TEACHERS CRUD (with direct file upload & reset support) ---
 app.post('/api/admin/teachers', adminAuth, upload.single('photo_file'), (req, res) => {
   try {
-    const { name, designation, department, qualification, experience, phone, photo_url } = req.body;
-    let photo = photo_url;
+    const { name, designation, department, qualification, experience, phone } = req.body;
+    let photo = '/uploads/staff/blank-teacher.png';
     if (req.file) {
       photo = `/uploads/${req.file.filename}`;
-    }
-    if (!photo) {
-      photo = "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&q=80";
     }
 
     const stmt = db.prepare(`
       INSERT INTO teachers (name, designation, department, qualification, experience, photo, phone)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
-    const info = stmt.run(name, designation, department, qualification, experience, photo, phone);
-    res.json({ success: true, id: info.lastInsertRowid, message: "Teacher added successfully." });
+    const info = stmt.run(name || '', designation || '', department || '', qualification || '', experience || '', photo, phone || '');
+    res.json({ success: true, id: info.lastInsertRowid, message: "शिक्षक प्रोफाइल सफलतापूर्वक जोड़ी गई।" });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -566,23 +581,33 @@ app.post('/api/admin/teachers', adminAuth, upload.single('photo_file'), (req, re
 
 app.put('/api/admin/teachers/:id', adminAuth, upload.single('photo_file'), (req, res) => {
   try {
-    const { name, designation, department, qualification, experience, phone, photo_url } = req.body;
-    let photo = photo_url;
-    if (req.file) {
+    const existing = db.prepare('SELECT * FROM teachers WHERE id = ?').get(req.params.id);
+    if (!existing) {
+      return res.status(404).json({ success: false, error: 'शिक्षक नहीं मिला।' });
+    }
+
+    const { delete_photo } = req.body;
+    let photo = existing.photo || '/uploads/staff/blank-teacher.png';
+    if (delete_photo === 'true') {
+      photo = '/uploads/staff/blank-teacher.png';
+    } else if (req.file) {
       photo = `/uploads/${req.file.filename}`;
     }
-    const existing = db.prepare('SELECT photo FROM teachers WHERE id = ?').get(req.params.id);
-    if (!photo && existing) {
-      photo = existing.photo;
-    }
+
+    const name = req.body.name !== undefined ? req.body.name : existing.name;
+    const designation = req.body.designation !== undefined ? req.body.designation : existing.designation;
+    const department = req.body.department !== undefined ? req.body.department : existing.department;
+    const qualification = req.body.qualification !== undefined ? req.body.qualification : existing.qualification;
+    const experience = req.body.experience !== undefined ? req.body.experience : existing.experience;
+    const phone = req.body.phone !== undefined ? req.body.phone : (existing.phone || '');
 
     const stmt = db.prepare(`
       UPDATE teachers 
       SET name = ?, designation = ?, department = ?, qualification = ?, experience = ?, photo = ?, phone = ?
       WHERE id = ?
     `);
-    stmt.run(name, designation, department, qualification, experience, photo || '', phone, req.params.id);
-    res.json({ success: true, message: "शिक्षक प्रोफाइल सफलतापूर्वक अपडेट हो गई!" });
+    stmt.run(name || '', designation || '', department || '', qualification || '', experience || '', photo, phone || '', req.params.id);
+    res.json({ success: true, message: "शिक्षक प्रोफाइल सफलतापूर्वक अपडेट हो गई!", photo });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -938,7 +963,7 @@ app.delete('/api/admin/sports/:id', adminAuth, (req, res) => {
 // --- ADMIN STUDENTS CRUD & BULK ---
 app.post('/api/admin/students', adminAuth, (req, res) => {
   try {
-    const { sr_no, roll_no, name, father_name, mother_name, class_name, section, gender, category, dob, phone, address, admission_date, status } = req.body;
+    const { sr_no, roll_no, name, father_name, mother_name, class_name, section, gender, category, dob, phone, status } = req.body;
     if (!name || !class_name || !gender) {
       return res.status(400).json({ success: false, message: "विद्यार्थी का नाम, कक्षा और लिंग अनिवार्य हैं।" });
     }
@@ -949,7 +974,7 @@ app.post('/api/admin/students', adminAuth, (req, res) => {
     const info = stmt.run(
       sr_no || '', roll_no || '', name.trim(), father_name || '', mother_name || '',
       class_name, section || 'A', gender, category || 'GEN', dob || '', phone || '',
-      address || 'राजलदेसर', admission_date || new Date().toISOString().split('T')[0], status || 'Active'
+      '', new Date().toISOString().split('T')[0], status || 'Active'
     );
     res.json({ success: true, id: info.lastInsertRowid, message: "विद्यार्थी रिकॉर्ड सफलतापूर्वक जोड़ा गया।" });
   } catch (err) {
@@ -959,16 +984,16 @@ app.post('/api/admin/students', adminAuth, (req, res) => {
 
 app.put('/api/admin/students/:id', adminAuth, (req, res) => {
   try {
-    const { sr_no, roll_no, name, father_name, mother_name, class_name, section, gender, category, dob, phone, address, admission_date, status } = req.body;
+    const { sr_no, roll_no, name, father_name, mother_name, class_name, section, gender, category, dob, phone, status } = req.body;
     const stmt = db.prepare(`
       UPDATE students 
-      SET sr_no = ?, roll_no = ?, name = ?, father_name = ?, mother_name = ?, class_name = ?, section = ?, gender = ?, category = ?, dob = ?, phone = ?, address = ?, admission_date = ?, status = ?
+      SET sr_no = ?, roll_no = ?, name = ?, father_name = ?, mother_name = ?, class_name = ?, section = ?, gender = ?, category = ?, dob = ?, phone = ?, status = ?
       WHERE id = ?
     `);
     stmt.run(
       sr_no || '', roll_no || '', name.trim(), father_name || '', mother_name || '',
       class_name, section || 'A', gender, category || 'GEN', dob || '', phone || '',
-      address || 'राजलदेसर', admission_date || '', status || 'Active', req.params.id
+      status || 'Active', req.params.id
     );
     res.json({ success: true, message: "विद्यार्थी विवरण सफलतापूर्वक अपडेट हो गया!" });
   } catch (err) {
@@ -985,7 +1010,7 @@ app.delete('/api/admin/students/:id', adminAuth, (req, res) => {
   }
 });
 
-// Bulk Import Students (accepts array of student objects from CSV/Excel parsing)
+// Bulk Import Students (accepts array of student objects with exactly the 11 fields)
 app.post('/api/admin/students/bulk', adminAuth, (req, res) => {
   try {
     const { students } = req.body;
@@ -1014,8 +1039,8 @@ app.post('/api/admin/students/bulk', adminAuth, (req, res) => {
           s.category || s['Category'] || s['वर्ग'] || 'GEN',
           s.dob || s['DOB'] || s['जन्म तिथि'] || '',
           s.phone || s['Phone'] || s['मोबाइल'] || '',
-          s.address || s['Address'] || s['पता'] || 'राजलदेसर',
-          s.admission_date || s['Admission Date'] || s['प्रवेश तिथि'] || new Date().toISOString().split('T')[0],
+          '',
+          new Date().toISOString().split('T')[0],
           s.status || s['Status'] || 'Active'
         );
         importedCount++;

@@ -73,11 +73,22 @@ export default function Navbar() {
           <div className="flex items-center gap-3 sm:gap-5">
             {/* National & PM SHRI Emblem Logos with Tricolor Rim */}
             <div className="flex items-center gap-2">
-              <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full p-1 bg-gradient-to-b from-orange-500 via-white to-emerald-600 shadow-md flex items-center justify-center shrink-0">
-                <div className="w-full h-full rounded-full bg-white flex flex-col items-center justify-center text-center p-1 border border-blue-900 shadow-inner">
-                  <span className="text-[10px] sm:text-[11px] font-black text-orange-600 tracking-tighter uppercase leading-none">PM SHRI</span>
-                  <span className="text-[9px] sm:text-[10px] font-black text-blue-950 tracking-wider">SCHOOL</span>
-                  <span className="text-[7px] text-emerald-700 font-black">RAJASTHAN</span>
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full p-1 bg-gradient-to-b from-orange-500 via-white to-emerald-600 shadow-md flex items-center justify-center shrink-0">
+                <div className="w-full h-full rounded-full bg-white flex items-center justify-center p-1 border border-blue-900 shadow-inner overflow-hidden">
+                  <img
+                    src={settings.school_logo || "/logo.png"}
+                    alt="विद्यालय का लोगो"
+                    className="w-full h-full object-contain"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      if (e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                  <div style={{ display: 'none' }} className="w-full h-full flex-col items-center justify-center text-center">
+                    <span className="text-[10px] sm:text-[11px] font-black text-orange-600 tracking-tighter uppercase leading-none">PM SHRI</span>
+                    <span className="text-[9px] sm:text-[10px] font-black text-blue-950 tracking-wider">SCHOOL</span>
+                    <span className="text-[7px] text-emerald-700 font-black">RAJASTHAN</span>
+                  </div>
                 </div>
               </div>
             </div>

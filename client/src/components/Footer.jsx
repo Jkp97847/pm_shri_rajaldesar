@@ -16,11 +16,16 @@ export default function Footer() {
         {/* Col 1: About School */}
         <div className="space-y-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full p-0.5 bg-gradient-to-b from-orange-500 via-white to-emerald-600 shadow-md flex items-center justify-center shrink-0">
-              <div className="w-full h-full rounded-full bg-white flex flex-col items-center justify-center text-center p-0.5 border border-blue-900">
-                <span className="text-[9px] font-black text-orange-600 leading-none">PM SHRI</span>
-                <span className="text-[7px] font-black text-blue-950 leading-none">SCHOOL</span>
-              </div>
+            <div className="w-12 h-12 rounded-full p-0.5 bg-gradient-to-b from-orange-500 via-white to-emerald-600 shadow-md flex items-center justify-center shrink-0 overflow-hidden">
+              <img
+                src={settings.school_logo || "/logo.png"}
+                alt="School Logo"
+                className="w-full h-full rounded-full bg-white object-contain p-0.5"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = "/logo.png";
+                }}
+              />
             </div>
             <div>
               <h3 className="text-white font-extrabold text-base leading-tight">

@@ -78,7 +78,7 @@ export default function Students() {
       alert("एक्सपोर्ट करने के लिए कोई विद्यार्थी डेटा उपलब्ध नहीं है।");
       return;
     }
-    const headers = ["SR No", "Roll No", "Student Name", "Father Name", "Mother Name", "Class", "Section", "Gender", "Category", "DOB", "Phone", "Address"];
+    const headers = ["SR No", "Roll No", "Student Name", "Father Name", "Mother Name", "Class", "Section", "Gender", "Category", "DOB", "Phone"];
     const rows = students.map(s => [
       `"${s.sr_no || ''}"`,
       `"${s.roll_no || ''}"`,
@@ -90,8 +90,7 @@ export default function Students() {
       `"${s.gender || ''}"`,
       `"${s.category || ''}"`,
       `"${s.dob || ''}"`,
-      `"${s.phone || ''}"`,
-      `"${s.address || ''}"`
+      `"${s.phone || ''}"`
     ]);
 
     const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
@@ -403,7 +402,7 @@ export default function Students() {
                   <th className="p-3.5 font-bold">लिंग</th>
                   <th className="p-3.5 font-bold">श्रेणी / वर्ग</th>
                   <th className="p-3.5 font-bold">जन्म तिथि</th>
-                  <th className="p-3.5 font-bold">संपर्क / पता</th>
+                  <th className="p-3.5 font-bold">संपर्क सूत्र (फोन)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
@@ -440,14 +439,15 @@ export default function Students() {
                       </span>
                     </td>
                     <td className="p-3.5 font-mono text-slate-600">{s.dob || '-'}</td>
-                    <td className="p-3.5">
-                      {s.phone && (
-                        <div className="flex items-center gap-1 text-slate-800 font-mono">
-                          <Phone className="w-3 h-3 text-slate-400" />
+                    <td className="p-3.5 font-mono text-slate-700">
+                      {s.phone ? (
+                        <div className="flex items-center gap-1 font-bold text-blue-950">
+                          <Phone className="w-3 h-3 text-emerald-600" />
                           <span>{s.phone}</span>
                         </div>
+                      ) : (
+                        <span className="text-slate-400">-</span>
                       )}
-                      <div className="text-[10px] text-slate-500 truncate max-w-[150px]">{s.address || 'राजलदेसर'}</div>
                     </td>
                   </tr>
                 ))}
