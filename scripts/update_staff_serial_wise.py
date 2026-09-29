@@ -145,10 +145,10 @@ for s in staff_list:
         dept = 'Administration'
     elif 'computer' in p_lower or 'computer' in subj_lower:
         dept = 'ICT'
+    elif 'political' in subj_lower or 'hindi' in subj_lower or 'sanskrit' in subj_lower or 'english' in subj_lower or 'urdu' in subj_lower:
+        dept = 'Arts'
     elif 'physics' in subj_lower or 'chemistry' in subj_lower or 'biology' in subj_lower or 'science' in subj_lower or 'math' in subj_lower or 'lab' in p_lower:
         dept = 'Science'
-    elif 'hindi' in subj_lower or 'sanskrit' in subj_lower or 'english' in subj_lower or 'urdu' in subj_lower or 'political' in subj_lower:
-        dept = 'Arts'
     elif 'level-1' in p_lower or 'level-2' in p_lower:
         dept = 'Elementary'
     elif 'administrative' in p_lower or 'assistant' in p_lower or 'class iv' in p_lower:
