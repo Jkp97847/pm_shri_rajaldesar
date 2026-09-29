@@ -88,7 +88,20 @@ export default function Admin() {
   // Form states
   const [newNotice, setNewNotice] = useState({ title: '', content: '', date: new Date().toISOString().split('T')[0], is_flash: false, category: 'general' });
   
-  const [newTeacher, setNewTeacher] = useState({ name: '', designation: '', department: 'Science', qualification: '', experience: '', phone: '', photo: '' });
+  const [newTeacher, setNewTeacher] = useState({
+    serial_no: '',
+    name: '',
+    designation: '',
+    subject: '',
+    department: 'General',
+    current_post: '',
+    joining_date: '',
+    current_joining_date: '',
+    qualification: '',
+    experience: '',
+    phone: '',
+    photo: ''
+  });
   const [teacherFile, setTeacherFile] = useState(null);
   const [deleteTeacherPhoto, setDeleteTeacherPhoto] = useState(false);
   const [teacherPhotoPreview, setTeacherPhotoPreview] = useState('');
@@ -497,12 +510,17 @@ export default function Admin() {
     e.preventDefault();
     setUploading(true);
     const formData = new FormData();
+    formData.append('serial_no', newTeacher.serial_no || '');
     formData.append('name', newTeacher.name);
     formData.append('designation', newTeacher.designation);
+    formData.append('subject', newTeacher.subject || '');
     formData.append('department', newTeacher.department);
-    formData.append('qualification', newTeacher.qualification);
-    formData.append('experience', newTeacher.experience);
-    formData.append('phone', newTeacher.phone);
+    formData.append('current_post', newTeacher.current_post || '');
+    formData.append('joining_date', newTeacher.joining_date || '');
+    formData.append('current_joining_date', newTeacher.current_joining_date || '');
+    formData.append('qualification', newTeacher.qualification || '');
+    formData.append('experience', newTeacher.experience || '');
+    formData.append('phone', newTeacher.phone || '');
     formData.append('delete_photo', deleteTeacherPhoto ? 'true' : 'false');
     if (teacherFile) {
       formData.append('photo_file', teacherFile);
@@ -521,7 +539,20 @@ export default function Admin() {
         setUploading(false);
         if (data.success) {
           showMsg(editingTeacherId ? "शिक्षक प्रोफाइल सफलतापूर्वक अपडेट हो गई!" : "शिक्षक प्रोफाइल फोटो सहित सफलतापूर्वक जुड़ गई!");
-          setNewTeacher({ name: '', designation: '', department: 'Science', qualification: '', experience: '', phone: '', photo: '' });
+          setNewTeacher({
+            serial_no: '',
+            name: '',
+            designation: '',
+            subject: '',
+            department: 'General',
+            current_post: '',
+            joining_date: '',
+            current_joining_date: '',
+            qualification: '',
+            experience: '',
+            phone: '',
+            photo: ''
+          });
           setTeacherFile(null);
           setDeleteTeacherPhoto(false);
           setTeacherPhotoPreview('');
@@ -540,9 +571,14 @@ export default function Admin() {
   const startEditTeacher = (t) => {
     setEditingTeacherId(t.id);
     setNewTeacher({
-      name: t.name,
-      designation: t.designation,
-      department: t.department,
+      serial_no: t.serial_no !== null && t.serial_no !== undefined ? t.serial_no : '',
+      name: t.name || '',
+      designation: t.designation || '',
+      subject: t.subject || '',
+      department: t.department || 'General',
+      current_post: t.current_post || t.designation || '',
+      joining_date: t.joining_date || '',
+      current_joining_date: t.current_joining_date || '',
       qualification: t.qualification || '',
       experience: t.experience || '',
       phone: t.phone || '',
@@ -550,13 +586,26 @@ export default function Admin() {
     });
     setTeacherFile(null);
     setDeleteTeacherPhoto(false);
-    setTeacherPhotoPreview(t.photo || '/uploads/staff/blank-teacher.png');
+    setTeacherPhotoPreview(t.photo || '/uploads/staff/user.jpg');
     showMsg(`शिक्षक '${t.name}' की प्रोफाइल संपादित कर रहे हैं।`, "info");
   };
 
   const cancelEditTeacher = () => {
     setEditingTeacherId(null);
-    setNewTeacher({ name: '', designation: '', department: 'Science', qualification: '', experience: '', phone: '', photo: '' });
+    setNewTeacher({
+      serial_no: '',
+      name: '',
+      designation: '',
+      subject: '',
+      department: 'General',
+      current_post: '',
+      joining_date: '',
+      current_joining_date: '',
+      qualification: '',
+      experience: '',
+      phone: '',
+      photo: ''
+    });
     setTeacherFile(null);
     setDeleteTeacherPhoto(false);
     setTeacherPhotoPreview('');
@@ -574,7 +623,7 @@ export default function Admin() {
   const handleRemoveTeacherPhoto = () => {
     setTeacherFile(null);
     setDeleteTeacherPhoto(true);
-    setTeacherPhotoPreview('/uploads/staff/blank-teacher.png');
+    setTeacherPhotoPreview('/uploads/staff/user.jpg');
     showMsg("फोटो हटा दी गई। बदलाव सुरक्षित करने के लिए नीचे 'अपडेट' दबाएं।", "info");
   };
 
@@ -1079,46 +1128,53 @@ export default function Admin() {
       });
   };
 
-  // 9. TEACHER BULK IMPORT & EXPORT HANDLERS
+  // 9. TEACHER BULK IMPORT & EXPORT HANDLERS (10 Columns: SERIAL, Name, Post, Subject, Faculty, current post, joining, current joining, Study, mobile no)
   const handleExportTeachersCSV = () => {
     if (teachers.length === 0) {
       showMsg("एक्सपोर्ट करने के लिए शिक्षक डेटा उपलब्ध नहीं है।", "error");
       return;
     }
-    const headers = ["Name", "Designation", "Department", "Qualification", "Experience", "Phone", "Photo"];
-    const rows = teachers.map(t => [
-      `"${t.name || ''}"`,
-      `"${t.designation || ''}"`,
-      `"${t.department || ''}"`,
-      `"${t.qualification || ''}"`,
-      `"${t.experience || ''}"`,
-      `"${t.phone || ''}"`,
-      `"${t.photo || ''}"`
+    const headers = ["SERIAL", "Name", "Post", "Subject", "Faculty", "current post", "joining", "current joining", "Study", "mobile no"];
+    const rows = teachers.map((t, idx) => [
+      `"${t.serial_no || idx + 1}"`,
+      `"${(t.name || '').replace(/"/g, '""')}"`,
+      `"${(t.designation || '').replace(/"/g, '""')}"`,
+      `"${(t.subject || '').replace(/"/g, '""')}"`,
+      `"${(t.department || '').replace(/"/g, '""')}"`,
+      `"${(t.current_post || t.designation || '').replace(/"/g, '""')}"`,
+      `"${(t.joining_date || '').replace(/"/g, '""')}"`,
+      `"${(t.current_joining_date || '').replace(/"/g, '""')}"`,
+      `"${(t.qualification || '').replace(/"/g, '""')}"`,
+      `"${(t.phone || '').replace(/"/g, '""')}"`
     ]);
     const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", `PM_SHRI_Teachers_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `PM_SHRI_Teachers_Staff_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    showMsg("शिक्षक डेटा CSV फ़ाइल में सफलतापूर्वक डाउनलोड हुआ!");
+    showMsg("शिक्षक डेटा 10-कॉलम CSV फ़ाइल में सफलतापूर्वक डाउनलोड हुआ!");
   };
 
   const handleDownloadTeacherSampleCSV = () => {
-    const headers = ["Name", "Designation", "Department", "Qualification", "Experience", "Phone"];
+    const headers = ["SERIAL", "Name", "Post", "Subject", "Faculty", "current post", "joining", "current joining", "Study", "mobile no"];
     const sampleRows = [
-      ["श्री मोहन लाल", "प्रधानाचार्य (Principal)", "Administration", "M.A., B.Ed, RSCIT", "24 वर्ष", "9414894845"],
-      ["श्रीमती विमला चौधरी", "उप-प्रधानाचार्य (Vice Principal)", "Administration", "B.A., M.A., B.Ed.", "14 वर्ष", "9460927989"]
+      ["1", "MOHAN LAL", "Vice Principal (School)", "", "Administration", "Vice Principal", "2002-08-15", "2023-04-28", "B.A/M.A/BSTC.B.ED/RSCIT", "9414894845"],
+      ["2", "INDER SINGH", "Vice Principal (School)", "", "Administration", "Vice Principal", "2006-09-12", "2016-07-30", "B.A/M.A", "9057295392"],
+      ["4", "MAHESH KUMAR SANKHOLIA", "Lecturer (I Gr.)", "Sanskrit Literature", "Arts", "Lecturer", "2012-04-10", "2016-09-03", "M.A/M.P/NET/RSCIT", "9024347777"],
+      ["5", "RASHMI MAHARSHI", "Lecturer (I Gr.)", "Political Science", "Arts", "Lecturer", "2010-07-20", "2017-01-21", "B.A/M.A/B.ED", "9079682607"],
+      ["6", "RAMESH KUMAR", "Lecturer (I Gr.)", "Physics", "Science", "Lecturer", "2012-05-18", "2017-06-28", "B.SC/M.SC/B.ED", "8963892319"],
+      ["35", "JAGDISH PRAJAPAT", "Basic Computer Instructor", "Computer Science", "ICT", "Basic Computer Instructor", "2022-10-18", "2022-10-18", "MCA", "9784730824"]
     ];
     const csvContent = "\uFEFF" + [headers.join(","), ...sampleRows.map(r => r.map(c => `"${c}"`).join(","))].join("\n");
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", "Sample_Teachers_Import_Template.csv");
+    link.setAttribute("download", "PM_SHRI_Teachers_Sample_10_Columns.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -1129,48 +1185,131 @@ export default function Admin() {
       showMsg("कृपया CSV डेटा दर्ज करें।", "error");
       return;
     }
-    const lines = teacherBulkCsvText.trim().split(/\r\n|\n/);
-    if (lines.length < 2) {
-      showMsg("CSV फ़ाइल में कम से कम एक शीर्षक पंक्ति और एक डेटा पंक्ति होनी चाहिए।", "error");
+    const lines = teacherBulkCsvText.trim().split(/\r\n|\n/).filter(l => l.trim().length > 0);
+    if (lines.length < 1) {
+      showMsg("CSV फ़ाइल में कोई डेटा पंक्ति नहीं मिली।", "error");
       return;
     }
-    const parseCSVLine = (text) => {
+
+    const parseDelimitedLine = (text, delimiter) => {
       const result = [];
       let cur = '';
       let inQuotes = false;
       for (let i = 0; i < text.length; i++) {
         const c = text[i];
-        if (c === '"') inQuotes = !inQuotes;
-        else if (c === ',' && !inQuotes) { result.push(cur.trim()); cur = ''; }
-        else cur += c;
+        if (c === '"') {
+          if (inQuotes && text[i + 1] === '"') {
+            cur += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (c === delimiter && !inQuotes) {
+          result.push(cur.trim());
+          cur = '';
+        } else {
+          cur += c;
+        }
       }
       result.push(cur.trim());
       return result;
     };
-    const headers = parseCSVLine(lines[0]).map(h => h.replace(/^"|"$/g, '').trim().toLowerCase());
+
+    const firstLine = lines[0];
+    const delimiter = firstLine.includes('\t') ? '\t' : ',';
+    const firstRowValues = parseDelimitedLine(firstLine, delimiter).map(v => v.replace(/^["'\s]+|["'\s]+$/g, ''));
+    
+    // Check if line 0 is a header
+    const normalizedFirstRow = firstRowValues.map(h => h.toLowerCase().replace(/[\s_\/-]+/g, ' '));
+    const isHeaderRow = normalizedFirstRow.some(h => 
+      h.includes('serial') || h.includes('name') || h.includes('post') || 
+      h.includes('subject') || h.includes('faculty') || h.includes('joining') || 
+      h.includes('study') || h.includes('mobile') || h.includes('नाम') || h.includes('पद')
+    );
+
+    let dataLines = lines;
+    let headers = [];
+
+    if (isHeaderRow) {
+      headers = normalizedFirstRow;
+      dataLines = lines.slice(1);
+    }
+
     const teachersToImport = [];
-    for (let i = 1; i < lines.length; i++) {
-      if (!lines[i].trim()) continue;
-      const values = parseCSVLine(lines[i]).map(v => v.replace(/^"|"$/g, '').trim());
-      const row = {};
-      headers.forEach((h, idx) => { row[h] = values[idx] || ''; });
-      const name = row['name'] || row['शिक्षक का नाम'] || row['teacher name'] || '';
-      if (name) {
+
+    for (let i = 0; i < dataLines.length; i++) {
+      if (!dataLines[i].trim()) continue;
+      const values = parseDelimitedLine(dataLines[i], delimiter).map(v => v.replace(/^"|"$/g, '').trim());
+
+      let serialNo = null;
+      let name = '';
+      let post = '';
+      let subject = '';
+      let faculty = 'General';
+      let currentPost = '';
+      let joining = '';
+      let currentJoining = '';
+      let study = '';
+      let mobileNo = '';
+
+      if (headers.length > 0) {
+        const getVal = (possibleKeys) => {
+          for (const key of possibleKeys) {
+            const idx = headers.findIndex(h => h === key || h.includes(key));
+            if (idx !== -1 && values[idx] !== undefined && values[idx] !== '') {
+              return values[idx];
+            }
+          }
+          return '';
+        };
+
+        const rawSerial = getVal(['serial', 'sr no', 'cr', 'क्र.सं.', 'क्र.']);
+        serialNo = rawSerial ? parseInt(rawSerial, 10) : null;
+        name = getVal(['name', 'teacher name', 'शिक्षक का नाम', 'नाम']);
+        post = getVal(['post', 'designation', 'पद']);
+        subject = getVal(['subject', 'विषय']);
+        faculty = getVal(['faculty', 'department', 'संकाय']) || 'General';
+        currentPost = getVal(['current post', 'वर्तमान पद']) || post;
+        joining = getVal(['joining', 'first joining', 'कार्यग्रहण तिथि']);
+        currentJoining = getVal(['current joining', 'current post joining', 'वर्तमान कार्यग्रहण']);
+        study = getVal(['study', 'qualification', 'योग्यता']);
+        mobileNo = getVal(['mobile no', 'mobile', 'phone', 'मोबाइल']);
+      } else {
+        // Positional fallback to the exact 10 columns:
+        // 0: SERIAL, 1: Name, 2: Post, 3: Subject, 4: Faculty, 5: current post, 6: joining, 7: current joining, 8: Study, 9: mobile no
+        serialNo = values[0] ? parseInt(values[0], 10) : null;
+        name = values[1] || '';
+        post = values[2] || '';
+        subject = values[3] || '';
+        faculty = values[4] || 'General';
+        currentPost = values[5] || post;
+        joining = values[6] || '';
+        currentJoining = values[7] || '';
+        study = values[8] || '';
+        mobileNo = values[9] || '';
+      }
+
+      if (name && name.trim()) {
         teachersToImport.push({
-          name,
-          designation: row['designation'] || row['पद'] || 'शिक्षक',
-          department: row['department'] || row['संकाय'] || 'General',
-          qualification: row['qualification'] || row['योग्यता'] || '',
-          experience: row['experience'] || row['अनुभव'] || '',
-          phone: row['phone'] || row['मोबाइल'] || '',
-          photo: row['photo'] || '/uploads/staff/blank-teacher.png'
+          serial_no: serialNo,
+          name: name.trim(),
+          designation: post || 'शिक्षक',
+          subject: subject || '',
+          department: faculty || 'General',
+          current_post: currentPost || post || '',
+          joining_date: joining || '',
+          current_joining_date: currentJoining || '',
+          qualification: study || '',
+          phone: mobileNo || ''
         });
       }
     }
+
     if (teachersToImport.length === 0) {
-      showMsg("कोई वैध शिक्षक डेटा नहीं मिला।", "error");
+      showMsg("कोई वैध शिक्षक डेटा नहीं मिला। कृपया सुनिश्चित करें कि 'Name' कॉलम सही है।", "error");
       return;
     }
+
     setUploading(true);
     fetch('/api/admin/teachers/bulk', {
       method: 'POST',
@@ -2354,25 +2493,37 @@ export default function Admin() {
             </div>
 
             <form onSubmit={handleAddTeacher} className="space-y-3 text-xs">
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">शिक्षक का नाम (Full Name) *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="जैसे: श्री रमेश कुमार शर्मा"
-                  value={newTeacher.name}
-                  onChange={(e) => setNewTeacher({ ...newTeacher, name: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300"
-                />
+              <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-1">
+                  <label className="block font-bold text-slate-700 mb-1">क्र.सं. (SERIAL)</label>
+                  <input
+                    type="number"
+                    placeholder="उदा. 1"
+                    value={newTeacher.serial_no}
+                    onChange={(e) => setNewTeacher({ ...newTeacher, serial_no: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 font-mono"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block font-bold text-slate-700 mb-1">शिक्षक का नाम (Name) *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="जैसे: MOHAN LAL"
+                    value={newTeacher.name}
+                    onChange={(e) => setNewTeacher({ ...newTeacher, name: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">पदनाम (Designation) *</label>
+                  <label className="block font-bold text-slate-700 mb-1">पद (Post / Designation) *</label>
                   <input
                     type="text"
                     required
-                    placeholder="जैसे: प्राध्यापक (जीव विज्ञान)"
+                    placeholder="उदा. Vice Principal / Lecturer"
                     value={newTeacher.designation}
                     onChange={(e) => setNewTeacher({ ...newTeacher, designation: e.target.value })}
                     className="w-full px-3 py-2 rounded-lg border border-slate-300"
@@ -2380,7 +2531,20 @@ export default function Admin() {
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">विभाग (Department) *</label>
+                  <label className="block font-bold text-slate-700 mb-1">विषय (Subject)</label>
+                  <input
+                    type="text"
+                    placeholder="उदा. Physics, Biology, Hindi"
+                    value={newTeacher.subject}
+                    onChange={(e) => setNewTeacher({ ...newTeacher, subject: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">संकाय (Faculty / Department) *</label>
                   <select
                     value={newTeacher.department}
                     onChange={(e) => setNewTeacher({ ...newTeacher, department: e.target.value })}
@@ -2391,17 +2555,52 @@ export default function Admin() {
                     <option value="Arts">Arts</option>
                     <option value="Commerce">Commerce</option>
                     <option value="ICT">ICT / Computer</option>
+                    <option value="Primary / Elementary">Primary / Elementary</option>
                     <option value="Sports">Sports / PTI</option>
+                    <option value="General">General</option>
                   </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">वर्तमान पद (Current Post)</label>
+                  <input
+                    type="text"
+                    placeholder="उदा. Vice Principal"
+                    value={newTeacher.current_post}
+                    onChange={(e) => setNewTeacher({ ...newTeacher, current_post: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300"
+                  />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">योग्यता (Qualification)</label>
+                  <label className="block font-bold text-slate-700 mb-1">प्रथम कार्यग्रहण (Joining)</label>
+                  <input
+                    type="date"
+                    value={newTeacher.joining_date}
+                    onChange={(e) => setNewTeacher({ ...newTeacher, joining_date: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">वर्तमान पद कार्यग्रहण (Current Joining)</label>
+                  <input
+                    type="date"
+                    value={newTeacher.current_joining_date}
+                    onChange={(e) => setNewTeacher({ ...newTeacher, current_joining_date: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">शैक्षणिक योग्यता (Study / Qualification)</label>
                   <input
                     type="text"
-                    placeholder="M.Sc., B.Ed."
+                    placeholder="उदा. M.Sc., B.Ed. / MCA"
                     value={newTeacher.qualification}
                     onChange={(e) => setNewTeacher({ ...newTeacher, qualification: e.target.value })}
                     className="w-full px-3 py-2 rounded-lg border border-slate-300"
@@ -2412,12 +2611,23 @@ export default function Admin() {
                   <label className="block font-bold text-slate-700 mb-1">अनुभव (Experience)</label>
                   <input
                     type="text"
-                    placeholder="12 Years"
+                    placeholder="छोड़ें तो कार्यग्रहण से स्वतः गणना"
                     value={newTeacher.experience}
                     onChange={(e) => setNewTeacher({ ...newTeacher, experience: e.target.value })}
                     className="w-full px-3 py-2 rounded-lg border border-slate-300"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">मोबाइल नंबर (Mobile No)</label>
+                <input
+                  type="text"
+                  placeholder="उदा. 9414894845"
+                  value={newTeacher.phone}
+                  onChange={(e) => setNewTeacher({ ...newTeacher, phone: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300"
+                />
               </div>
 
               {/* Direct Photo File Picker & Preview (No URL input) */}
@@ -2426,12 +2636,12 @@ export default function Admin() {
                 <div className="flex items-center gap-3">
                   <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-slate-300 bg-white shrink-0 shadow-inner flex items-center justify-center">
                     <img
-                      src={teacherPhotoPreview || newTeacher.photo || "/uploads/staff/blank-teacher.png"}
+                      src={teacherPhotoPreview || newTeacher.photo || "/uploads/staff/user.jpg"}
                       alt="Teacher Avatar"
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         e.currentTarget.onerror = null;
-                        e.currentTarget.src = "/uploads/staff/blank-teacher.png";
+                        e.currentTarget.src = "/uploads/staff/user.jpg";
                       }}
                     />
                   </div>
@@ -2442,8 +2652,8 @@ export default function Admin() {
                       onChange={handleTeacherFileSelect}
                       className="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-900 file:text-white hover:file:bg-blue-800 cursor-pointer"
                     />
-                    {((teacherPhotoPreview && teacherPhotoPreview !== '/uploads/staff/blank-teacher.png') || 
-                      (newTeacher.photo && newTeacher.photo !== '/uploads/staff/blank-teacher.png') || 
+                    {((teacherPhotoPreview && teacherPhotoPreview !== '/uploads/staff/user.jpg') || 
+                      (newTeacher.photo && newTeacher.photo !== '/uploads/staff/user.jpg') || 
                       teacherFile) && (
                       <button
                         type="button"
@@ -2504,24 +2714,34 @@ export default function Admin() {
                 <div key={t.id} className="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between gap-3 text-xs">
                   <div className="flex items-center gap-3">
                     <img
-                      src={t.photo || "/uploads/staff/blank-teacher.png"}
+                      src={t.photo || "/uploads/staff/user.jpg"}
                       alt={t.name}
                       onError={(e) => {
                         e.currentTarget.onerror = null;
-                        e.currentTarget.src = "/uploads/staff/blank-teacher.png";
+                        e.currentTarget.src = "/uploads/staff/user.jpg";
                       }}
-                      className="w-12 h-12 rounded-full object-cover border border-slate-300 shrink-0"
+                      className="w-12 h-12 rounded-full object-cover border border-slate-300 shrink-0 bg-white"
                     />
                     <div>
                       <p className="font-bold text-slate-900">
-                        <span className="text-orange-600 font-mono mr-1">#{t.id}.</span>{t.name}
+                        <span className="text-orange-600 font-mono mr-1">#{t.serial_no || t.id}.</span>{t.name}
                       </p>
-                      <p className="text-[11px] text-blue-900">{t.designation}</p>
-                      <span className="text-[10px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-700">{t.department}</span>
+                      <p className="text-[11px] text-blue-900 font-semibold">
+                        {t.designation}{t.subject ? ` (${t.subject})` : ''}
+                      </p>
+                      <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                        <span className="text-[10px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-700 font-medium">{t.department}</span>
+                        {t.experience && (
+                          <span className="text-[10px] bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded font-bold">{t.experience}</span>
+                        )}
+                        {t.phone && (
+                          <span className="text-[10px] text-emerald-800 font-mono font-medium">{t.phone}</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
-                    {t.photo && t.photo !== '/uploads/staff/blank-teacher.png' && (
+                    {t.photo && t.photo !== '/uploads/staff/user.jpg' && (
                       <button
                         onClick={() => handleResetTeacherPhotoDirect(t.id)}
                         className="p-1.5 text-amber-600 hover:bg-amber-50 rounded transition"
@@ -3371,9 +3591,9 @@ export default function Admin() {
               </button>
             </div>
 
-            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-950 space-y-1.5">
+            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 text-xs text-emerald-950 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="font-bold">CSV फ़ॉर्मेट निर्देश (CSV Format Guide):</span>
+                <span className="font-bold text-emerald-900">10-कॉलम CSV फ़ॉर्मेट निर्देश (Format Guide):</span>
                 <button
                   type="button"
                   onClick={handleDownloadTeacherSampleCSV}
@@ -3382,9 +3602,14 @@ export default function Admin() {
                   <Download className="w-3 h-3" /> नमूना (Sample CSV) डाउनलोड करें
                 </button>
               </div>
-              <p className="text-[11px] text-emerald-800">
-                कॉलम क्रम: <code>Name, Designation, Department, Qualification, Experience, Phone</code>
+              <p className="text-[11px] text-emerald-900 font-mono bg-emerald-100/70 p-1.5 rounded border border-emerald-200">
+                SERIAL, Name, Post, Subject, Faculty, current post, joining, current joining, Study, mobile no
               </p>
+              <ul className="text-[11px] text-emerald-800 list-disc list-inside space-y-0.5">
+                <li><strong>अनुभव स्वतः गणना (Auto Calculate):</strong> अनुभव कार्यग्रहण तिथि (joining / current joining) से स्वतः परिकलित होगा।</li>
+                <li><strong>फोटो स्वतः लिंक (Auto Fetch Photo):</strong> शिक्षक की फोटो <code>staff</code> फोल्डर से 1st कॉलम SERIAL नंबर (उदा. 1.jpeg, 2.jpeg...) से स्वतः लिंक होगी।</li>
+                <li><strong>डिफ़ॉल्ट फोटो (Default Photo):</strong> जिस सीरियल की फोटो उपलब्ध नहीं होगी, उसमें <code>user.jpg</code> फोटो स्वतः सेट होगी।</li>
+              </ul>
             </div>
 
             <div>
@@ -3405,10 +3630,10 @@ export default function Admin() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">या CSV डेटा यहाँ पेस्ट करें (Paste CSV Data)</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">या CSV / Excel डेटा यहाँ पेस्ट करें (Paste CSV Data)</label>
               <textarea
                 rows={7}
-                placeholder={`Name,Designation,Department,Qualification,Experience,Phone\nश्री मोहन लाल,प्रधानाचार्य,Administration,"M.A., B.Ed",24 वर्ष,9414894845`}
+                placeholder={`SERIAL,Name,Post,Subject,Faculty,current post,joining,current joining,Study,mobile no\n1,MOHAN LAL,Vice Principal (School),,Administration,Vice Principal,2002-08-15,2023-04-28,B.A/M.A/BSTC.B.ED/RSCIT,9414894845\n8,RIKHA RAM,Lecturer (I Gr.),Political Science,Arts,Lecturer,2010-07-15,2018-06-11,B.A/M.A/B.ED,9950695755`}
                 value={teacherBulkCsvText}
                 onChange={(e) => setTeacherBulkCsvText(e.target.value)}
                 className="w-full p-2.5 rounded-lg border border-slate-300 font-mono text-xs focus:ring-2 focus:ring-emerald-600"
@@ -3441,7 +3666,7 @@ export default function Admin() {
       {/* ==================================================== */}
       {isTeacherPrintModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-4xl w-full my-8 p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-5xl w-full my-8 p-6 space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-200 pb-3 print:hidden">
               <div className="flex items-center gap-2">
                 <Printer className="w-5 h-5 text-blue-900" />
@@ -3490,11 +3715,12 @@ export default function Admin() {
                 <table className="w-full text-left border-collapse border border-slate-300 text-[11px]">
                   <thead>
                     <tr className="bg-slate-100 text-slate-900 font-bold border-b border-slate-300">
-                      <th className="border border-slate-300 px-2 py-1.5 w-8 text-center">क्र.सं.</th>
+                      <th className="border border-slate-300 px-2 py-1.5 w-10 text-center">क्र.सं. (SERIAL)</th>
                       <th className="border border-slate-300 px-3 py-1.5">शिक्षक / कार्मिक का नाम</th>
-                      <th className="border border-slate-300 px-3 py-1.5">पदनाम (Designation)</th>
-                      <th className="border border-slate-300 px-2 py-1.5">संकाय (Dept)</th>
-                      <th className="border border-slate-300 px-3 py-1.5">योग्यता</th>
+                      <th className="border border-slate-300 px-3 py-1.5">पदनाम (Post)</th>
+                      <th className="border border-slate-300 px-2 py-1.5">विषय (Subject)</th>
+                      <th className="border border-slate-300 px-2 py-1.5">संकाय (Faculty)</th>
+                      <th className="border border-slate-300 px-3 py-1.5">योग्यता (Study)</th>
                       <th className="border border-slate-300 px-2 py-1.5 text-center">अनुभव</th>
                       <th className="border border-slate-300 px-2 py-1.5 text-center">मोबाइल नंबर</th>
                     </tr>
@@ -3502,12 +3728,13 @@ export default function Admin() {
                   <tbody>
                     {teachers.map((t, idx) => (
                       <tr key={t.id || idx} className={idx % 2 === 0 ? "bg-white" : "bg-slate-50/50"}>
-                        <td className="border border-slate-300 px-2 py-1 text-center font-bold text-slate-700">{idx + 1}</td>
+                        <td className="border border-slate-300 px-2 py-1 text-center font-bold font-mono text-slate-700">{t.serial_no || idx + 1}</td>
                         <td className="border border-slate-300 px-3 py-1 font-bold text-slate-900">{t.name}</td>
                         <td className="border border-slate-300 px-3 py-1 text-blue-900 font-semibold">{t.designation}</td>
+                        <td className="border border-slate-300 px-2 py-1 text-slate-700">{t.subject || "-"}</td>
                         <td className="border border-slate-300 px-2 py-1 text-slate-700">{t.department}</td>
                         <td className="border border-slate-300 px-3 py-1 text-slate-600">{t.qualification || "-"}</td>
-                        <td className="border border-slate-300 px-2 py-1 text-center text-slate-700">{t.experience || "-"}</td>
+                        <td className="border border-slate-300 px-2 py-1 text-center font-semibold text-slate-700">{t.experience || "-"}</td>
                         <td className="border border-slate-300 px-2 py-1 text-center font-mono text-slate-800">{t.phone || "-"}</td>
                       </tr>
                     ))}

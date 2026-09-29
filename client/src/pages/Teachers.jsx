@@ -8,7 +8,7 @@ export default function Teachers() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeModalTeacher, setActiveModalTeacher] = useState(null);
 
-  const departments = ['All', 'Administration', 'Science', 'Arts', 'ICT', 'Primary / Elementary'];
+  const departments = ['All', 'Administration', 'Science', 'Arts', 'Commerce', 'ICT', 'Primary / Elementary'];
 
   const getDeptLabel = (dept) => {
     switch (dept) {
@@ -16,6 +16,7 @@ export default function Teachers() {
       case 'Administration': return 'प्रशासन (Admin)';
       case 'Science': return 'विज्ञान संकाय';
       case 'Arts': return 'कला संकाय';
+      case 'Commerce': return 'वाणिज्य संकाय';
       case 'ICT': return 'कंप्यूटर / ICT';
       case 'Primary / Elementary': return 'प्राथमिक / उच्च प्राथमिक';
       default: return dept;
@@ -39,6 +40,7 @@ export default function Teachers() {
     const matchesDept = selectedDept === 'All' || (t.department && t.department.toLowerCase() === selectedDept.toLowerCase());
     const matchesSearch = t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           t.designation.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (t.subject && t.subject.toLowerCase().includes(searchQuery.toLowerCase())) ||
                           (t.qualification && t.qualification.toLowerCase().includes(searchQuery.toLowerCase())) ||
                           (t.phone && t.phone.includes(searchQuery));
     return matchesDept && matchesSearch;
@@ -174,7 +176,7 @@ export default function Teachers() {
                 >
                   {/* Subtle blurred ambient backdrop to fill aspect ratio naturally */}
                   <img
-                    src={teacher.photo || "/uploads/staff/blank-teacher.png"}
+                    src={teacher.photo || "/uploads/staff/user.jpg"}
                     alt=""
                     aria-hidden="true"
                     className="absolute inset-0 w-full h-full object-cover blur-xl opacity-25 scale-125 pointer-events-none"
@@ -183,10 +185,10 @@ export default function Teachers() {
                   
                   {/* 100% Uncropped Full Photo */}
                   <img
-                    src={teacher.photo || "/uploads/staff/blank-teacher.png"}
+                    src={teacher.photo || "/uploads/staff/user.jpg"}
                     alt={teacher.name}
                     className="relative z-10 max-h-full max-w-full object-contain rounded-xl drop-shadow-md transition-transform duration-300 group-hover/photo:scale-105"
-                    onError={(e) => { e.currentTarget.src = "/uploads/staff/blank-teacher.png"; }}
+                    onError={(e) => { e.currentTarget.src = "/uploads/staff/user.jpg"; }}
                   />
 
                   {/* Zoom hint on hover */}
@@ -212,7 +214,7 @@ export default function Teachers() {
                     {teacher.name}
                   </h3>
                   <p className="text-xs font-semibold text-blue-900">
-                    {teacher.designation}
+                    {teacher.designation}{teacher.subject ? ` (${teacher.subject})` : ''}
                   </p>
 
                   <div className="pt-2 space-y-1.5 text-xs text-slate-600 border-t border-slate-100">
@@ -280,9 +282,10 @@ export default function Teachers() {
             {/* Modal Full Photo - 100% Uncropped */}
             <div className="bg-slate-900 flex items-center justify-center p-4 max-h-[65vh] overflow-hidden">
               <img
-                src={activeModalTeacher.photo || "/uploads/staff/blank-teacher.png"}
+                src={activeModalTeacher.photo || "/uploads/staff/user.jpg"}
                 alt={activeModalTeacher.name}
                 className="max-h-[60vh] max-w-full object-contain rounded-lg shadow-xl"
+                onError={(e) => { e.currentTarget.src = "/uploads/staff/user.jpg"; }}
               />
             </div>
 
@@ -296,7 +299,7 @@ export default function Teachers() {
                   {activeModalTeacher.name}
                 </h3>
                 <p className="text-sm font-bold text-blue-950">
-                  {activeModalTeacher.designation}
+                  {activeModalTeacher.designation}{activeModalTeacher.subject ? ` (${activeModalTeacher.subject})` : ''}
                 </p>
               </div>
 

@@ -145,10 +145,10 @@ app.get('/api/teachers', (req, res) => {
     const dept = req.query.department;
     let query = 'SELECT * FROM teachers';
     if (dept && dept !== 'All') {
-      const rows = db.prepare('SELECT * FROM teachers WHERE department = ? ORDER BY id ASC').all(dept);
+      const rows = db.prepare('SELECT * FROM teachers WHERE department = ? ORDER BY COALESCE(serial_no, id) ASC, id ASC').all(dept);
       return res.json({ success: true, teachers: rows });
     }
-    const rows = db.prepare('SELECT * FROM teachers ORDER BY id ASC').all();
+    const rows = db.prepare('SELECT * FROM teachers ORDER BY COALESCE(serial_no, id) ASC, id ASC').all();
     res.json({ success: true, teachers: rows });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -559,20 +559,120 @@ app.put('/api/admin/notices/:id', adminAuth, (req, res) => {
   }
 });
 
+// Staff Photo helper: search for serial number file in uploads/staff or staff, fallback to user.jpg
+const uploadsStaffDir = path.join(__dirname, 'uploads', 'staff');
+if (!fs.existsSync(uploadsStaffDir)) {
+  fs.mkdirSync(uploadsStaffDir, { recursive: true });
+}
+const rootStaffDir = path.join(__dirname, '..', 'staff');
+
+// Ensure default user.jpg is in uploads/staff/
+if (!fs.existsSync(path.join(uploadsStaffDir, 'user.jpg'))) {
+  const rootUserJpg = path.join(rootStaffDir, 'user.jpg');
+  if (fs.existsSync(rootUserJpg)) {
+    try { fs.copyFileSync(rootUserJpg, path.join(uploadsStaffDir, 'user.jpg')); } catch (e) {}
+  }
+}
+
+const findStaffPhoto = (serial) => {
+  if (serial === undefined || serial === null || String(serial).trim() === '') {
+    return '/uploads/staff/user.jpg';
+  }
+  const cleanSerial = String(serial).trim();
+  const extensions = ['.jpeg', '.jpg', '.png', '.webp', '.JPEG', '.JPG', '.PNG'];
+  for (const ext of extensions) {
+    const filename = `${cleanSerial}${ext}`;
+    if (fs.existsSync(path.join(uploadsStaffDir, filename))) {
+      return `/uploads/staff/${filename}`;
+    }
+    if (fs.existsSync(path.join(rootStaffDir, filename))) {
+      try {
+        fs.copyFileSync(path.join(rootStaffDir, filename), path.join(uploadsStaffDir, filename));
+      } catch (e) {}
+      return `/uploads/staff/${filename}`;
+    }
+  }
+  return '/uploads/staff/user.jpg';
+};
+
+const normalizeStaffDate = (val) => {
+  if (!val) return '';
+  const trimmed = String(val).trim();
+  if (/^\d{5}$/.test(trimmed)) {
+    const days = parseInt(trimmed, 10);
+    const d = new Date((days - 25569) * 86400 * 1000);
+    if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
+  }
+  const dmy = trimmed.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
+  if (dmy) {
+    return `${dmy[3]}-${dmy[2].padStart(2, '0')}-${dmy[1].padStart(2, '0')}`;
+  }
+  return trimmed;
+};
+
+const calculateStaffExperience = (joiningDate, currentJoiningDate) => {
+  const dateVal = joiningDate || currentJoiningDate;
+  if (!dateVal) return '1 वर्ष';
+  const clean = String(dateVal).trim();
+  let d = null;
+  if (/^\d{5}$/.test(clean)) {
+    const days = parseInt(clean, 10);
+    d = new Date((days - 25569) * 86400 * 1000);
+  } else if (/^\d{4}$/.test(clean)) {
+    d = new Date(parseInt(clean, 10), 0, 1);
+  } else {
+    const dmy = clean.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
+    if (dmy) {
+      d = new Date(`${dmy[3]}-${dmy[2].padStart(2, '0')}-${dmy[1].padStart(2, '0')}`);
+    } else {
+      d = new Date(clean);
+    }
+  }
+  if (d && !isNaN(d.getTime())) {
+    const now = new Date();
+    let years = now.getFullYear() - d.getFullYear();
+    const mDiff = now.getMonth() - d.getMonth();
+    if (mDiff < 0 || (mDiff === 0 && now.getDate() < d.getDate())) {
+      years--;
+    }
+    return `${Math.max(1, years)} वर्ष`;
+  }
+  return '1 वर्ष';
+};
+
 // --- ADMIN TEACHERS CRUD (with direct file upload & reset support) ---
 app.post('/api/admin/teachers', adminAuth, upload.single('photo_file'), (req, res) => {
   try {
-    const { name, designation, department, qualification, experience, phone } = req.body;
-    let photo = '/uploads/staff/blank-teacher.png';
+    const { serial_no, name, designation, subject, department, current_post, joining_date, current_joining_date, qualification, phone } = req.body;
+    let photo = '';
     if (req.file) {
       photo = `/uploads/${req.file.filename}`;
+    } else {
+      photo = findStaffPhoto(serial_no);
     }
 
+    const joining = normalizeStaffDate(joining_date);
+    const currJoining = normalizeStaffDate(current_joining_date);
+    const experience = req.body.experience || calculateStaffExperience(joining, currJoining);
+
     const stmt = db.prepare(`
-      INSERT INTO teachers (name, designation, department, qualification, experience, photo, phone)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO teachers (serial_no, name, designation, subject, department, current_post, joining_date, current_joining_date, qualification, experience, photo, phone)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
-    const info = stmt.run(name || '', designation || '', department || '', qualification || '', experience || '', photo, phone || '');
+    const info = stmt.run(
+      serial_no ? parseInt(serial_no, 10) : null,
+      name || '',
+      designation || '',
+      subject || '',
+      department || 'General',
+      current_post || designation || '',
+      joining,
+      currJoining,
+      qualification || '',
+      experience,
+      photo,
+      phone || ''
+    );
     res.json({ success: true, id: info.lastInsertRowid, message: "शिक्षक प्रोफाइल सफलतापूर्वक जोड़ी गई।" });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -587,26 +687,31 @@ app.put('/api/admin/teachers/:id', adminAuth, upload.single('photo_file'), (req,
     }
 
     const { delete_photo } = req.body;
-    let photo = existing.photo || '/uploads/staff/blank-teacher.png';
+    let photo = existing.photo || '/uploads/staff/user.jpg';
     if (delete_photo === 'true') {
-      photo = '/uploads/staff/blank-teacher.png';
+      photo = '/uploads/staff/user.jpg';
     } else if (req.file) {
       photo = `/uploads/${req.file.filename}`;
     }
 
+    const serial_no = req.body.serial_no !== undefined ? (req.body.serial_no ? parseInt(req.body.serial_no, 10) : null) : existing.serial_no;
     const name = req.body.name !== undefined ? req.body.name : existing.name;
     const designation = req.body.designation !== undefined ? req.body.designation : existing.designation;
+    const subject = req.body.subject !== undefined ? req.body.subject : (existing.subject || '');
     const department = req.body.department !== undefined ? req.body.department : existing.department;
+    const current_post = req.body.current_post !== undefined ? req.body.current_post : (existing.current_post || '');
+    const joining = req.body.joining_date !== undefined ? normalizeStaffDate(req.body.joining_date) : (existing.joining_date || '');
+    const currJoining = req.body.current_joining_date !== undefined ? normalizeStaffDate(req.body.current_joining_date) : (existing.current_joining_date || '');
     const qualification = req.body.qualification !== undefined ? req.body.qualification : existing.qualification;
-    const experience = req.body.experience !== undefined ? req.body.experience : existing.experience;
+    const experience = req.body.experience !== undefined ? req.body.experience : (calculateStaffExperience(joining, currJoining) || existing.experience || '');
     const phone = req.body.phone !== undefined ? req.body.phone : (existing.phone || '');
 
     const stmt = db.prepare(`
       UPDATE teachers 
-      SET name = ?, designation = ?, department = ?, qualification = ?, experience = ?, photo = ?, phone = ?
+      SET serial_no = ?, name = ?, designation = ?, subject = ?, department = ?, current_post = ?, joining_date = ?, current_joining_date = ?, qualification = ?, experience = ?, photo = ?, phone = ?
       WHERE id = ?
     `);
-    stmt.run(name || '', designation || '', department || '', qualification || '', experience || '', photo, phone || '', req.params.id);
+    stmt.run(serial_no, name || '', designation || '', subject, department || '', current_post, joining, currJoining, qualification || '', experience || '', photo, phone || '', req.params.id);
     res.json({ success: true, message: "शिक्षक प्रोफाइल सफलतापूर्वक अपडेट हो गई!", photo });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -622,35 +727,80 @@ app.delete('/api/admin/teachers/:id', adminAuth, (req, res) => {
   }
 });
 
-// Bulk Import Teachers (accepts array of teacher objects)
+// Bulk Import Teachers (accepts array of teacher objects with the exact 10 fields: SERIAL, Name, Post, Subject, Faculty, current post, joining, current joining, Study, mobile no)
 app.post('/api/admin/teachers/bulk', adminAuth, (req, res) => {
   try {
     const { teachers } = req.body;
     if (!Array.isArray(teachers) || teachers.length === 0) {
       return res.status(400).json({ success: false, message: "आयात करने के लिए वैध शिक्षक डेटा सूची प्रदान करें।" });
     }
+
     const insertStmt = db.prepare(`
-      INSERT INTO teachers (name, designation, department, qualification, experience, photo, phone)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO teachers (serial_no, name, designation, subject, department, current_post, joining_date, current_joining_date, qualification, experience, photo, phone)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    const updateStmt = db.prepare(`
+      UPDATE teachers 
+      SET serial_no = ?, name = ?, designation = ?, subject = ?, department = ?, current_post = ?, joining_date = ?, current_joining_date = ?, qualification = ?, experience = ?, photo = ?, phone = ?
+      WHERE id = ?
+    `);
+
+    const checkExistingStmt = db.prepare(`
+      SELECT id, photo FROM teachers 
+      WHERE (serial_no = ? AND serial_no IS NOT NULL) OR (name = ? AND name != '')
+      LIMIT 1
     `);
 
     let importedCount = 0;
     for (const t of teachers) {
-      const name = t.name || t['Name'] || t['शिक्षक का नाम'];
-      if (name) {
-        insertStmt.run(
-          name,
-          t.designation || t['Designation'] || t['पद'] || 'शिक्षक',
-          t.department || t['Department'] || t['संकाय'] || 'General',
-          t.qualification || t['Qualification'] || t['योग्यता'] || '',
-          t.experience || t['Experience'] || t['अनुभव'] || '',
-          t.photo || t['Photo'] || '/uploads/staff/blank-teacher.png',
-          t.phone || t['Phone'] || t['मोबाइल'] || ''
-        );
-        importedCount++;
+      const name = t.name || t['Name'] || t['शिक्षक का नाम'] || t['naam'] || '';
+      if (!name || !String(name).trim()) continue;
+
+      const rawSerial = t.serial_no ?? t['SERIAL'] ?? t['serial'] ?? t['Serial'] ?? t['क्र.सं.'] ?? t['sr no'];
+      const serial_no = rawSerial !== undefined && rawSerial !== '' ? parseInt(rawSerial, 10) : null;
+      const designation = t.designation || t['Post'] || t['post'] || t['Designation'] || t['पद'] || 'शिक्षक';
+      const subject = t.subject || t['Subject'] || t['subject'] || t['विषय'] || '';
+      const department = t.department || t['Faculty'] || t['faculty'] || t['Department'] || t['संकाय'] || 'General';
+      const current_post = t.current_post || t['current post'] || t['current_post'] || t['वर्तमान पद'] || designation;
+      const joining = normalizeStaffDate(t.joining_date || t['joining'] || t['Joining'] || t['joining_date'] || '');
+      const currJoining = normalizeStaffDate(t.current_joining_date || t['current joining'] || t['current post joining'] || t['current_joining'] || '');
+      const qualification = t.qualification || t['Study'] || t['study'] || t['Qualification'] || t['योग्यता'] || '';
+      const phone = t.phone || t['mobile no'] || t['Mobile No'] || t['Phone'] || t['मोबाइल'] || '';
+
+      // Auto-calculate experience from joining or current joining dates
+      const experience = t.experience || calculateStaffExperience(joining, currJoining);
+
+      // Auto-fetch photo from staff folder by SERIAL number (fallback to user.jpg)
+      let photo = t.photo;
+      if (!photo || photo === '/uploads/staff/blank-teacher.png' || photo === '/uploads/staff/user.jpg' || !photo.includes('/')) {
+        photo = findStaffPhoto(serial_no);
       }
+
+      const existing = (serial_no !== null || name) ? checkExistingStmt.get(serial_no, String(name).trim()) : null;
+      if (existing) {
+        // Keep existing custom uploaded photo if present, unless auto-fetching by serial
+        const finalPhoto = (existing.photo && existing.photo !== '/uploads/staff/blank-teacher.png' && existing.photo !== '/uploads/staff/user.jpg')
+          ? existing.photo
+          : photo;
+        updateStmt.run(
+          serial_no, String(name).trim(), designation, subject, department,
+          current_post, joining, currJoining, qualification, experience, finalPhoto, phone,
+          existing.id
+        );
+      } else {
+        insertStmt.run(
+          serial_no, String(name).trim(), designation, subject, department,
+          current_post, joining, currJoining, qualification, experience, photo, phone
+        );
+      }
+      importedCount++;
     }
-    res.json({ success: true, count: importedCount, message: `सफलतापूर्वक ${importedCount} शिक्षकों का डेटा आयात (Import) किया गया।` });
+    res.json({ 
+      success: true, 
+      count: importedCount, 
+      message: `सफलतापूर्वक ${importedCount} शिक्षकों का 10-कॉलम डेटा आयात (Import) किया गया। अनुभव स्वतः परिकलित हुआ एवं फोटो ऑटो-फैच हो गई।` 
+    });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

@@ -125,6 +125,13 @@ function initDB() {
   try { db.exec("ALTER TABLE sports_events ADD COLUMN news_content TEXT DEFAULT ''"); } catch (e) {}
   try { db.exec("ALTER TABLE sports_events ADD COLUMN video_url TEXT DEFAULT ''"); } catch (e) {}
 
+  // Migrate teachers columns for 10-column staff format (SERIAL, Subject, Current Post, Joining Dates)
+  try { db.exec("ALTER TABLE teachers ADD COLUMN serial_no INTEGER"); } catch (e) {}
+  try { db.exec("ALTER TABLE teachers ADD COLUMN subject TEXT DEFAULT ''"); } catch (e) {}
+  try { db.exec("ALTER TABLE teachers ADD COLUMN current_post TEXT DEFAULT ''"); } catch (e) {}
+  try { db.exec("ALTER TABLE teachers ADD COLUMN joining_date TEXT DEFAULT ''"); } catch (e) {}
+  try { db.exec("ALTER TABLE teachers ADD COLUMN current_joining_date TEXT DEFAULT ''"); } catch (e) {}
+
   // Seed sample inquiries if empty
   const countInquiries = db.prepare('SELECT count(*) as count FROM inquiries').get().count;
   if (countInquiries === 0) {
