@@ -9,6 +9,8 @@ import sqlite3
 
 sys.stdout.reconfigure(encoding='utf-8')
 
+print("=== STARTING TEACHER DATA UPDATE WITH NEW EXCEL & PHOTOS ===")
+
 # 1. Parse Excel file
 with zipfile.ZipFile('staff/staff details.xlsx', 'r') as z:
     shared_strings = []
@@ -36,25 +38,41 @@ with zipfile.ZipFile('staff/staff details.xlsx', 'r') as z:
         rows.append(row_cells)
 
 # Ensure destinations exist
-os.makedirs('server/uploads/staff', exist_ok=True)
-os.makedirs('client/public/uploads/staff', exist_ok=True)
+target_dirs = [
+    'server/uploads/staff',
+    'client/public/uploads/staff',
+    'client/dist/uploads/staff'
+]
+for d in target_dirs:
+    os.makedirs(d, exist_ok=True)
 
 staff_files = os.listdir('staff')
 
-# Copy all staff photo files into both server/uploads/staff and client/public/uploads/staff
+# Remove old numbered photos from destination folders to prevent lingering obsolete extensions
+for d in target_dirs:
+    for f in os.listdir(d):
+        base, ext = os.path.splitext(f)
+        if base.isdigit() and ext.lower() in ['.jpeg', '.jpg', '.png']:
+            try:
+                os.remove(os.path.join(d, f))
+            except Exception:
+                pass
+
+# Copy all current staff photo files from staff/ into all destination directories
 for f in staff_files:
     if f.lower().endswith(('.jpeg', '.jpg', '.png', '.webp', '.svg')):
         src_path = os.path.join('staff', f)
-        dest1 = os.path.join('server/uploads/staff', f)
-        dest2 = os.path.join('client/public/uploads/staff', f)
-        shutil.copy2(src_path, dest1)
-        shutil.copy2(src_path, dest2)
+        for d in target_dirs:
+            shutil.copy2(src_path, os.path.join(d, f))
         print(f"Copied photo: {f}")
 
-# Also ensure blank-teacher avatar is in both locations
+# Also ensure blank-teacher avatar is in all locations
 blank_src = 'server/uploads/staff/blank-teacher.png'
 if os.path.exists(blank_src):
-    shutil.copy2(blank_src, 'client/public/uploads/staff/blank-teacher.png')
+    for d in target_dirs:
+        dst = os.path.join(d, 'blank-teacher.png')
+        if os.path.abspath(blank_src) != os.path.abspath(dst):
+            shutil.copy2(blank_src, dst)
 
 staff_list = []
 for r in rows[1:]:
@@ -65,19 +83,19 @@ for r in rows[1:]:
     name = r.get('B', '').strip()
     post = r.get('C', '').strip()
     subject = r.get('D', '').strip()
-    # clean placeholders like '......' or ''
+    # clean placeholder characters like '……'
     subject = re.sub(r'^[.…\s]+$', '', subject)
     joining = r.get('E', '').strip()
     study = r.get('F', '').strip()
     study = re.sub(r'^[.…\s]+$', '', study)
     mobile = r.get('G', '').strip()
     
-    # Check photo matching serial
+    # Check photo matching serial in staff_files
     photo_file = None
-    for ext in ['.jpeg', '.jpg', '.png']:
-        candidate = f"{serial}{ext}"
-        if candidate in staff_files:
-            photo_file = candidate
+    for f in staff_files:
+        base, ext = os.path.splitext(f)
+        if base == str(serial) and ext.lower() in ['.jpeg', '.jpg', '.png']:
+            photo_file = f
             break
             
     staff_list.append({
@@ -115,6 +133,8 @@ for s in staff_list:
                 exp_str = f"{years} वर्ष"
             else:
                 exp_str = f"{months} माह"
+        else:
+            exp_str = "नवनियुक्त (सत्र 2026)"
 
     # 2. Department logic
     dept = 'General'
@@ -180,12 +200,10 @@ conn.commit()
 print("\nSuccessfully updated 'teachers' table in server/school.db with all 37 teachers in serial order 1 to 37!")
 
 # Verify count & order
-cursor.execute("SELECT id, name, designation, photo FROM teachers ORDER BY id ASC")
+cursor.execute("SELECT id, name, designation, photo, experience FROM teachers ORDER BY id ASC")
 saved_rows = cursor.fetchall()
-print(f"Total rows in teachers table: {len(saved_rows)}")
-for sr in saved_rows[:5]:
-    print(" ", sr)
-for sr in saved_rows[-5:]:
-    print(" ", sr)
+print(f"\nTotal rows in teachers table: {len(saved_rows)}")
+for sr in saved_rows:
+    print(f"  #{sr[0]:2} {sr[1]:25} | {sr[2]:35} | {sr[3]:30} | {sr[4]}")
 
 conn.close()
