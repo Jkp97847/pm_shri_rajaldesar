@@ -2513,7 +2513,9 @@ export default function Admin() {
                       className="w-12 h-12 rounded-full object-cover border border-slate-300 shrink-0"
                     />
                     <div>
-                      <p className="font-bold text-slate-900">{t.name}</p>
+                      <p className="font-bold text-slate-900">
+                        <span className="text-orange-600 font-mono mr-1">#{t.id}.</span>{t.name}
+                      </p>
                       <p className="text-[11px] text-blue-900">{t.designation}</p>
                       <span className="text-[10px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-700">{t.department}</span>
                     </div>
