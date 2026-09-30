@@ -29,19 +29,6 @@ export default function Courses() {
       career: "सिविल सेवक (IAS/RAS), प्राध्यापक, अधिवक्ता, पत्रकार, शोधार्थी",
       color: "border-amber-500",
       bg: "bg-amber-50/50"
-    },
-    {
-      name: "वाणिज्य संकाय (Commerce Stream)",
-      desc: "बैंकिंग, वित्त, चार्टर्ड एकाउंटेंसी (CA), व्यापार प्रबंधन (BBA/MBA) एवं कॉर्पोरेट क्षेत्र हेतु।",
-      subjects: [
-        "लेखाशास्त्र (Accountancy)",
-        "व्यावसायिक अध्ययन (Business Studies)",
-        "अर्थशास्त्र (Economics)",
-        "अनिवार्य हिंदी एवं अंग्रेजी"
-      ],
-      career: "चार्टर्ड एकाउंटेंट (CA), कंपनी सेक्रेटरी (CS), बैंक पीओ, वित्तीय सलाहकार",
-      color: "border-emerald-500",
-      bg: "bg-emerald-50/50"
     }
   ];
 

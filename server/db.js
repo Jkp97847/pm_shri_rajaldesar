@@ -114,6 +114,19 @@ function initDB() {
       admission_date TEXT,
       status TEXT DEFAULT 'Active'
     );
+
+    CREATE TABLE IF NOT EXISTS classes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      class_name TEXT NOT NULL,
+      level TEXT NOT NULL,
+      stream TEXT DEFAULT 'General',
+      section TEXT DEFAULT 'A',
+      medium TEXT DEFAULT 'Hindi & English',
+      subjects TEXT,
+      description TEXT,
+      display_order INTEGER DEFAULT 0,
+      is_active INTEGER DEFAULT 1
+    );
   `);
 
   // Migrate gallery columns for video support if not existing
@@ -140,6 +153,12 @@ function initDB() {
   try { db.exec("ALTER TABLE results ADD COLUMN total_marks INTEGER DEFAULT 600"); } catch (e) {}
   try { db.exec("ALTER TABLE results ADD COLUMN obtained_marks INTEGER DEFAULT 0"); } catch (e) {}
   try { db.exec("ALTER TABLE results ADD COLUMN rank INTEGER DEFAULT 1"); } catch (e) {}
+
+  // Clean up any Commerce references in results or notices (as Commerce is not offered)
+  try {
+    db.exec("UPDATE results SET class_name = '12th Arts' WHERE class_name LIKE '%Commerce%'");
+    db.exec("UPDATE notices SET title = 'कक्षा 11वीं एवं 12वीं (कला एवं विज्ञान संकाय) में प्रवेश प्रक्रिया प्रारम्भ', content = 'सत्र 2026-27 हेतु कक्षा 11 एवं 12 में कला एवं विज्ञान संकाय में बालिकाओं के लिए निःशुल्क प्रवेश फॉर्म विद्यालय कार्यालय से प्राप्त करें।' WHERE title LIKE '%वाणिज्य%'");
+  } catch (e) {}
 
   // Seed sample inquiries if empty
   const countInquiries = db.prepare('SELECT count(*) as count FROM inquiries').get().count;
@@ -1107,18 +1126,18 @@ function initDB() {
       // Class 11 Science
       { sr_no: 'SR-1030', roll_no: '1111', name: 'प्रियंका शर्मा', father_name: 'दिनेश कुमार शर्मा', mother_name: 'सुनीता शर्मा', class_name: 'Class 11 Science', section: 'A', gender: 'Girl', category: 'GEN', dob: '2009-01-20', phone: '9414310320', address: 'स्टेशन रोड, राजलदेसर' },
       { sr_no: 'SR-1031', roll_no: '1112', name: 'दिव्या प्रजापत', father_name: 'गोपाल राम प्रजापत', mother_name: 'कृष्णा देवी', class_name: 'Class 11 Science', section: 'A', gender: 'Girl', category: 'OBC', dob: '2009-06-30', phone: '9784320330', address: 'वार्ड 10, राजलदेसर' },
-      // Class 11 Commerce
-      { sr_no: 'SR-1032', roll_no: '1121', name: 'खुशबू अग्रवाल', father_name: 'अनिल अग्रवाल', mother_name: 'रेखा अग्रवाल', class_name: 'Class 11 Commerce', section: 'A', gender: 'Girl', category: 'GEN', dob: '2009-05-14', phone: '9460330340', address: 'मुख्य बाजार, राजलदेसर' },
-      { sr_no: 'SR-1033', roll_no: '1122', name: 'मीनाक्षी सारस्वत', father_name: 'नरेश सारस्वत', mother_name: 'अनुराधा देवी', class_name: 'Class 11 Commerce', section: 'A', gender: 'Girl', category: 'EWS', dob: '2009-12-08', phone: '9610340350', address: 'वार्ड 17, राजलदेसर' },
+      // Class 11 Arts (Additional Students)
+      { sr_no: 'SR-1032', roll_no: '1121', name: 'खुशबू अग्रवाल', father_name: 'अनिल अग्रवाल', mother_name: 'रेखा अग्रवाल', class_name: 'Class 11 Arts', section: 'A', gender: 'Girl', category: 'GEN', dob: '2009-05-14', phone: '9460330340', address: 'मुख्य बाजार, राजलदेसर' },
+      { sr_no: 'SR-1033', roll_no: '1122', name: 'मीनाक्षी सारस्वत', father_name: 'नरेश सारस्वत', mother_name: 'अनुराधा देवी', class_name: 'Class 11 Arts', section: 'A', gender: 'Girl', category: 'EWS', dob: '2009-12-08', phone: '9610340350', address: 'वार्ड 17, राजलदेसर' },
       // Class 12 Arts
       { sr_no: 'SR-1034', roll_no: '1201', name: 'मोनिका कंवर', father_name: 'भेरू सिंह', mother_name: 'कमलेश कंवर', class_name: 'Class 12 Arts', section: 'A', gender: 'Girl', category: 'GEN', dob: '2008-04-10', phone: '9928350360', address: 'वार्ड 20, राजलदेसर' },
       { sr_no: 'SR-1035', roll_no: '1202', name: 'सीमा नायक', father_name: 'भंवरलाल नायक', mother_name: 'धापू देवी', class_name: 'Class 12 Arts', section: 'A', gender: 'Girl', category: 'SC', dob: '2008-09-24', phone: '9783360370', address: 'नायक बास, राजलदेसर' },
       // Class 12 Science
       { sr_no: 'SR-1036', roll_no: '260101', name: 'पूजा स्वामी', father_name: 'सुरेश कुमार स्वामी', mother_name: 'सरोज देवी', class_name: 'Class 12 Science', section: 'A', gender: 'Girl', category: 'OBC', dob: '2008-02-18', phone: '9414370380', address: 'वार्ड 06, राजलदेसर' },
       { sr_no: 'SR-1037', roll_no: '260102', name: 'मनीषा शर्मा', father_name: 'रमेश चंद्र शर्मा', mother_name: 'प्रेमलता देवी', class_name: 'Class 12 Science', section: 'A', gender: 'Girl', category: 'GEN', dob: '2008-07-07', phone: '9828380390', address: 'स्टेशन रोड, राजलदेसर' },
-      // Class 12 Commerce
-      { sr_no: 'SR-1038', roll_no: '1221', name: 'रिया सिंघल', father_name: 'सुभाष सिंघल', mother_name: 'रंजना सिंघल', class_name: 'Class 12 Commerce', section: 'A', gender: 'Girl', category: 'GEN', dob: '2008-05-12', phone: '9462390400', address: 'बाजार चौक, राजलदेसर' },
-      { sr_no: 'SR-1039', roll_no: '1222', name: 'सलोनी भाटी', father_name: 'प्रहलाद भाटी', mother_name: 'संतोष भाटी', class_name: 'Class 12 Commerce', section: 'A', gender: 'Girl', category: 'OBC', dob: '2008-11-20', phone: '9672400410', address: 'वार्ड 19, राजलदेसर' }
+      // Class 12 Arts (Additional Students)
+      { sr_no: 'SR-1038', roll_no: '1221', name: 'रिया सिंघल', father_name: 'सुभाष सिंघल', mother_name: 'रंजना सिंघल', class_name: 'Class 12 Arts', section: 'A', gender: 'Girl', category: 'GEN', dob: '2008-05-12', phone: '9462390400', address: 'बाजार चौक, राजलदेसर' },
+      { sr_no: 'SR-1039', roll_no: '1222', name: 'सलोनी भाटी', father_name: 'प्रहलाद भाटी', mother_name: 'संतोष भाटी', class_name: 'Class 12 Arts', section: 'A', gender: 'Girl', category: 'OBC', dob: '2008-11-20', phone: '9672400410', address: 'वार्ड 19, राजलदेसर' }
     ];
 
     const insertStudent = db.prepare(`
@@ -1131,6 +1150,192 @@ function initDB() {
         s.section || 'A', s.gender, s.category || 'GEN', s.dob || '', s.phone || '',
         s.address || 'राजलदेसर', '2025-07-01', 'Active'
       );
+    }
+  }
+
+  // Seed Classes if empty (Starting from Nursery, LKG, UKG to 12th - Arts & Science only, NO Commerce)
+  const countClasses = db.prepare('SELECT count(*) as count FROM classes').get().count;
+  if (countClasses === 0) {
+    const defaultClasses = [
+      {
+        class_name: 'Nursery',
+        level: 'पूर्व-प्राथमिक (Pre-Primary)',
+        stream: 'General',
+        section: 'A',
+        medium: 'Hindi & English',
+        subjects: 'Early Literacy, Play & Rhymes, Activity-Based Learning, Art & Drawing',
+        description: 'बालवाटिका एवं खेल-खेल में प्रारंभिक बुनियादी शिक्षा, रंग-बिरंगे बाल सुलभ क्लासरूम',
+        display_order: 1
+      },
+      {
+        class_name: 'LKG',
+        level: 'पूर्व-प्राथमिक (Pre-Primary)',
+        stream: 'General',
+        section: 'A',
+        medium: 'Hindi & English',
+        subjects: 'English, Hindi, Numbers, Coloring & Craft, Rhymes & Story Telling',
+        description: 'बुनियादी अक्षर ज्ञान एवं संख्यात्मक कौशल का विकास',
+        display_order: 2
+      },
+      {
+        class_name: 'UKG',
+        level: 'पूर्व-प्राथमिक (Pre-Primary)',
+        stream: 'General',
+        section: 'A',
+        medium: 'Hindi & English',
+        subjects: 'Hindi, English, Mathematics, General Awareness, Moral Education',
+        description: 'प्राथमिक विद्यालय में प्रवेश हेतु सर्वांगीण पूर्व तैयारी',
+        display_order: 3
+      },
+      {
+        class_name: 'Class 1',
+        level: 'प्राथमिक (Primary)',
+        stream: 'General',
+        section: 'A',
+        medium: 'Hindi & English',
+        subjects: 'हिंदी, अंग्रेजी, गणित, पर्यावरण अध्ययन (FLN आधारित)',
+        description: 'निपुण भारत मिशन के तहत बुनियादी साक्षरता एवं संख्या ज्ञान',
+        display_order: 4
+      },
+      {
+        class_name: 'Class 2',
+        level: 'प्राथमिक (Primary)',
+        stream: 'General',
+        section: 'A',
+        medium: 'Hindi & English',
+        subjects: 'हिंदी, अंग्रेजी, गणित, पर्यावरण अध्ययन',
+        description: 'बुनियादी भाषा कौशल एवं गणितीय संक्रियाओं का नियमित अभ्यास',
+        display_order: 5
+      },
+      {
+        class_name: 'Class 3',
+        level: 'प्राथमिक (Primary)',
+        stream: 'General',
+        section: 'A',
+        medium: 'Hindi & English',
+        subjects: 'हिंदी, अंग्रेजी, गणित, पर्यावरण अध्ययन',
+        description: 'रचनात्मक शिक्षण एवं पर्यावरण के प्रति वैज्ञानिक समझ',
+        display_order: 6
+      },
+      {
+        class_name: 'Class 4',
+        level: 'प्राथमिक (Primary)',
+        stream: 'General',
+        section: 'A',
+        medium: 'Hindi & English',
+        subjects: 'हिंदी, अंग्रेजी, गणित, पर्यावरण अध्ययन',
+        description: 'समस्या समाधान, नैतिक शिक्षा एवं व्यावहारिक भाषा ज्ञान',
+        display_order: 7
+      },
+      {
+        class_name: 'Class 5',
+        level: 'प्राथमिक (Primary)',
+        stream: 'General',
+        section: 'A',
+        medium: 'Hindi & English',
+        subjects: 'हिंदी, अंग्रेजी, गणित, पर्यावरण (जिला स्तरीय 5वीं बोर्ड)',
+        description: 'प्राथमिक स्तर बोर्ड परीक्षा एवं समग्र सतत मूल्यांकन (CCE)',
+        display_order: 8
+      },
+      {
+        class_name: 'Class 6',
+        level: 'उच्च प्राथमिक (Upper Primary)',
+        stream: 'General',
+        section: 'A',
+        medium: 'Hindi & English',
+        subjects: 'हिंदी, अंग्रेजी, संस्कृत, गणित, विज्ञान, सामाजिक विज्ञान',
+        description: 'विषयवार शिक्षण, कंप्यूटर बुनियादी ज्ञान एवं आत्मरक्षा प्रशिक्षण',
+        display_order: 9
+      },
+      {
+        class_name: 'Class 7',
+        level: 'उच्च प्राथमिक (Upper Primary)',
+        stream: 'General',
+        section: 'A',
+        medium: 'Hindi & English',
+        subjects: 'हिंदी, अंग्रेजी, संस्कृत, गणित, विज्ञान, सामाजिक विज्ञान',
+        description: 'वैज्ञानिक दृष्टिकोण, प्रायोगिक समझ एवं खेलकूद गतिविधियां',
+        display_order: 10
+      },
+      {
+        class_name: 'Class 8',
+        level: 'उच्च प्राथमिक (Upper Primary)',
+        stream: 'General',
+        section: 'A',
+        medium: 'Hindi & English',
+        subjects: 'हिंदी, अंग्रेजी, संस्कृत, गणित, विज्ञान, सामाजिक विज्ञान (8वीं बोर्ड)',
+        description: 'प्रारंभिक शिक्षा पूर्णता प्रमाण पत्र परीक्षा (8th Board) की विशेष तैयारी',
+        display_order: 11
+      },
+      {
+        class_name: 'Class 9',
+        level: 'माध्यमिक (Secondary)',
+        stream: 'General',
+        section: 'A',
+        medium: 'Hindi & English',
+        subjects: 'हिंदी, अंग्रेजी, संस्कृत, गणित, विज्ञान, सामाजिक विज्ञान, सूचना प्रौद्योगिकी (IT)',
+        description: 'माध्यमिक बोर्ड की आधारभूत तैयारी, करियर गाइडेंस एवं विज्ञान क्लब',
+        display_order: 12
+      },
+      {
+        class_name: 'Class 10',
+        level: 'माध्यमिक (Secondary)',
+        stream: 'General',
+        section: 'A',
+        medium: 'Hindi & English',
+        subjects: 'हिंदी, अंग्रेजी, संस्कृत, गणित, विज्ञान, सामाजिक विज्ञान (RBSE बोर्ड)',
+        description: 'माध्यमिक शिक्षा बोर्ड राजस्थान (RBSE) 10वीं बोर्ड परीक्षा 100% परिणाम हेतु विशेष कक्षाएं',
+        display_order: 13
+      },
+      {
+        class_name: 'Class 11 Arts',
+        level: 'उच्च माध्यमिक (Senior Secondary)',
+        stream: 'कला संकाय (Arts)',
+        section: 'A',
+        medium: 'Hindi & English',
+        subjects: 'अनिवार्य हिंदी, अनिवार्य अंग्रेजी, राजनीति विज्ञान, इतिहास, भूगोल, हिंदी साहित्य, संस्कृत साहित्य',
+        description: 'मानविकी एवं प्रशासनिक सेवाओं (UPSC/RPSC) तथा उच्च शिक्षा हेतु सशक्त आधार',
+        display_order: 14
+      },
+      {
+        class_name: 'Class 11 Science',
+        level: 'उच्च माध्यमिक (Senior Secondary)',
+        stream: 'विज्ञान संकाय (Science)',
+        section: 'A',
+        medium: 'Hindi & English',
+        subjects: 'अनिवार्य हिंदी, अनिवार्य अंग्रेजी, भौतिक विज्ञान (Physics), रसायन विज्ञान (Chemistry), जीव विज्ञान (Biology), गणित (Maths)',
+        description: 'NEET, JEE, CUET एवं अत्याधुनिक सुसज्जित प्रयोगशालाओं में हैंड्स-ऑन प्रायोगिक शिक्षण',
+        display_order: 15
+      },
+      {
+        class_name: 'Class 12 Arts',
+        level: 'उच्च माध्यमिक (Senior Secondary)',
+        stream: 'कला संकाय (Arts)',
+        section: 'A',
+        medium: 'Hindi & English',
+        subjects: 'अनिवार्य हिंदी, अनिवार्य अंग्रेजी, राजनीति विज्ञान, इतिहास, भूगोल, हिंदी साहित्य, संस्कृत साहित्य (RBSE बोर्ड)',
+        description: '12वीं कला बोर्ड परीक्षा में मेरिट एवं उत्कृष्ट परिणाम की परंपरा',
+        display_order: 16
+      },
+      {
+        class_name: 'Class 12 Science',
+        level: 'उच्च माध्यमिक (Senior Secondary)',
+        stream: 'विज्ञान संकाय (Science)',
+        section: 'A',
+        medium: 'Hindi & English',
+        subjects: 'अनिवार्य हिंदी, अनिवार्य अंग्रेजी, भौतिक विज्ञान, रसायन विज्ञान, जीव विज्ञान, गणित (RBSE बोर्ड)',
+        description: '12वीं विज्ञान बोर्ड परीक्षा एवं राष्ट्रीय स्तरीय प्रतियोगी परीक्षाओं की विशेष तैयारी',
+        display_order: 17
+      }
+    ];
+
+    const insertClass = db.prepare(`
+      INSERT INTO classes (class_name, level, stream, section, medium, subjects, description, display_order, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    for (const c of defaultClasses) {
+      insertClass.run(c.class_name, c.level, c.stream, c.section, c.medium, c.subjects, c.description, c.display_order, 1);
     }
   }
 

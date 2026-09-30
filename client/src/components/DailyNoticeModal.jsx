@@ -1,194 +1,164 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, X, Calendar, Sparkles, CheckCheck, ArrowRight } from 'lucide-react';
+import { Bell, X, Calendar, Sparkles, CheckCheck, ArrowRight, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useSchool } from '../context/SchoolContext';
 
 export default function DailyNoticeModal() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [notice, setNotice] = useState(null);
-  const [isDismissed, setIsDismissed] = useState(false);
+  const { isNoticeModalOpen, closeNoticeModal } = useSchool();
+  const [notices, setNotices] = useState([]);
+  const [selectedNotice, setSelectedNotice] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetch('/api/notices')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.notices && data.notices.length > 0) {
-          const latest = data.notices[0];
-          const today = new Date().toISOString().split('T')[0];
-          const lastSeenDate = localStorage.getItem('pm_shri_daily_notice_seen_date');
-          const lastSeenId = localStorage.getItem('pm_shri_last_seen_notice_id');
-
-          // If user hasn't dismissed today's notice
-          if (lastSeenDate !== today || String(lastSeenId) !== String(latest.id)) {
-            setNotice(latest);
+    if (isNoticeModalOpen) {
+      setLoading(true);
+      fetch('/api/notices')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.notices && data.notices.length > 0) {
+            setNotices(data.notices);
+            setSelectedNotice(data.notices[0]);
           }
-        }
-      })
-      .catch(err => console.error("Error checking daily notice:", err));
-  }, []);
-
-  const handleDontShowToday = () => {
-    const today = new Date().toISOString().split('T')[0];
-    localStorage.setItem('pm_shri_daily_notice_seen_date', today);
-    if (notice) {
-      localStorage.setItem('pm_shri_last_seen_notice_id', String(notice.id));
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error("Error fetching notices for modal:", err);
+          setLoading(false);
+        });
     }
-    setIsOpen(false);
-    setIsDismissed(true);
-  };
+  }, [isNoticeModalOpen]);
 
-  const handleClose = () => {
-    setIsOpen(false);
-  };
-
-  if (!notice || isDismissed) return null;
+  if (!isNoticeModalOpen) return null;
 
   return (
-    <>
-      {/* 1. Non-blocking Floating Announcement Pill at bottom-right (Tiranga Styled) */}
-      {!isOpen && (
-        <div className="fixed bottom-4 right-4 z-40 max-w-sm bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border-2 border-orange-500 p-3 sm:p-3.5 flex items-center justify-between gap-3 transition-all hover:scale-102 relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1 tiranga-bar"></div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-fadeIn">
+      <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden border-2 border-orange-500/40 animate-scaleUp">
+        
+        {/* Tricolor Govt Header Line */}
+        <div className="h-2 w-full tiranga-bar"></div>
 
-          <div className="flex items-center gap-2.5 overflow-hidden pt-0.5">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-orange-500 to-amber-500 text-white flex items-center justify-center shrink-0 shadow-sm animate-pulse">
-              <Bell className="w-4 h-4 text-white" />
+        {/* Modal Header (Ashoka Chakra Navy Blue with Saffron & Gold accents) */}
+        <div className="bg-gradient-to-r from-blue-950 via-slate-900 to-blue-950 text-white p-4 sm:p-5 flex items-center justify-between border-b border-orange-500/30">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-orange-500 to-amber-500 flex items-center justify-center text-white shrink-0 shadow-md">
+              <Bell className="w-5 h-5 animate-bounce" />
             </div>
-            <div className="overflow-hidden">
-              <span className="text-[10px] font-black text-orange-600 uppercase tracking-wider block flex items-center gap-1">
-                <span>🇮🇳</span>
-                <span>आज की नवीन सूचना</span>
-              </span>
-              <p className="text-xs font-bold text-blue-950 truncate max-w-[200px]">
-                {notice.title}
-              </p>
+            <div>
+              <div className="flex items-center gap-1.5 text-[11px] font-bold text-amber-300 uppercase tracking-wider">
+                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <span>पीएम श्री विद्यालय - नवीनतम विद्यालयी सूचनाएं</span>
+              </div>
+              <h3 className="text-base sm:text-lg font-black leading-tight text-white">
+                नवीन सूचना एवं मुख्य घोषणाएं (Notice Board)
+              </h3>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
-            <button
-              onClick={() => setIsOpen(true)}
-              className="bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white text-[11px] font-black px-3 py-1.5 rounded-lg shadow-sm transition"
-            >
-              देखें →
-            </button>
-            <button
-              onClick={handleDontShowToday}
-              className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
-              title="हटाएं"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
+          <button
+            onClick={closeNoticeModal}
+            className="p-1.5 rounded-lg bg-white/10 hover:bg-white/25 text-white transition hover:scale-105"
+            title="बंद करें (Close)"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
-      )}
 
-      {/* 2. Full Announcement Modal (Opens when user clicks 'देखें') */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
-          <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden border-2 border-orange-500/40">
+        {/* Modal Content */}
+        {loading ? (
+          <div className="p-12 text-center text-slate-500 text-xs">सूचनाएं लोड हो रही हैं...</div>
+        ) : notices.length === 0 ? (
+          <div className="p-8 text-center text-slate-600 text-xs">वर्तमान में कोई नई सूचना उपलब्ध नहीं है।</div>
+        ) : (
+          <div className="flex flex-col md:flex-row max-h-[70vh]">
             
-            {/* Tricolor Govt Header Line */}
-            <div className="h-2 w-full tiranga-bar"></div>
+            {/* Notices List Sidebar (if multiple) */}
+            {notices.length > 1 && (
+              <div className="w-full md:w-5/12 bg-slate-50 border-r border-slate-200 overflow-y-auto p-3 space-y-2 border-b md:border-b-0 max-h-48 md:max-h-[70vh]">
+                <p className="text-[11px] font-bold text-slate-500 uppercase px-1">सभी सूचनाएं ({notices.length})</p>
+                {notices.map((n, idx) => {
+                  const isSelected = selectedNotice && selectedNotice.id === n.id;
+                  return (
+                    <button
+                      key={n.id || idx}
+                      onClick={() => setSelectedNotice(n)}
+                      className={`w-full text-left p-2.5 rounded-xl text-xs transition border flex flex-col gap-1 ${
+                        isSelected 
+                          ? 'bg-white border-orange-500 shadow-sm text-blue-950 font-bold ring-1 ring-orange-400' 
+                          : 'bg-white/60 hover:bg-white border-slate-200 text-slate-700 font-medium'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-1">
+                        <span className={`text-[10px] font-black px-1.5 py-0.2 rounded uppercase ${
+                          n.is_flash === 1 ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
+                        }`}>
+                          {n.category || 'General'}
+                        </span>
+                        <span className="text-[10px] text-slate-400">{n.date}</span>
+                      </div>
+                      <p className="line-clamp-2 leading-snug">{n.title}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
-            {/* Modal Header (Chakra Navy Blue with Saffron & Green accents) */}
-            <div className="bg-gradient-to-r from-blue-950 via-slate-900 to-blue-950 text-white p-4 sm:p-5 flex items-center justify-between border-b border-orange-500/30">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white shrink-0">
-                  <Bell className="w-5 h-5 animate-bounce" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5 text-[11px] font-bold text-amber-200 uppercase tracking-wider">
-                    <Sparkles className="w-3 h-3" />
-                    <span>PM SHRI विद्यालय दैनिक सूचना</span>
+            {/* Selected Notice Detailed View */}
+            <div className={`p-6 space-y-4 overflow-y-auto ${notices.length > 1 ? 'w-full md:w-7/12' : 'w-full'}`}>
+              {selectedNotice && (
+                <>
+                  {/* Badges */}
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    {selectedNotice.is_flash === 1 && (
+                      <span className="bg-red-600 text-white font-black px-2.5 py-0.5 rounded uppercase text-[10px] tracking-wider animate-pulse">
+                        ★ महत्वपूर्ण FLASH NOTICE
+                      </span>
+                    )}
+                    <span className="bg-blue-100 text-blue-900 font-bold px-2.5 py-0.5 rounded uppercase text-[11px]">
+                      {selectedNotice.category || 'सामान्य'}
+                    </span>
+                    <span className="text-slate-500 flex items-center gap-1 font-medium text-[11px]">
+                      <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                      <span>दिनांक: {selectedNotice.date}</span>
+                    </span>
                   </div>
-                  <h3 className="text-base sm:text-lg font-black leading-tight">
-                    आज का मुख्य अपडेट एवं घोषणा
-                  </h3>
-                </div>
-              </div>
 
-              <button
-                onClick={handleClose}
-                className="p-1.5 rounded-lg bg-white/10 hover:bg-white/25 text-white transition"
-                title="बंद करें (Close)"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+                  {/* Title */}
+                  <h4 className="text-base sm:text-lg font-bold text-blue-950 leading-snug">
+                    {selectedNotice.title}
+                  </h4>
 
-            {/* Notice Content Body */}
-            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-              {/* Metadata badges */}
-              <div className="flex flex-wrap items-center gap-2 text-xs">
-                {notice.is_flash === 1 && (
-                  <span className="bg-red-600 text-white font-black px-2 py-0.5 rounded uppercase text-[10px] tracking-wider animate-pulse">
-                    ★ FLASH NOTICE
-                  </span>
-                )}
-                <span className="bg-blue-100 text-blue-900 font-bold px-2.5 py-0.5 rounded uppercase text-[11px]">
-                  {notice.category || 'General'}
-                </span>
-                <span className="text-slate-500 flex items-center gap-1 font-medium text-[11px]">
-                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                  <span>दिनांक: {notice.date}</span>
-                </span>
-              </div>
+                  {/* Body Content */}
+                  <div className="p-4 bg-amber-50/70 rounded-xl border border-amber-200 text-slate-800 text-xs sm:text-sm leading-relaxed whitespace-pre-line shadow-inner">
+                    {selectedNotice.content || 'उपरोक्त विषय से संबंधित सभी छात्र-छात्राएं एवं अभिभावक ध्यान दें। अधिक जानकारी हेतु विद्यालय कार्यालय में संपर्क करें।'}
+                  </div>
 
-              {/* Title */}
-              <h4 className="text-lg font-bold text-blue-950 leading-snug">
-                {notice.title}
-              </h4>
-
-              {/* Detailed Content */}
-              {notice.content ? (
-                <div className="p-4 bg-amber-50/60 rounded-xl border border-amber-200/60 text-slate-700 text-sm leading-relaxed whitespace-pre-line">
-                  {notice.content}
-                </div>
-              ) : (
-                <p className="text-sm text-slate-600 italic">
-                  उपरोक्त विषय से संबंधित सभी छात्र-छात्राएं एवं अभिभावक ध्यान दें। अधिक जानकारी हेतु विद्यालय कार्यालय में संपर्क करें।
-                </p>
+                  {/* School Contact Note */}
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                    <span className="font-semibold text-slate-700">पीएम श्री रा.बा.उ.मा.वि. राजलदेसर (चूरू)</span>
+                    <span className="text-[11px] text-blue-900 font-bold">हेल्पलाइन: 01564-220145</span>
+                  </div>
+                </>
               )}
-
-              {/* School Contact Note */}
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 flex items-center justify-between">
-                <span className="font-semibold text-slate-700">पीएम श्री रा.बा.उ.मा.वि. राजलदेसर (चूरू)</span>
-                <span className="text-[11px] text-blue-900 font-bold">हेल्पलाइन: 01564-222045</span>
-              </div>
-            </div>
-
-            {/* Modal Footer Actions */}
-            <div className="bg-slate-100 px-6 py-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <button
-                onClick={handleDontShowToday}
-                className="w-full sm:w-auto text-xs text-slate-600 hover:text-slate-900 font-bold flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg hover:bg-slate-200 transition"
-              >
-                <CheckCheck className="w-4 h-4 text-emerald-600" />
-                <span>आज दोबारा न दिखाएं (Don't show again today)</span>
-              </button>
-
-              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-                <Link
-                  to="/classes"
-                  onClick={handleDontShowToday}
-                  className="w-full sm:w-auto bg-blue-950 hover:bg-blue-900 text-white font-bold px-4 py-2 rounded-lg text-xs transition flex items-center justify-center gap-1.5 shadow"
-                >
-                  <span>अन्य सूचनाएं देखें</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-                
-                <button
-                  onClick={handleClose}
-                  className="w-full sm:w-auto bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-4 py-2 rounded-lg text-xs transition"
-                >
-                  बंद करें
-                </button>
-              </div>
             </div>
 
           </div>
+        )}
+
+        {/* Modal Footer Actions */}
+        <div className="bg-slate-100 px-6 py-3.5 border-t border-slate-200 flex items-center justify-between gap-3">
+          <span className="text-[11px] text-slate-500 font-medium">
+            विद्यालय विकास एवं प्रबंधन समिति (SDMC)
+          </span>
+
+          <button
+            onClick={closeNoticeModal}
+            className="bg-blue-950 hover:bg-blue-900 text-white font-bold px-5 py-2 rounded-xl text-xs transition shadow"
+          >
+            बंद करें (Close)
+          </button>
         </div>
-      )}
-    </>
+
+      </div>
+    </div>
   );
 }

@@ -141,8 +141,8 @@ export default function Footer() {
       {/* Bottom Bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-8 mt-10 pt-6 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
         <p>© {new Date().getFullYear()} पीएम श्री यूनियन क्लब रा.बा.उ.मा.वि., राजलदेसर (चूरू). सर्वाधिकार सुरक्षित।</p>
-        <p className="text-amber-400 font-bold bg-slate-900/90 px-3 py-1 rounded-full border border-amber-500/30">
-          Develop by Jagdish Prajapat Mo.9784730824 (Basic computer instructor)
+        <p className="text-amber-400 font-black bg-slate-900/90 px-3.5 py-1.5 rounded-full border border-amber-500/40 uppercase tracking-wide text-[11px] sm:text-xs shadow-md">
+          DEVELOPER @ JAGDISH PRAJAPAT MO.9784730824 (BASIC COMPUTER INSTRUCTOR)
         </p>
       </div>
     </footer>

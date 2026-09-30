@@ -11,6 +11,7 @@ import * as XLSX from 'xlsx';
 import { useSchool } from '../context/SchoolContext';
 import AdminStudentsTab from '../components/admin/AdminStudentsTab';
 import AdminLibraryTab from '../components/admin/AdminLibraryTab';
+import AdminClassesTab from '../components/admin/AdminClassesTab';
 
 export default function Admin() {
   const { settings, refreshSettings } = useSchool();
@@ -1944,6 +1945,7 @@ export default function Admin() {
       <div className="flex items-center gap-2 flex-wrap border-b border-slate-200 pb-2">
         {[
           { id: 'school_details', label: 'विद्यालय विवरण (Profile & Contact)', icon: Building },
+          { id: 'classes', label: 'कक्षा व संकाय (Classes)', icon: GraduationCap },
           { id: 'students', label: `विद्यार्थी (${studentsCount})`, icon: UserCheck },
           { id: 'teachers', label: `शिक्षक (${teachers.length})`, icon: Users },
           { id: 'results', label: `परिणाम (${results.length})`, icon: Award },
@@ -1976,6 +1978,13 @@ export default function Admin() {
           );
         })}
       </div>
+
+      {/* ==================================================== */}
+      {/* TAB: CLASSES & STREAMS MANAGER */}
+      {/* ==================================================== */}
+      {activeTab === 'classes' && (
+        <AdminClassesTab token={token} showMsg={showMsg} />
+      )}
 
       {/* ==================================================== */}
       {/* TAB: STUDENTS MANAGER */}
@@ -2703,7 +2712,6 @@ export default function Admin() {
                     <option value="Administration">Administration</option>
                     <option value="Science">Science</option>
                     <option value="Arts">Arts</option>
-                    <option value="Commerce">Commerce</option>
                     <option value="ICT">ICT / Computer</option>
                     <option value="Primary / Elementary">Primary / Elementary</option>
                     <option value="Sports">Sports / PTI</option>
@@ -3173,7 +3181,6 @@ export default function Admin() {
                   >
                     <option value="12th Science">12th Science</option>
                     <option value="12th Arts">12th Arts</option>
-                    <option value="12th Commerce">12th Commerce</option>
                     <option value="11th Science">11th Science</option>
                     <option value="11th Arts">11th Arts</option>
                     <option value="10th Board">10th Board</option>

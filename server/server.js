@@ -365,6 +365,16 @@ app.post('/api/contact', contactLimiter, (req, res) => {
   }
 });
 
+// 7.5 Classes & Academic Streams (Public)
+app.get('/api/classes', (req, res) => {
+  try {
+    const rows = db.prepare('SELECT * FROM classes WHERE is_active = 1 ORDER BY display_order ASC, id ASC').all();
+    res.json({ success: true, classes: rows });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // 8. Timetables (Exam & Regular)
 app.get('/api/timetables', (req, res) => {
   try {
@@ -478,8 +488,8 @@ app.get('/api/students/stats', (req, res) => {
       'Nursery', 'LKG', 'UKG',
       'Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5',
       'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10',
-      'Class 11 Arts', 'Class 11 Science', 'Class 11 Commerce',
-      'Class 12 Arts', 'Class 12 Science', 'Class 12 Commerce'
+      'Class 11 Arts', 'Class 11 Science',
+      'Class 12 Arts', 'Class 12 Science'
     ];
 
     const classRows = db.prepare(`
@@ -1591,6 +1601,129 @@ app.delete('/api/admin/inquiries/:id', adminAuth, (req, res) => {
   try {
     db.prepare('DELETE FROM inquiries WHERE id = ?').run(req.params.id);
     res.json({ success: true, message: "संदेश हटा दिया गया।" });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// --- ADMIN CLASSES & STREAMS CRUD ---
+app.get('/api/admin/classes', adminAuth, (req, res) => {
+  try {
+    const rows = db.prepare('SELECT * FROM classes ORDER BY display_order ASC, id ASC').all();
+    res.json({ success: true, classes: rows });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/admin/classes', adminAuth, (req, res) => {
+  try {
+    const { class_name, level, stream, section, medium, subjects, description, display_order, is_active } = req.body;
+    if (!class_name || !level) {
+      return res.status(400).json({ success: false, message: "कक्षा का नाम और स्तर आवश्यक हैं।" });
+    }
+    const stmt = db.prepare(`
+      INSERT INTO classes (class_name, level, stream, section, medium, subjects, description, display_order, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const order = display_order !== undefined && display_order !== '' ? parseInt(display_order) : 99;
+    const active = is_active !== undefined ? (is_active ? 1 : 0) : 1;
+    const info = stmt.run(
+      class_name.trim(),
+      level.trim(),
+      stream ? stream.trim() : 'General',
+      section ? section.trim() : 'A',
+      medium ? medium.trim() : 'Hindi & English',
+      subjects ? subjects.trim() : '',
+      description ? description.trim() : '',
+      order,
+      active
+    );
+    const item = db.prepare('SELECT * FROM classes WHERE id = ?').get(info.lastInsertRowid);
+    res.json({ success: true, message: "कक्षा सफलतापूर्वक जोड़ दी गई!", classItem: item });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.put('/api/admin/classes/:id', adminAuth, (req, res) => {
+  try {
+    const { class_name, level, stream, section, medium, subjects, description, display_order, is_active } = req.body;
+    if (!class_name || !level) {
+      return res.status(400).json({ success: false, message: "कक्षा का नाम और स्तर आवश्यक हैं।" });
+    }
+    const stmt = db.prepare(`
+      UPDATE classes 
+      SET class_name = ?, level = ?, stream = ?, section = ?, medium = ?, subjects = ?, description = ?, display_order = ?, is_active = ?
+      WHERE id = ?
+    `);
+    const order = display_order !== undefined && display_order !== '' ? parseInt(display_order) : 99;
+    const active = is_active !== undefined ? (is_active ? 1 : 0) : 1;
+    stmt.run(
+      class_name.trim(),
+      level.trim(),
+      stream ? stream.trim() : 'General',
+      section ? section.trim() : 'A',
+      medium ? medium.trim() : 'Hindi & English',
+      subjects ? subjects.trim() : '',
+      description ? description.trim() : '',
+      order,
+      active,
+      req.params.id
+    );
+    const item = db.prepare('SELECT * FROM classes WHERE id = ?').get(req.params.id);
+    res.json({ success: true, message: "कक्षा विवरण सफलतापूर्वक अपडेट हो गया!", classItem: item });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.delete('/api/admin/classes/:id', adminAuth, (req, res) => {
+  try {
+    db.prepare('DELETE FROM classes WHERE id = ?').run(req.params.id);
+    res.json({ success: true, message: "कक्षा सफलतापूर्वक हटा दी गई।" });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/admin/classes/quick-add-commerce', adminAuth, (req, res) => {
+  try {
+    const existing11 = db.prepare("SELECT id FROM classes WHERE class_name LIKE '%11%Commerce%'").get();
+    if (!existing11) {
+      db.prepare(`
+        INSERT INTO classes (class_name, level, stream, section, medium, subjects, description, display_order, is_active)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        'Class 11 Commerce',
+        'उच्च माध्यमिक (Senior Secondary)',
+        'वाणिज्य संकाय (Commerce)',
+        'A',
+        'Hindi & English',
+        'अनिवार्य हिंदी, अनिवार्य अंग्रेजी, लेखाशास्त्र (Accountancy), व्यावसायिक अध्ययन (Business Studies), अर्थशास्त्र (Economics)',
+        'बैंकिंग, सीए (CA), वित्त एवं प्रबंधन क्षेत्र में भविष्य निर्माण हेतु',
+        16,
+        1
+      );
+    }
+    const existing12 = db.prepare("SELECT id FROM classes WHERE class_name LIKE '%12%Commerce%'").get();
+    if (!existing12) {
+      db.prepare(`
+        INSERT INTO classes (class_name, level, stream, section, medium, subjects, description, display_order, is_active)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        'Class 12 Commerce',
+        'उच्च माध्यमिक (Senior Secondary)',
+        'वाणिज्य संकाय (Commerce)',
+        'A',
+        'Hindi & English',
+        'अनिवार्य हिंदी, अनिवार्य अंग्रेजी, लेखाशास्त्र (Accountancy), व्यावसायिक अध्ययन (Business Studies), अर्थशास्त्र (Economics) (RBSE बोर्ड)',
+        '12वीं बोर्ड वाणिज्य संकाय एवं सीए फाउंडेशन प्रवेश परीक्षा मार्गदर्शन',
+        19,
+        1
+      );
+    }
+    res.json({ success: true, message: "वाणिज्य संकाय (Class 11 & 12 Commerce) सफलतापूर्वक जोड़ दिया गया!" });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

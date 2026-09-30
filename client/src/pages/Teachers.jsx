@@ -8,7 +8,7 @@ export default function Teachers() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeModalTeacher, setActiveModalTeacher] = useState(null);
 
-  const departments = ['All', 'Administration', 'Science', 'Arts', 'Commerce', 'ICT', 'Primary / Elementary'];
+  const departments = ['All', 'Administration', 'Science', 'Arts', 'ICT', 'Primary / Elementary'];
 
   const getDeptLabel = (dept) => {
     switch (dept) {
@@ -16,7 +16,6 @@ export default function Teachers() {
       case 'Administration': return 'प्रशासन (Admin)';
       case 'Science': return 'विज्ञान संकाय';
       case 'Arts': return 'कला संकाय';
-      case 'Commerce': return 'वाणिज्य संकाय';
       case 'ICT': return 'कंप्यूटर / ICT';
       case 'Primary / Elementary': return 'प्राथमिक / उच्च प्राथमिक';
       default: return dept;

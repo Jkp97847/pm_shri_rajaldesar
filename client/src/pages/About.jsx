@@ -420,8 +420,8 @@ export default function About() {
             <span>🇮🇳</span>
             <span>वेबसाइट निर्माण एवं तकनीकी प्रबंधन (Technical In-charge)</span>
           </div>
-          <h3 className="text-lg sm:text-2xl font-black text-amber-400 tracking-wide">
-            Develop by Jagdish Prajapat Mo.9784730824 (Basic computer instructor)
+          <h3 className="text-lg sm:text-2xl font-black text-amber-400 tracking-wide uppercase">
+            DEVELOPER @ JAGDISH PRAJAPAT MO.9784730824 (BASIC COMPUTER INSTRUCTOR)
           </h3>
           <p className="text-xs text-slate-300 font-semibold">
             पीएम श्री यूनियन क्लब राजकीय बालिका उच्च माध्यमिक विद्यालय, राजलदेसर (चूरू), राजस्थान

@@ -9,7 +9,7 @@ import {
 import { useSchool } from '../context/SchoolContext';
 
 export default function Home() {
-  const { settings } = useSchool();
+  const { settings, openNoticeModal } = useSchool();
   const [notices, setNotices] = useState([]);
   const [toppers, setToppers] = useState([]);
   const [activeNoticeTab, setActiveNoticeTab] = useState('all');
@@ -275,10 +275,13 @@ export default function Home() {
                     )}
                   </div>
 
-                  <span className="shrink-0 text-xs font-bold text-orange-600 hover:text-orange-700 flex items-center gap-1 cursor-pointer bg-orange-50 px-2.5 py-1 rounded-md border border-orange-200">
+                  <button 
+                    onClick={openNoticeModal}
+                    className="shrink-0 text-xs font-bold text-orange-600 hover:text-orange-700 flex items-center gap-1 cursor-pointer bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-lg border border-orange-200 transition"
+                  >
                     <span>विवरण पढ़ें</span>
                     <ChevronRight className="w-3.5 h-3.5 text-orange-600" />
-                  </span>
+                  </button>
                 </div>
               ))
             ) : (

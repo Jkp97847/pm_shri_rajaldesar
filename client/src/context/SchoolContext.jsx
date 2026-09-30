@@ -40,8 +40,21 @@ export function SchoolProvider({ children }) {
     refreshSettings();
   }, []);
 
+  const [isNoticeModalOpen, setIsNoticeModalOpen] = useState(false);
+  const openNoticeModal = () => setIsNoticeModalOpen(true);
+  const closeNoticeModal = () => setIsNoticeModalOpen(false);
+
   return (
-    <SchoolContext.Provider value={{ settings, setSettings, refreshSettings, loading }}>
+    <SchoolContext.Provider value={{ 
+      settings, 
+      setSettings, 
+      refreshSettings, 
+      loading,
+      isNoticeModalOpen,
+      setIsNoticeModalOpen,
+      openNoticeModal,
+      closeNoticeModal
+    }}>
       {children}
     </SchoolContext.Provider>
   );
