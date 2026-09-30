@@ -132,6 +132,15 @@ function initDB() {
   try { db.exec("ALTER TABLE teachers ADD COLUMN joining_date TEXT DEFAULT ''"); } catch (e) {}
   try { db.exec("ALTER TABLE teachers ADD COLUMN current_joining_date TEXT DEFAULT ''"); } catch (e) {}
 
+  // Migrate results columns for duplicate copy marksheet, student details, and all-over marks
+  try { db.exec("ALTER TABLE results ADD COLUMN dob TEXT DEFAULT ''"); } catch (e) {}
+  try { db.exec("ALTER TABLE results ADD COLUMN mother_name TEXT DEFAULT ''"); } catch (e) {}
+  try { db.exec("ALTER TABLE results ADD COLUMN sr_no TEXT DEFAULT ''"); } catch (e) {}
+  try { db.exec("ALTER TABLE results ADD COLUMN section TEXT DEFAULT 'A'"); } catch (e) {}
+  try { db.exec("ALTER TABLE results ADD COLUMN total_marks INTEGER DEFAULT 600"); } catch (e) {}
+  try { db.exec("ALTER TABLE results ADD COLUMN obtained_marks INTEGER DEFAULT 0"); } catch (e) {}
+  try { db.exec("ALTER TABLE results ADD COLUMN rank INTEGER DEFAULT 1"); } catch (e) {}
+
   // Seed sample inquiries if empty
   const countInquiries = db.prepare('SELECT count(*) as count FROM inquiries').get().count;
   if (countInquiries === 0) {
@@ -641,106 +650,326 @@ function initDB() {
     }
   }
 
-  // Seed Results if empty
-  const resultsCount = db.prepare('SELECT COUNT(*) as c FROM results').get().c;
-  if (resultsCount === 0) {
-    const defaultResults = [
-      {
-        roll_no: "260101",
-        student_name: "प्रिया शर्मा",
-        father_name: "श्री रमेश शर्मा",
-        class_name: "12th Science",
-        year: "2025-2026",
-        percentage: 96.8,
-        grade: "A+ (Topper)",
-        status: "PASS",
-        marks_details: JSON.stringify({
-          "Physics": "97/100",
-          "Chemistry": "98/100",
-          "Biology": "96/100",
-          "Hindi Compulsory": "95/100",
-          "English Compulsory": "98/100"
-        })
-      },
-      {
-        roll_no: "260102",
-        student_name: "सुमन कस्वां",
-        father_name: "श्री भागीरथ कस्वां",
-        class_name: "12th Arts",
-        year: "2025-2026",
-        percentage: 95.4,
-        grade: "A+ (Merit)",
-        status: "PASS",
-        marks_details: JSON.stringify({
-          "History": "96/100",
-          "Political Science": "98/100",
-          "Geography": "94/100",
-          "Hindi Compulsory": "94/100",
-          "English Compulsory": "95/100"
-        })
-      },
-      {
-        roll_no: "260103",
-        student_name: "कोमल सोनी",
-        father_name: "श्री विनोद सोनी",
-        class_name: "12th Commerce",
-        year: "2025-2026",
-        percentage: 94.2,
-        grade: "A+ (Merit)",
-        status: "PASS",
-        marks_details: JSON.stringify({
-          "Accountancy": "96/100",
-          "Business Studies": "95/100",
-          "Economics": "92/100",
-          "Hindi Compulsory": "93/100",
-          "English Compulsory": "95/100"
-        })
-      },
-      {
-        roll_no: "260104",
-        student_name: "मनीषा प्रजापत",
-        father_name: "श्री जगदीश प्रजापत",
-        class_name: "10th Board",
-        year: "2025-2026",
-        percentage: 95.8,
-        grade: "A+ (School Topper)",
-        status: "PASS",
-        marks_details: JSON.stringify({
-          "Hindi": "96/100",
-          "English": "94/100",
-          "Science": "98/100",
-          "Social Science": "97/100",
-          "Mathematics": "95/100",
-          "Sanskrit": "95/100"
-        })
-      },
-      {
-        roll_no: "260105",
-        student_name: "आरती पारीक",
-        father_name: "श्री सुरेन्द्र पारीक",
-        class_name: "10th Board",
-        year: "2025-2026",
-        percentage: 92.6,
-        grade: "A",
-        status: "PASS",
-        marks_details: JSON.stringify({
-          "Hindi": "94/100",
-          "English": "90/100",
-          "Science": "94/100",
-          "Social Science": "93/100",
-          "Mathematics": "92/100",
-          "Sanskrit": "93/100"
-        })
-      }
-    ];
-
-    const insertResult = db.prepare(`
-      INSERT INTO results (roll_no, student_name, father_name, class_name, year, percentage, grade, status, marks_details)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    for (const r of defaultResults) {
-      insertResult.run(r.roll_no, r.student_name, r.father_name, r.class_name, r.year, r.percentage, r.grade, r.status, r.marks_details);
+  // Seed / Upsert Results for class-wise toppers and duplicate copy marksheet
+  const defaultResults = [
+    {
+      roll_no: "260101",
+      student_name: "प्रिया शर्मा",
+      father_name: "श्री रमेश शर्मा",
+      mother_name: "श्रीमती सुशीला देवी",
+      class_name: "12th Science",
+      section: "A",
+      sr_no: "5101",
+      dob: "2008-05-15",
+      year: "2025-2026",
+      total_marks: 500,
+      obtained_marks: 484,
+      percentage: 96.8,
+      grade: "A+ (1st Rank - State Topper)",
+      rank: 1,
+      status: "PASS",
+      marks_details: "{}"
+    },
+    {
+      roll_no: "260102",
+      student_name: "सुमन कस्वां",
+      father_name: "श्री भागीरथ कस्वां",
+      mother_name: "श्रीमती भंवरी देवी",
+      class_name: "12th Arts",
+      section: "A",
+      sr_no: "5102",
+      dob: "2008-08-20",
+      year: "2025-2026",
+      total_marks: 500,
+      obtained_marks: 477,
+      percentage: 95.4,
+      grade: "A+ (1st Rank - District Merit)",
+      rank: 1,
+      status: "PASS",
+      marks_details: "{}"
+    },
+    {
+      roll_no: "260103",
+      student_name: "कोमल सोनी",
+      father_name: "श्री विनोद सोनी",
+      mother_name: "श्रीमती संतोष देवी",
+      class_name: "12th Commerce",
+      section: "A",
+      sr_no: "5103",
+      dob: "2008-11-12",
+      year: "2025-2026",
+      total_marks: 500,
+      obtained_marks: 471,
+      percentage: 94.2,
+      grade: "A+ (1st Rank - Merit)",
+      rank: 1,
+      status: "PASS",
+      marks_details: "{}"
+    },
+    {
+      roll_no: "260111",
+      student_name: "पूजा शर्मा",
+      father_name: "श्री पवन शर्मा",
+      mother_name: "श्रीमती गीता देवी",
+      class_name: "11th Science",
+      section: "A",
+      sr_no: "5211",
+      dob: "2009-03-14",
+      year: "2025-2026",
+      total_marks: 500,
+      obtained_marks: 473,
+      percentage: 94.6,
+      grade: "A+ (1st Rank)",
+      rank: 1,
+      status: "PASS",
+      marks_details: "{}"
+    },
+    {
+      roll_no: "260112",
+      student_name: "सुनीता देवी",
+      father_name: "श्री मोहन लाल",
+      mother_name: "श्रीमती कमला देवी",
+      class_name: "11th Arts",
+      section: "A",
+      sr_no: "5212",
+      dob: "2009-07-22",
+      year: "2025-2026",
+      total_marks: 500,
+      obtained_marks: 469,
+      percentage: 93.8,
+      grade: "A+ (1st Rank)",
+      rank: 1,
+      status: "PASS",
+      marks_details: "{}"
+    },
+    {
+      roll_no: "260104",
+      student_name: "मनीषा प्रजापत",
+      father_name: "श्री जगदीश प्रजापत",
+      mother_name: "श्रीमती शांति देवी",
+      class_name: "10th Board",
+      section: "A",
+      sr_no: "5104",
+      dob: "2010-04-18",
+      year: "2025-2026",
+      total_marks: 600,
+      obtained_marks: 575,
+      percentage: 95.8,
+      grade: "A+ (1st Rank - School Topper)",
+      rank: 1,
+      status: "PASS",
+      marks_details: "{}"
+    },
+    {
+      roll_no: "260105",
+      student_name: "आरती पारीक",
+      father_name: "श्री सुरेन्द्र पारीक",
+      mother_name: "श्रीमती विमला देवी",
+      class_name: "10th Board",
+      section: "B",
+      sr_no: "5105",
+      dob: "2010-07-25",
+      year: "2025-2026",
+      total_marks: 600,
+      obtained_marks: 556,
+      percentage: 92.6,
+      grade: "A (2nd Rank)",
+      rank: 2,
+      status: "PASS",
+      marks_details: "{}"
+    },
+    {
+      roll_no: "260109",
+      student_name: "अंजलि कंवर",
+      father_name: "श्री कल्याण सिंह",
+      mother_name: "श्रीमती मंजू कंवर",
+      class_name: "9th Standard",
+      section: "A",
+      sr_no: "5309",
+      dob: "2011-01-19",
+      year: "2025-2026",
+      total_marks: 600,
+      obtained_marks: 571,
+      percentage: 95.2,
+      grade: "A+ (1st Rank)",
+      rank: 1,
+      status: "PASS",
+      marks_details: "{}"
+    },
+    {
+      roll_no: "260108",
+      student_name: "रितु सैनी",
+      father_name: "श्री ओमप्रकाश सैनी",
+      mother_name: "श्रीमती सरोज देवी",
+      class_name: "8th Board",
+      section: "A",
+      sr_no: "5408",
+      dob: "2012-06-11",
+      year: "2025-2026",
+      total_marks: 600,
+      obtained_marks: 576,
+      percentage: 96.0,
+      grade: "A+ (1st Rank - Board Merit)",
+      rank: 1,
+      status: "PASS",
+      marks_details: "{}"
+    },
+    {
+      roll_no: "260107",
+      student_name: "किरण चौधरी",
+      father_name: "श्री हनुमान राम",
+      mother_name: "श्रीमती चंदा देवी",
+      class_name: "7th Standard",
+      section: "A",
+      sr_no: "5507",
+      dob: "2013-09-05",
+      year: "2025-2026",
+      total_marks: 600,
+      obtained_marks: 578,
+      percentage: 96.3,
+      grade: "A+ (1st Rank)",
+      rank: 1,
+      status: "PASS",
+      marks_details: "{}"
+    },
+    {
+      roll_no: "260106",
+      student_name: "दिव्या प्रजापत",
+      father_name: "श्री कालूराम प्रजापत",
+      mother_name: "श्रीमती धापू देवी",
+      class_name: "6th Standard",
+      section: "A",
+      sr_no: "5606",
+      dob: "2014-02-14",
+      year: "2025-2026",
+      total_marks: 600,
+      obtained_marks: 575,
+      percentage: 95.8,
+      grade: "A+ (1st Rank)",
+      rank: 1,
+      status: "PASS",
+      marks_details: "{}"
+    },
+    {
+      roll_no: "260100",
+      student_name: "संजना मेघवाल",
+      father_name: "श्री भंवरलाल",
+      mother_name: "श्रीमती रोशनी देवी",
+      class_name: "5th Standard",
+      section: "A",
+      sr_no: "5705",
+      dob: "2015-05-30",
+      year: "2025-2026",
+      total_marks: 500,
+      obtained_marks: 486,
+      percentage: 97.2,
+      grade: "A+ (1st Rank)",
+      rank: 1,
+      status: "PASS",
+      marks_details: "{}"
+    },
+    {
+      roll_no: "260099",
+      student_name: "नेहा शर्मा",
+      father_name: "श्री विकास शर्मा",
+      mother_name: "श्रीमती अंजना देवी",
+      class_name: "Class 4",
+      section: "A",
+      sr_no: "5804",
+      dob: "2016-08-17",
+      year: "2025-2026",
+      total_marks: 400,
+      obtained_marks: 386,
+      percentage: 96.5,
+      grade: "A+ (1st Rank)",
+      rank: 1,
+      status: "PASS",
+      marks_details: "{}"
+    },
+    {
+      roll_no: "260098",
+      student_name: "पायल सोनी",
+      father_name: "श्री सुनील सोनी",
+      mother_name: "श्रीमती किरण सोनी",
+      class_name: "Class 3",
+      section: "A",
+      sr_no: "5903",
+      dob: "2017-10-09",
+      year: "2025-2026",
+      total_marks: 400,
+      obtained_marks: 388,
+      percentage: 97.0,
+      grade: "A+ (1st Rank)",
+      rank: 1,
+      status: "PASS",
+      marks_details: "{}"
+    },
+    {
+      roll_no: "260097",
+      student_name: "खुशी जांगिड़",
+      father_name: "श्री महावीर जांगिड़",
+      mother_name: "श्रीमती ममता जांगिड़",
+      class_name: "Class 2",
+      section: "A",
+      sr_no: "6002",
+      dob: "2018-12-01",
+      year: "2025-2026",
+      total_marks: 400,
+      obtained_marks: 392,
+      percentage: 98.0,
+      grade: "A+ (1st Rank)",
+      rank: 1,
+      status: "PASS",
+      marks_details: "{}"
+    },
+    {
+      roll_no: "260096",
+      student_name: "भावना राठौड़",
+      father_name: "श्री सुरेन्द्र सिंह",
+      mother_name: "श्रीमती प्रेम कंवर",
+      class_name: "Class 1",
+      section: "A",
+      sr_no: "6101",
+      dob: "2019-04-15",
+      year: "2025-2026",
+      total_marks: 400,
+      obtained_marks: 394,
+      percentage: 98.5,
+      grade: "A+ (1st Rank)",
+      rank: 1,
+      status: "PASS",
+      marks_details: "{}"
     }
+  ];
+
+  const upsertResult = db.prepare(`
+    INSERT INTO results (
+      roll_no, student_name, father_name, mother_name, class_name, section, sr_no, dob,
+      year, total_marks, obtained_marks, percentage, grade, rank, status, marks_details
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(roll_no) DO UPDATE SET
+      student_name = excluded.student_name,
+      father_name = excluded.father_name,
+      mother_name = excluded.mother_name,
+      class_name = excluded.class_name,
+      section = excluded.section,
+      sr_no = excluded.sr_no,
+      dob = excluded.dob,
+      year = excluded.year,
+      total_marks = excluded.total_marks,
+      obtained_marks = excluded.obtained_marks,
+      percentage = excluded.percentage,
+      grade = excluded.grade,
+      rank = excluded.rank,
+      status = excluded.status,
+      marks_details = excluded.marks_details
+  `);
+
+  for (const r of defaultResults) {
+    upsertResult.run(
+      r.roll_no, r.student_name, r.father_name, r.mother_name, r.class_name, r.section, r.sr_no, r.dob,
+      r.year, r.total_marks, r.obtained_marks, r.percentage, r.grade, r.rank, r.status, r.marks_details
+    );
   }
 
   // Seed Timetables if empty

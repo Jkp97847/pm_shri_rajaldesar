@@ -48,3 +48,38 @@
   background: linear-gradient(to right, #ea580c, #059669);
   color: #ffffff;
 }
+
+/* Print Styling for Student Duplicate Marksheet */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  body * {
+    visibility: hidden;
+  }
+  #printable-marksheet, #printable-marksheet * {
+    visibility: visible;
+  }
+  #printable-marksheet {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 16px !important;
+    border: 2px solid #0f172a !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}

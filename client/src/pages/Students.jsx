@@ -324,12 +324,17 @@ export default function Students() {
           </div>
         </div>
 
-        {/* Showing Count */}
-        <div className="text-xs text-slate-500 font-medium">
-          कुल प्रदर्शित विद्यार्थी: <strong className="text-blue-950">{students.length}</strong>
-          {selectedClass !== 'All' && <span> | कक्षा: <strong className="text-blue-950">{selectedClass}</strong></span>}
-          {selectedGender !== 'All' && <span> | लिंग: <strong className="text-blue-950">{selectedGender === 'Girl' ? 'बालिकाएं' : 'बालक'}</strong></span>}
-          {selectedCategory !== 'All' && <span> | वर्ग: <strong className="text-blue-950">{selectedCategory}</strong></span>}
+        {/* Showing Count & Sorting Status */}
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 font-medium">
+          <div>
+            कुल प्रदर्शित विद्यार्थी: <strong className="text-blue-950">{students.length}</strong>
+            {selectedClass !== 'All' && <span> | कक्षा: <strong className="text-blue-950">{selectedClass}</strong></span>}
+            {selectedGender !== 'All' && <span> | लिंग: <strong className="text-blue-950">{selectedGender === 'Girl' ? 'बालिकाएं' : 'बालक'}</strong></span>}
+            {selectedCategory !== 'All' && <span> | वर्ग: <strong className="text-blue-950">{selectedCategory}</strong></span>}
+          </div>
+          <div className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-900 bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-100">
+            <span>क्रम: कक्षावार (Class-wise) एवं नामानुसार (A to Z) सॉर्टेड</span>
+          </div>
         </div>
       </div>
 

@@ -145,13 +145,20 @@ export default function Admin() {
     roll_no: '',
     student_name: '',
     father_name: '',
-    class_name: '12th Science',
+    mother_name: '',
+    class_name: 'Class 10',
+    section: 'A',
+    sr_no: '',
+    dob: '',
+    total_marks: 600,
+    obtained_marks: '',
     percentage: '',
     grade: 'A+',
+    rank: 1,
     status: 'PASS',
-    sub1_name: 'Subject 1', sub1_marks: '95/100',
-    sub2_name: 'Subject 2', sub2_marks: '92/100',
-    sub3_name: 'Subject 3', sub3_marks: '94/100'
+    sub1_name: '', sub1_marks: '',
+    sub2_name: '', sub2_marks: '',
+    sub3_name: '', sub3_marks: ''
   });
 
   const [message, setMessage] = useState({ type: '', text: '' });
@@ -787,9 +794,16 @@ export default function Admin() {
       roll_no: newResult.roll_no,
       student_name: newResult.student_name,
       father_name: newResult.father_name,
+      mother_name: newResult.mother_name,
       class_name: newResult.class_name,
+      section: newResult.section,
+      sr_no: newResult.sr_no,
+      dob: newResult.dob,
+      total_marks: newResult.total_marks,
+      obtained_marks: newResult.obtained_marks,
       percentage: newResult.percentage,
       grade: newResult.grade,
+      rank: newResult.rank,
       status: newResult.status,
       marks_details: marksObj
     };
@@ -810,11 +824,12 @@ export default function Admin() {
         if (data.success) {
           showMsg(editingResultId ? "परीक्षा परिणाम सफलतापूर्वक अपडेट हो गया!" : "छात्रा का परीक्षा परिणाम सफलतापूर्वक रिकॉर्ड हो गया!");
           setNewResult({
-            roll_no: '', student_name: '', father_name: '', class_name: '12th Science',
-            percentage: '', grade: 'A+', status: 'PASS',
-            sub1_name: 'Subject 1', sub1_marks: '95/100',
-            sub2_name: 'Subject 2', sub2_marks: '92/100',
-            sub3_name: 'Subject 3', sub3_marks: '94/100'
+            roll_no: '', student_name: '', father_name: '', mother_name: '', class_name: 'Class 10',
+            section: 'A', sr_no: '', dob: '', total_marks: 600, obtained_marks: '',
+            percentage: '', grade: 'A+', rank: 1, status: 'PASS',
+            sub1_name: '', sub1_marks: '',
+            sub2_name: '', sub2_marks: '',
+            sub3_name: '', sub3_marks: ''
           });
           setEditingResultId(null);
           loadAllData();
@@ -837,16 +852,23 @@ export default function Admin() {
       roll_no: r.roll_no,
       student_name: r.student_name,
       father_name: r.father_name || '',
+      mother_name: r.mother_name || '',
       class_name: r.class_name,
+      section: r.section || 'A',
+      sr_no: r.sr_no || '',
+      dob: r.dob || '',
+      total_marks: r.total_marks || (r.class_name?.includes('11') || r.class_name?.includes('12') ? 500 : 600),
+      obtained_marks: r.obtained_marks !== undefined ? String(r.obtained_marks) : '',
       percentage: String(r.percentage),
       grade: r.grade,
+      rank: r.rank || 1,
       status: r.status,
-      sub1_name: entries[0] ? entries[0][0] : 'Subject 1',
-      sub1_marks: entries[0] ? entries[0][1] : '95/100',
-      sub2_name: entries[1] ? entries[1][0] : 'Subject 2',
-      sub2_marks: entries[1] ? entries[1][1] : '90/100',
-      sub3_name: entries[2] ? entries[2][0] : 'Subject 3',
-      sub3_marks: entries[2] ? entries[2][1] : '85/100'
+      sub1_name: entries[0] ? entries[0][0] : '',
+      sub1_marks: entries[0] ? entries[0][1] : '',
+      sub2_name: entries[1] ? entries[1][0] : '',
+      sub2_marks: entries[1] ? entries[1][1] : '',
+      sub3_name: entries[2] ? entries[2][0] : '',
+      sub3_marks: entries[2] ? entries[2][1] : ''
     });
     showMsg(`रोल नंबर ${r.roll_no} का परिणाम संपादित कर रहे हैं।`, "info");
   };
@@ -854,11 +876,12 @@ export default function Admin() {
   const cancelEditResult = () => {
     setEditingResultId(null);
     setNewResult({
-      roll_no: '', student_name: '', father_name: '', class_name: '12th Science',
-      percentage: '', grade: 'A+', status: 'PASS',
-      sub1_name: 'Subject 1', sub1_marks: '95/100',
-      sub2_name: 'Subject 2', sub2_marks: '92/100',
-      sub3_name: 'Subject 3', sub3_marks: '94/100'
+      roll_no: '', student_name: '', father_name: '', mother_name: '', class_name: 'Class 10',
+      section: 'A', sr_no: '', dob: '', total_marks: 600, obtained_marks: '',
+      percentage: '', grade: 'A+', rank: 1, status: 'PASS',
+      sub1_name: '', sub1_marks: '',
+      sub2_name: '', sub2_marks: '',
+      sub3_name: '', sub3_marks: ''
     });
   };
 
@@ -1391,7 +1414,7 @@ export default function Admin() {
   };
 
   // 10. RESULTS BULK IMPORT & EXPORT HANDLERS
-  const resultHeaders = ["Roll No", "Student Name", "Father Name", "Class", "Year", "Percentage", "Grade", "Status"];
+  const resultHeaders = ["Roll No", "Student Name", "Father Name", "Mother Name", "Class", "Section", "SR No", "DOB", "Year", "Total Marks", "Obtained Marks", "Percentage", "Grade", "Rank", "Status"];
 
   // Export results list to Excel (.xlsx)
   const handleExportResultsExcel = () => {
@@ -1405,10 +1428,17 @@ export default function Admin() {
         r.roll_no || '',
         r.student_name || '',
         r.father_name || '',
+        r.mother_name || '',
         r.class_name || '',
+        r.section || 'A',
+        r.sr_no || '',
+        r.dob || '',
         r.year || '2025-2026',
+        r.total_marks || (r.class_name?.includes('11') || r.class_name?.includes('12') ? 500 : 600),
+        r.obtained_marks || (r.percentage ? Math.round((r.percentage / 100) * (r.total_marks || 600)) : ''),
         r.percentage !== undefined && r.percentage !== null ? Number(r.percentage) : '',
         r.grade || '',
+        r.rank || 1,
         r.status || 'PASS'
       ])
     ];
@@ -1429,10 +1459,10 @@ export default function Admin() {
   };
 
   const handleDownloadResultSampleExcel = () => {
-    const sampleHeaders = ["Roll No", "Student Name", "Father Name", "Class", "Year", "Percentage", "Grade", "Status", "Hindi", "English", "Science", "Maths"];
+    const sampleHeaders = ["Roll No", "Student Name", "Father Name", "Mother Name", "Class", "Section", "SR No", "DOB", "Year", "Total Marks", "Obtained Marks", "Percentage", "Grade", "Rank", "Status"];
     const sampleRows = [
-      ["260105", "अंजू शर्मा", "दिनेश कुमार शर्मा", "10th Board", "2025-2026", "94.50", "Merit", "PASS", "95", "92", "96", "95"],
-      ["260106", "सुनीता प्रजापत", "रामगोपाल प्रजापत", "12th Science", "2025-2026", "91.80", "First Div", "PASS", "90", "88", "94", "95"]
+      ["260105", "अंजू शर्मा", "दिनेश कुमार शर्मा", "श्रीमती विमला देवी", "Class 10", "A", "5512", "2010-07-25", "2025-2026", "600", "567", "94.50", "A+ (Merit)", "1", "PASS"],
+      ["260106", "सुनीता प्रजापत", "रामगोपाल प्रजापत", "श्रीमती धापू देवी", "12th Science", "A", "5120", "2008-04-12", "2025-2026", "500", "459", "91.80", "A (First Div)", "2", "PASS"]
     ];
     const ws = XLSX.utils.aoa_to_sheet([sampleHeaders, ...sampleRows]);
     ws['!cols'] = sampleHeaders.map(h => ({ wch: h.length + 5 }));
@@ -1451,10 +1481,17 @@ export default function Admin() {
       `"${r.roll_no || ''}"`,
       `"${r.student_name || ''}"`,
       `"${r.father_name || ''}"`,
+      `"${r.mother_name || ''}"`,
       `"${r.class_name || ''}"`,
+      `"${r.section || 'A'}"`,
+      `"${r.sr_no || ''}"`,
+      `"${r.dob || ''}"`,
       `"${r.year || '2025-2026'}"`,
-      `"${r.percentage || ''}"`,
+      r.total_marks || (r.class_name?.includes('11') || r.class_name?.includes('12') ? 500 : 600),
+      r.obtained_marks || (r.percentage ? Math.round((r.percentage / 100) * (r.total_marks || 600)) : ''),
+      r.percentage !== undefined && r.percentage !== null ? r.percentage : '',
       `"${r.grade || ''}"`,
+      r.rank || 1,
       `"${r.status || 'PASS'}"`
     ]);
     const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
@@ -1470,10 +1507,10 @@ export default function Admin() {
   };
 
   const handleDownloadResultSampleCSV = () => {
-    const headers = ["Roll No", "Student Name", "Father Name", "Class", "Year", "Percentage", "Grade", "Status", "Hindi", "English", "Science", "Maths"];
+    const headers = ["Roll No", "Student Name", "Father Name", "Mother Name", "Class", "Section", "SR No", "DOB", "Year", "Total Marks", "Obtained Marks", "Percentage", "Grade", "Rank", "Status"];
     const sampleRows = [
-      ["260105", "अंजू शर्मा", "दिनेश कुमार शर्मा", "10th Board", "2025-2026", "94.50", "Merit", "PASS", "95", "92", "96", "95"],
-      ["260106", "सुनीता प्रजापत", "रामगोपाल प्रजापत", "12th Science", "2025-2026", "91.80", "First Div", "PASS", "90", "88", "94", "95"]
+      ["260105", "अंजू शर्मा", "दिनेश कुमार शर्मा", "श्रीमती विमला देवी", "Class 10", "A", "5512", "2010-07-25", "2025-2026", "600", "567", "94.50", "A+ (Merit)", "1", "PASS"],
+      ["260106", "सुनीता प्रजापत", "रामगोपाल प्रजापत", "श्रीमती धापू देवी", "12th Science", "A", "5120", "2008-04-12", "2025-2026", "500", "459", "91.80", "A (First Div)", "2", "PASS"]
     ];
     const csvContent = "\uFEFF" + [headers.join(","), ...sampleRows.map(r => r.map(c => `"${c}"`).join(","))].join("\n");
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -1517,11 +1554,11 @@ export default function Admin() {
       const row = {};
       headers.forEach((h, idx) => { row[h] = values[idx] || ''; });
       const roll_no = row['roll no'] || row['roll_no'] || row['roll'] || row['रोल नंबर'] || '';
-      const name = row['student name'] || row['name'] || row['छात्र का नाम'] || '';
+      const name = row['student name'] || row['name'] || row['छात्र का नाम'] || row['विद्यार्थी का नाम'] || '';
       if (roll_no && name) {
         const marksObj = {};
         headers.forEach((h, idx) => {
-          if (!['roll no', 'roll_no', 'roll', 'student name', 'name', 'father name', "father's name", 'class', 'class name', 'year', 'percentage', 'grade', 'status'].includes(h)) {
+          if (!['roll no', 'roll_no', 'roll', 'student name', 'name', 'father name', "father's name", 'mother name', 'mother_name', 'class', 'class name', 'section', 'sr no', 'sr_no', 'dob', 'year', 'total marks', 'total_marks', 'obtained marks', 'obtained_marks', 'percentage', 'grade', 'rank', 'status'].includes(h)) {
             if (values[idx]) {
               marksObj[h] = values[idx];
             }
@@ -1530,12 +1567,19 @@ export default function Admin() {
         resultsToImport.push({
           roll_no: String(roll_no).trim(),
           student_name: name,
-          father_name: row['father name'] || row["father's name"] || '',
-          class_name: row['class'] || row['class name'] || 'Class 10',
-          year: row['year'] || '2025-2026',
-          percentage: parseFloat(row['percentage'] || 0),
-          grade: row['grade'] || 'First Division',
-          status: row['status'] || 'PASS',
+          father_name: row['father name'] || row["father's name"] || row['पिता का नाम'] || '',
+          mother_name: row['mother name'] || row['mother_name'] || row['माता का नाम'] || '',
+          class_name: row['class'] || row['class name'] || row['कक्षा'] || 'Class 10',
+          section: row['section'] || row['सेक्शन'] || 'A',
+          sr_no: row['sr no'] || row['sr_no'] || row['srno'] || '',
+          dob: row['dob'] || row['date of birth'] || row['जन्म तिथि'] || '',
+          year: row['year'] || row['सत्र'] || '2025-2026',
+          total_marks: row['total marks'] || row['total_marks'] || row['पूर्णांक'] || '',
+          obtained_marks: row['obtained marks'] || row['obtained_marks'] || row['प्राप्तांक'] || '',
+          percentage: parseFloat(row['percentage'] || row['प्रतिशत'] || 0),
+          grade: row['grade'] || row['श्रेणी'] || 'First Division',
+          rank: row['rank'] || row['कक्षा रैंक'] || 1,
+          status: row['status'] || row['स्थिति'] || 'PASS',
           marks_details: marksObj
         });
       }
@@ -3107,7 +3151,7 @@ export default function Admin() {
             </div>
 
             <form onSubmit={handleAddResult} className="space-y-3 text-xs">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                 <div>
                   <label className="block font-bold text-slate-700 mb-1">अनुक्रमांक (Roll No) *</label>
                   <input
@@ -3116,28 +3160,59 @@ export default function Admin() {
                     placeholder="260106"
                     value={newResult.roll_no}
                     onChange={(e) => setNewResult({ ...newResult, roll_no: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 font-mono"
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono text-xs"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">कक्षा / संकाय *</label>
+                  <label className="block font-bold text-slate-700 mb-1">कक्षा (Class) *</label>
                   <select
                     value={newResult.class_name}
                     onChange={(e) => setNewResult({ ...newResult, class_name: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300"
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs"
                   >
                     <option value="12th Science">12th Science</option>
                     <option value="12th Arts">12th Arts</option>
                     <option value="12th Commerce">12th Commerce</option>
+                    <option value="11th Science">11th Science</option>
+                    <option value="11th Arts">11th Arts</option>
                     <option value="10th Board">10th Board</option>
                     <option value="9th Standard">9th Standard</option>
                     <option value="8th Board">8th Board</option>
+                    <option value="7th Standard">7th Standard</option>
+                    <option value="6th Standard">6th Standard</option>
+                    <option value="5th Standard">5th Standard</option>
+                    <option value="Class 4">Class 4</option>
+                    <option value="Class 3">Class 3</option>
+                    <option value="Class 2">Class 2</option>
+                    <option value="Class 1">Class 1</option>
                   </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">सेक्शन (Section)</label>
+                  <input
+                    type="text"
+                    placeholder="A"
+                    value={newResult.section}
+                    onChange={(e) => setNewResult({ ...newResult, section: e.target.value })}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">SR नंबर (SR No)</label>
+                  <input
+                    type="text"
+                    placeholder="5569"
+                    value={newResult.sr_no}
+                    onChange={(e) => setNewResult({ ...newResult, sr_no: e.target.value })}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono text-xs"
+                  />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                 <div>
                   <label className="block font-bold text-slate-700 mb-1">छात्रा का नाम *</label>
                   <input
@@ -3146,7 +3221,7 @@ export default function Admin() {
                     placeholder="छात्रा का पूरा नाम"
                     value={newResult.student_name}
                     onChange={(e) => setNewResult({ ...newResult, student_name: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300"
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs"
                   />
                 </div>
 
@@ -3157,34 +3232,112 @@ export default function Admin() {
                     placeholder="श्री ..."
                     value={newResult.father_name}
                     onChange={(e) => setNewResult({ ...newResult, father_name: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300"
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">माता का नाम</label>
+                  <input
+                    type="text"
+                    placeholder="श्रीमती ..."
+                    value={newResult.mother_name}
+                    onChange={(e) => setNewResult({ ...newResult, mother_name: e.target.value })}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">जन्म तिथि (DOB) *</label>
+                  <input
+                    type="date"
+                    value={newResult.dob}
+                    onChange={(e) => setNewResult({ ...newResult, dob: e.target.value })}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              {/* Overall Marks & Performance Fields */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 bg-slate-50 p-3 rounded-xl border border-slate-200">
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">कुल प्रतिशत (%) *</label>
+                  <label className="block font-bold text-slate-700 mb-1">कुल पूर्णांक (Total Marks)</label>
                   <input
                     type="number"
-                    step="0.1"
-                    required
-                    placeholder="94.5"
-                    value={newResult.percentage}
-                    onChange={(e) => setNewResult({ ...newResult, percentage: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300"
+                    value={newResult.total_marks}
+                    onChange={(e) => {
+                      const tm = e.target.value;
+                      const om = newResult.obtained_marks;
+                      let perc = newResult.percentage;
+                      if (tm && om) perc = ((parseFloat(om) / parseFloat(tm)) * 100).toFixed(2);
+                      setNewResult({ ...newResult, total_marks: tm, percentage: perc });
+                    }}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono text-xs"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">ग्रेड / डिवीजन</label>
+                  <label className="block font-bold text-slate-700 mb-1">कुल प्राप्तांक (Obtained Marks)</label>
+                  <input
+                    type="number"
+                    value={newResult.obtained_marks}
+                    onChange={(e) => {
+                      const om = e.target.value;
+                      const tm = newResult.total_marks || 600;
+                      let perc = newResult.percentage;
+                      if (tm && om) perc = ((parseFloat(om) / parseFloat(tm)) * 100).toFixed(2);
+                      setNewResult({ ...newResult, obtained_marks: om, percentage: perc });
+                    }}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">प्रतिशत (%) *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    required
+                    placeholder="94.5"
+                    value={newResult.percentage}
+                    onChange={(e) => setNewResult({ ...newResult, percentage: e.target.value })}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono font-bold text-blue-950 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">ग्रेड / श्रेणी</label>
                   <input
                     type="text"
                     placeholder="A+ / 1st Div"
                     value={newResult.grade}
                     onChange={(e) => setNewResult({ ...newResult, grade: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300"
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs"
                   />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">कक्षा में रैंक (Rank)</label>
+                  <input
+                    type="number"
+                    placeholder="1"
+                    value={newResult.rank}
+                    onChange={(e) => setNewResult({ ...newResult, rank: e.target.value })}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">परिणाम स्थिति (Status)</label>
+                  <select
+                    value={newResult.status}
+                    onChange={(e) => setNewResult({ ...newResult, status: e.target.value })}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs font-bold text-emerald-800"
+                  >
+                    <option value="PASS">PASS (उत्तीर्ण)</option>
+                    <option value="FAIL">FAIL (अनुत्तीर्ण)</option>
+                    <option value="SUPPL">SUPPL (पूरक)</option>
+                  </select>
                 </div>
               </div>
 
