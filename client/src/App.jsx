@@ -28,6 +28,51 @@ function ScrollToTop() {
   return null;
 }
 
+// Security Guard: disables right-click, saving (Ctrl+S), and printing on public data views
+function WebsiteSecurityGuard() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    // Admin has full authorized access to print, save, and export
+    if (pathname.startsWith('/admin')) {
+      return;
+    }
+
+    const handleContextMenu = (e) => {
+      // Disable right-click context menu on tables, images, student records, and public data containers
+      if (
+        pathname.startsWith('/students') ||
+        e.target.closest('table, .select-none, img, [data-secure="true"], .student-list, .teacher-card, .data-container')
+      ) {
+        e.preventDefault();
+      }
+    };
+
+    const handleKeyDown = (e) => {
+      // Block Ctrl+S (Save page) across all public pages
+      if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      // Block Ctrl+P (Print page) on student details page (printing reserved for Admin)
+      if (pathname.startsWith('/students') && (e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    window.addEventListener('contextmenu', handleContextMenu);
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('contextmenu', handleContextMenu);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [pathname]);
+
+  return null;
+}
+
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -77,6 +122,7 @@ export default function App() {
       <SchoolProvider>
         <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 selection:bg-amber-500 selection:text-slate-950">
         <ScrollToTop />
+        <WebsiteSecurityGuard />
         
         {/* Daily Announcement Modal (Pops up on first visit of the day or upon new notices) */}
         <DailyNoticeModal />

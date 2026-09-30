@@ -13,8 +13,26 @@ export default function Home() {
   const [notices, setNotices] = useState([]);
   const [toppers, setToppers] = useState([]);
   const [activeNoticeTab, setActiveNoticeTab] = useState('all');
+  const [studentStats, setStudentStats] = useState(null);
+  const [teacherCount, setTeacherCount] = useState(null);
 
   useEffect(() => {
+    // Fetch live student count from student details stats
+    fetch('/api/students/stats')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.stats) setStudentStats(data.stats);
+      })
+      .catch(err => console.error(err));
+
+    // Fetch teachers count
+    fetch('/api/teachers')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.teachers)) setTeacherCount(data.teachers.length);
+      })
+      .catch(err => console.error(err));
+
     // Fetch notices
     fetch('/api/notices')
       .then(res => res.json())
@@ -45,13 +63,17 @@ export default function Home() {
       <section className="max-w-7xl mx-auto px-4 sm:px-8 -mt-8 relative z-20">
         <div className="bg-white rounded-2xl shadow-2xl border border-slate-200/80 p-5 sm:p-6 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 text-center">
           
-          {/* Stat 1: Saffron / Kesariya (नामांकित छात्राएं) */}
+          {/* Stat 1: Saffron / Kesariya (नामांकित विद्यार्थी - Auto from student details) */}
           <div className="space-y-1 p-3 rounded-xl border-t-4 border-orange-500 bg-gradient-to-b from-orange-50/80 via-white to-white shadow-sm hover:scale-102 transition">
             <div className="w-12 h-12 mx-auto rounded-full bg-orange-100 text-orange-600 flex items-center justify-center mb-2 shadow-inner">
               <Users className="w-6 h-6" />
             </div>
-            <p className="text-3xl font-black text-orange-600">1,150+</p>
-            <p className="text-xs sm:text-sm font-bold text-slate-700">नामांकित छात्राएं (Girls Enrolled)</p>
+            <p className="text-3xl font-black text-orange-600">
+              {studentStats && studentStats.total ? `${studentStats.total}+` : '700+'}
+            </p>
+            <p className="text-xs sm:text-sm font-bold text-slate-700">
+              कुल नामांकित विद्यार्थी ({studentStats?.girls ? `${studentStats.girls} छात्राएं` : 'Girls Enrolled'})
+            </p>
           </div>
 
           {/* Stat 2: Shwet & Ashoka Chakra Blue (बोर्ड परिणाम) */}
@@ -63,12 +85,14 @@ export default function Home() {
             <p className="text-xs sm:text-sm font-bold text-slate-700">बोर्ड परीक्षा परिणाम (Board Results)</p>
           </div>
 
-          {/* Stat 3: India Green (अनुभवी शिक्षक) */}
+          {/* Stat 3: India Green (अनुभवी शिक्षक - Auto from teacher details) */}
           <div className="space-y-1 p-3 rounded-xl border-t-4 border-emerald-600 bg-gradient-to-b from-emerald-50/80 via-white to-white shadow-sm hover:scale-102 transition">
             <div className="w-12 h-12 mx-auto rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mb-2 shadow-inner">
               <GraduationCap className="w-6 h-6" />
             </div>
-            <p className="text-3xl font-black text-emerald-700">35+</p>
+            <p className="text-3xl font-black text-emerald-700">
+              {teacherCount ? `${teacherCount}+` : '35+'}
+            </p>
             <p className="text-xs sm:text-sm font-bold text-slate-700">योग्य एवं अनुभवी शिक्षक (Faculty)</p>
           </div>
 

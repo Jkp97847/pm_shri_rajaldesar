@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Users, UserCheck, Search, Filter, Printer, Download, Sparkles, 
+  Users, UserCheck, Search, Filter, Shield, Lock, Sparkles, 
   GraduationCap, Phone, Calendar, MapPin, Award, CheckCircle2, ChevronRight, X 
 } from 'lucide-react';
 import { useSchool } from '../context/SchoolContext';
@@ -16,10 +16,6 @@ export default function Students() {
   const [selectedGender, setSelectedGender] = useState('All');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
-
-  // Print modal state
-  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
-  const [printClass, setPrintClass] = useState('Class 10');
 
   const classesList = [
     'All',
@@ -72,50 +68,24 @@ export default function Students() {
     fetchStudents();
   }, [selectedClass, selectedGender, selectedCategory, searchQuery]);
 
-  // Export current filtered list as CSV (Confidential details like DOB and Mobile No are excluded from public download)
-  const handleExportCSV = () => {
-    if (students.length === 0) {
-      alert("एक्सपोर्ट करने के लिए कोई विद्यार्थी डेटा उपलब्ध नहीं है।");
-      return;
-    }
-    const headers = [
-      "Class",
-      "Section",
-      "SRNO",
-      "Rollno",
-      "Student Name",
-      "Father/Guardian Name",
-      "Mother Name",
-      "Cast Category",
-      "Gender"
-    ];
-    const rows = students.map(s => [
-      `"${(s.class_name || '').replace(/"/g, '""')}"`,
-      `"${(s.section || 'A').replace(/"/g, '""')}"`,
-      `"${(s.sr_no || '').replace(/"/g, '""')}"`,
-      `"${(s.roll_no || '').replace(/"/g, '""')}"`,
-      `"${(s.name || '').replace(/"/g, '""')}"`,
-      `"${(s.father_name || '').replace(/"/g, '""')}"`,
-      `"${(s.mother_name || '').replace(/"/g, '""')}"`,
-      `"${(s.category || '').replace(/"/g, '""')}"`,
-      `"${(s.gender || '').replace(/"/g, '""')}"`
-    ]);
-
-    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", `PM_SHRI_Rajaldesar_Students_${selectedClass}_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const studentsForPrint = students.filter(s => printClass === 'All' || s.class_name === printClass);
+  // Public Security: Disable browser shortcuts (Ctrl+P, Ctrl+S, Ctrl+U) to prevent printing/saving public database
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && ['p', 'P', 's', 'S', 'u', 'U'].includes(e.key)) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-8 py-10 space-y-10">
+    <div 
+      onContextMenu={(e) => e.preventDefault()}
+      className="max-w-7xl mx-auto px-4 sm:px-8 py-10 space-y-10 select-none"
+    >
       
       {/* 1. Header Banner */}
       <div className="bg-gradient-to-r from-blue-950 via-slate-900 to-indigo-950 text-white rounded-2xl p-8 sm:p-10 shadow-xl relative overflow-hidden">
@@ -334,9 +304,9 @@ export default function Students() {
             )}
           </div>
 
-          {/* Search Box & Buttons */}
-          <div className="flex items-center gap-3">
-            <div className="relative flex-1 sm:w-64">
+          {/* Search Box & Privacy Security Badge */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="relative flex-1 sm:w-72">
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
@@ -347,28 +317,10 @@ export default function Students() {
               />
             </div>
 
-            {/* Print Class List Button */}
-            <button
-              onClick={() => {
-                setPrintClass(selectedClass !== 'All' ? selectedClass : 'Class 10');
-                setIsPrintModalOpen(true);
-              }}
-              className="bg-blue-950 hover:bg-blue-900 text-white font-bold px-3.5 py-2 rounded-lg text-xs transition flex items-center gap-1.5 shadow"
-              title="कक्षा सूची व उपस्थिति पत्रक प्रिंट करें"
-            >
-              <Printer className="w-4 h-4 text-amber-400" />
-              <span className="hidden sm:inline">कक्षा सूची प्रिंट करें</span>
-            </button>
-
-            {/* Export CSV Button */}
-            <button
-              onClick={handleExportCSV}
-              className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3.5 py-2 rounded-lg text-xs transition flex items-center gap-1.5 shadow"
-              title="विद्यार्थी डेटा CSV फ़ाइल में डाउनलोड करें"
-            >
-              <Download className="w-4 h-4" />
-              <span className="hidden sm:inline">CSV एक्सपोर्ट</span>
-            </button>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold shadow-xs">
+              <Shield className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span>गोपनीयता सुरक्षित (Protected View)</span>
+            </div>
           </div>
         </div>
 
@@ -458,134 +410,16 @@ export default function Students() {
         </div>
       )}
 
-      {/* 5. Class-wise Formal Print Modal */}
-      {isPrintModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 max-w-4xl w-full space-y-4 my-8 max-h-[90vh] flex flex-col">
-            
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-200 pb-3 shrink-0">
-              <div className="flex items-center gap-2">
-                <Printer className="w-5 h-5 text-blue-950" />
-                <div>
-                  <h3 className="font-bold text-slate-900 text-base">कक्षा सूची प्रिंट एवं उपस्थिति पत्रक</h3>
-                  <p className="text-xs text-slate-500">विद्यालय के आधिकारिक लेटरहेड के साथ प्रिंट निकालें</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <select
-                  value={printClass}
-                  onChange={(e) => setPrintClass(e.target.value)}
-                  className="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-bold text-blue-950 focus:outline-none"
-                >
-                  {classesList.map(c => (
-                    <option key={c} value={c}>{c === 'All' ? 'सभी कक्षाएं' : c}</option>
-                  ))}
-                </select>
-
-                <button
-                  onClick={() => window.print()}
-                  className="bg-blue-950 hover:bg-blue-900 text-white font-bold px-4 py-1.5 rounded-lg text-xs transition flex items-center gap-1.5 shadow"
-                >
-                  <Printer className="w-3.5 h-3.5" />
-                  <span>अभी प्रिंट करें (Print)</span>
-                </button>
-
-                <button
-                  onClick={() => setIsPrintModalOpen(false)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Printable Sheet View */}
-            <div id="printable-class-register" className="overflow-y-auto flex-1 p-6 border-2 border-slate-300 rounded-xl space-y-6 bg-white text-slate-900">
-              
-              {/* Formal Letterhead */}
-              <div className="text-center border-b-2 border-blue-950 pb-4 space-y-1">
-                <div className="text-[11px] font-black text-orange-600 uppercase tracking-widest">
-                  🇮🇳 भारत सरकार — पीएम श्री विद्यालय योजना (PM SHRI SCHOOL) 🇮🇳
-                </div>
-                <h2 className="text-xl sm:text-2xl font-black text-blue-950 tracking-tight">
-                  {settings.school_name_hi || "पीएम श्री यूनियन क्लब राजकीय बालिका उच्च माध्यमिक विद्यालय, राजलदेसर"}
-                </h2>
-                <p className="text-xs text-slate-700 font-semibold uppercase">
-                  {settings.school_name || "PM SHRI UNION CLUB GOVT GIRLS SENIOR SECONDARY SCHOOL, RAJALDESAR"}
-                </p>
-                <div className="flex items-center justify-center gap-4 text-[11px] text-slate-600 font-medium pt-1">
-                  <span>UDISE: <strong>{settings.udise_code || "08040700105"}</strong></span>
-                  <span>|</span>
-                  <span>ब्लॉक: <strong>रतनगढ़</strong>, जिला: <strong>चूरू (राजस्थान)</strong></span>
-                  <span>|</span>
-                  <span>सत्र: <strong>2025-2026</strong></span>
-                </div>
-                <div className="inline-block bg-blue-950 text-white text-xs font-bold px-4 py-1 rounded-full mt-2">
-                  कक्षा रोल सूची एवं छात्र रजिस्टर: {printClass === 'All' ? 'समस्त कक्षाएं' : printClass} (कुल: {studentsForPrint.length})
-                </div>
-              </div>
-
-              {/* Table */}
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border border-slate-300 border-collapse">
-                  <thead className="bg-slate-100 text-slate-900 border-b border-slate-300 font-bold">
-                    <tr>
-                      <th className="p-2 border border-slate-300 text-center w-10">क्र.सं.</th>
-                      <th className="p-2 border border-slate-300 text-center">कक्षा</th>
-                      <th className="p-2 border border-slate-300 text-center">सेक्शन</th>
-                      <th className="p-2 border border-slate-300 text-center">SR नं.</th>
-                      <th className="p-2 border border-slate-300 text-center">रोल नं.</th>
-                      <th className="p-2 border border-slate-300">विद्यार्थी का नाम</th>
-                      <th className="p-2 border border-slate-300">पिता/अभिभावक का नाम</th>
-                      <th className="p-2 border border-slate-300">माता का नाम</th>
-                      <th className="p-2 border border-slate-300 text-center">जाति वर्ग</th>
-                      <th className="p-2 border border-slate-300 text-center">लिंग</th>
-                      <th className="p-2 border border-slate-300 text-center">हस्ताक्षर / उपस्थिति</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200">
-                    {studentsForPrint.map((s, i) => (
-                      <tr key={s.id || i} className="hover:bg-slate-50">
-                        <td className="p-2 border border-slate-300 text-center font-mono">{i + 1}</td>
-                        <td className="p-2 border border-slate-300 text-center font-semibold">{s.class_name}</td>
-                        <td className="p-2 border border-slate-300 text-center font-bold">{s.section || 'A'}</td>
-                        <td className="p-2 border border-slate-300 text-center font-mono">{s.sr_no || '-'}</td>
-                        <td className="p-2 border border-slate-300 text-center font-mono font-bold">{s.roll_no || '-'}</td>
-                        <td className="p-2 border border-slate-300 font-bold">{s.name}</td>
-                        <td className="p-2 border border-slate-300">{s.father_name || '-'}</td>
-                        <td className="p-2 border border-slate-300">{s.mother_name || '-'}</td>
-                        <td className="p-2 border border-slate-300 text-center font-bold">{s.category || 'GEN'}</td>
-                        <td className="p-2 border border-slate-300 text-center">{s.gender === 'Girl' || s.gender === 'बालिका' ? 'बालिका' : 'बालक'}</td>
-                        <td className="p-2 border border-slate-300 text-center text-slate-300">____________</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Signature Blocks */}
-              <div className="pt-12 grid grid-cols-2 text-center text-xs font-bold text-slate-800">
-                <div>
-                  <div className="w-48 mx-auto border-t-2 border-slate-800 pt-1">
-                    हस्ताक्षर कक्षा अध्यापक
-                  </div>
-                  <p className="text-[10px] text-slate-500 font-normal">Class Teacher Signature</p>
-                </div>
-                <div>
-                  <div className="w-48 mx-auto border-t-2 border-slate-800 pt-1">
-                    हस्ताक्षर एवं सील प्रधानाचार्य
-                  </div>
-                  <p className="text-[10px] text-slate-500 font-normal">Principal Seal & Signature</p>
-                </div>
-              </div>
-
-            </div>
-
-          </div>
-        </div>
-      )}
+      {/* 5. Security & Privacy Notice Footer */}
+      <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center text-xs text-slate-600 space-y-1 shadow-xs">
+        <p className="font-bold text-slate-800 flex items-center justify-center gap-1.5">
+          <Lock className="w-3.5 h-3.5 text-blue-950" />
+          <span>सुरक्षा एवं गोपनीयता निर्देश (Data Privacy & Protection Policy)</span>
+        </p>
+        <p className="text-[11px] text-slate-500 max-w-2xl mx-auto">
+          सार्वजनिक सुरक्षा हेतु छात्राओं की जन्म तिथि (DOB) एवं संपर्क नंबर (Phone) पोर्टल पर पूर्णतः गोपनीय व अप्रदर्शित रखे गए हैं। डेटा का अनधिकृत प्रिंट, डाउनलोड अथवा सेविंग सार्वजनिक पोर्टल पर प्रतिबंधित है। आधिकारिक कार्य एवं सूची प्रिंट केवल अधिकृत विद्यालय एडमिन पैनल पर उपलब्ध है।
+        </p>
+      </div>
 
     </div>
   );
