@@ -72,7 +72,7 @@ export default function Students() {
     fetchStudents();
   }, [selectedClass, selectedGender, selectedCategory, searchQuery]);
 
-  // Export current filtered list as CSV matching exact 11 columns
+  // Export current filtered list as CSV (Confidential details like DOB and Mobile No are excluded from public download)
   const handleExportCSV = () => {
     if (students.length === 0) {
       alert("एक्सपोर्ट करने के लिए कोई विद्यार्थी डेटा उपलब्ध नहीं है।");
@@ -87,9 +87,7 @@ export default function Students() {
       "Father/Guardian Name",
       "Mother Name",
       "Cast Category",
-      "Gender",
-      "DOB",
-      "Mobile No"
+      "Gender"
     ];
     const rows = students.map(s => [
       `"${(s.class_name || '').replace(/"/g, '""')}"`,
@@ -100,9 +98,7 @@ export default function Students() {
       `"${(s.father_name || '').replace(/"/g, '""')}"`,
       `"${(s.mother_name || '').replace(/"/g, '""')}"`,
       `"${(s.category || '').replace(/"/g, '""')}"`,
-      `"${(s.gender || '').replace(/"/g, '""')}"`,
-      `"${(s.dob || '').replace(/"/g, '""')}"`,
-      `"${(s.phone || '').replace(/"/g, '""')}"`
+      `"${(s.gender || '').replace(/"/g, '""')}"`
     ]);
 
     const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
@@ -416,8 +412,6 @@ export default function Students() {
                   <th className="p-3.5 font-bold">माता का नाम</th>
                   <th className="p-3.5 font-bold text-center">जाति वर्ग</th>
                   <th className="p-3.5 font-bold text-center">लिंग</th>
-                  <th className="p-3.5 font-bold text-center">जन्म तिथि</th>
-                  <th className="p-3.5 font-bold">मोबाइल नं.</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
@@ -455,17 +449,6 @@ export default function Students() {
                       }`}>
                         {s.gender === 'Girl' || s.gender === 'बालिका' ? 'बालिका' : 'बालक'}
                       </span>
-                    </td>
-                    <td className="p-3.5 text-center font-mono text-slate-600">{s.dob || '-'}</td>
-                    <td className="p-3.5 font-mono text-slate-700">
-                      {s.phone ? (
-                        <div className="flex items-center gap-1 font-bold text-blue-950">
-                          <Phone className="w-3 h-3 text-emerald-600" />
-                          <span>{s.phone}</span>
-                        </div>
-                      ) : (
-                        <span className="text-slate-400">-</span>
-                      )}
                     </td>
                   </tr>
                 ))}
@@ -559,8 +542,6 @@ export default function Students() {
                       <th className="p-2 border border-slate-300">माता का नाम</th>
                       <th className="p-2 border border-slate-300 text-center">जाति वर्ग</th>
                       <th className="p-2 border border-slate-300 text-center">लिंग</th>
-                      <th className="p-2 border border-slate-300 text-center">जन्म तिथि</th>
-                      <th className="p-2 border border-slate-300">मोबाइल नं.</th>
                       <th className="p-2 border border-slate-300 text-center">हस्ताक्षर / उपस्थिति</th>
                     </tr>
                   </thead>
@@ -577,8 +558,6 @@ export default function Students() {
                         <td className="p-2 border border-slate-300">{s.mother_name || '-'}</td>
                         <td className="p-2 border border-slate-300 text-center font-bold">{s.category || 'GEN'}</td>
                         <td className="p-2 border border-slate-300 text-center">{s.gender === 'Girl' || s.gender === 'बालिका' ? 'बालिका' : 'बालक'}</td>
-                        <td className="p-2 border border-slate-300 text-center font-mono">{s.dob || '-'}</td>
-                        <td className="p-2 border border-slate-300 font-mono">{s.phone || '-'}</td>
                         <td className="p-2 border border-slate-300 text-center text-slate-300">____________</td>
                       </tr>
                     ))}

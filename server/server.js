@@ -260,11 +260,16 @@ app.get('/api/library', (req, res) => {
   }
 });
 
-// 11. Students List & Filters
+// 11. Students List & Filters (Confidentiality Protected: DOB & Phone hidden from public)
 app.get('/api/students', (req, res) => {
   try {
+    const adminToken = req.headers['x-admin-token'];
+    const isAdmin = Boolean(adminToken && activeSessions.has(adminToken));
+
     const { class_name, gender, category, search } = req.query;
-    let query = 'SELECT * FROM students WHERE 1=1';
+    let query = isAdmin
+      ? 'SELECT * FROM students WHERE 1=1'
+      : 'SELECT id, sr_no, roll_no, name, father_name, mother_name, class_name, section, gender, category, status FROM students WHERE 1=1';
     const params = [];
 
     if (class_name && class_name !== 'All') {
@@ -287,7 +292,7 @@ app.get('/api/students', (req, res) => {
 
     query += ' ORDER BY class_name ASC, roll_no ASC, id ASC';
     const students = db.prepare(query).all(...params);
-    res.json({ success: true, students });
+    res.json({ success: true, students, confidential_masked: !isAdmin });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -1203,23 +1208,53 @@ app.post('/api/admin/students/bulk', adminAuth, (req, res) => {
 
     let importedCount = 0;
     for (const s of students) {
-      const name = s.name || s['Student Name'] || s['student_name'] || s['Name'] || s['नाम'] || s['विद्यार्थी का नाम'];
-      const className = s.class_name || s['Class'] || s['class'] || s['कक्षा'] || 'Class 10';
-      const section = s.section || s['Section'] || s['section'] || s['सेक्शन'] || 'A';
-      const sr_no = s.sr_no || s['SRNO'] || s['SR No'] || s['sr_no'] || s['srno'] || s['एसआर नंबर'] || '';
-      const roll_no = s.roll_no || s['Rollno'] || s['Roll No'] || s['roll_no'] || s['rollno'] || s['Student Unique NIC Id'] || s['NIC Id'] || s['रोल नंबर'] || '';
-      const father_name = s.father_name || s['Father/Guardian Name'] || s['Father Name'] || s["Father's Name"] || s['father_name'] || s['पिता का नाम'] || s['पिता/अभिभावक का नाम'] || '';
-      const mother_name = s.mother_name || s['Mother Name'] || s["Mother's Name"] || s['mother_name'] || s['माता का नाम'] || '';
-      const category = (s.category || s['Cast Category'] || s['Category'] || s['cast_category'] || s['वर्ग'] || s['जाति वर्ग'] || 'GEN').toUpperCase();
-      let gender = s.gender || s['Gender'] || s['लिंग'] || 'Girl';
+      let sr_no = '';
+      let roll_no = '';
+      let name = '';
+      let father_name = '';
+      let mother_name = '';
+      let category = 'GEN';
+      let gender = 'Girl';
+      let dob = '';
+      let phone = '';
+      let className = 'Class 10';
+      let section = 'A';
+      let status = 'Active';
+
+      if (Array.isArray(s)) {
+        // Positional 11 columns: SRNO, Rollno, Student Name, Father/Guardian Name, Mother Name, Cast Category, Gender, DOB, Mobile No, Class, Section
+        sr_no = s[0] || '';
+        roll_no = s[1] || '';
+        name = s[2] || '';
+        father_name = s[3] || '';
+        mother_name = s[4] || '';
+        category = s[5] || 'GEN';
+        gender = s[6] || 'Girl';
+        dob = s[7] || '';
+        phone = s[8] || '';
+        className = s[9] || 'Class 10';
+        section = s[10] || 'A';
+      } else {
+        name = s.name || s['Student Name'] || s['student_name'] || s['Name'] || s['नाम'] || s['विद्यार्थी का नाम'] || '';
+        className = s.class_name || s['Class'] || s['class'] || s['कक्षा'] || 'Class 10';
+        section = s.section || s['Section'] || s['section'] || s['सेक्शन'] || 'A';
+        sr_no = s.sr_no || s['SRNO'] || s['SR No'] || s['sr_no'] || s['srno'] || s['एसआर नंबर'] || '';
+        roll_no = s.roll_no || s['Rollno'] || s['Roll No'] || s['roll_no'] || s['rollno'] || s['Student Unique NIC Id'] || s['NIC Id'] || s['रोल नंबर'] || '';
+        father_name = s.father_name || s['Father/Guardian Name'] || s['Father Name'] || s["Father's Name"] || s['father_name'] || s['पिता का नाम'] || s['पिता/अभिभावक का नाम'] || '';
+        mother_name = s.mother_name || s['Mother Name'] || s["Mother's Name"] || s['mother_name'] || s['माता का नाम'] || '';
+        category = (s.category || s['Cast Category'] || s['Category'] || s['cast_category'] || s['वर्ग'] || s['जाति वर्ग'] || 'GEN').toUpperCase();
+        gender = s.gender || s['Gender'] || s['लिंग'] || 'Girl';
+        dob = s.dob || s['DOB'] || s['जन्म तिथि'] || '';
+        phone = s.phone || s['Mobile No'] || s['Mobile'] || s['Phone'] || s['mobile_no'] || s['मोबाइल'] || s['मोबाइल नं'] || '';
+        status = s.status || s['Status'] || 'Active';
+      }
+
       if (String(gender).toLowerCase().includes('boy') || gender === 'बालक' || String(gender).toLowerCase() === 'm' || String(gender).toLowerCase() === 'male') {
         gender = 'Boy';
       } else {
         gender = 'Girl';
       }
-      const dob = normalizeDOB(s.dob || s['DOB'] || s['जन्म तिथि'] || '');
-      const phone = s.phone || s['Mobile No'] || s['Mobile'] || s['Phone'] || s['mobile_no'] || s['मोबाइल'] || s['मोबाइल नं'] || '';
-      const status = s.status || s['Status'] || 'Active';
+      dob = normalizeDOB(dob);
 
       if (name && String(name).trim()) {
         const cleanSr = String(sr_no).trim();

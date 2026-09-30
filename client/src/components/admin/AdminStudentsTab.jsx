@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import * as XLSX from 'xlsx';
 import { 
   Users, UserCheck, Plus, Pencil, Trash2, Upload, Download, 
   Printer, Search, Filter, CheckCircle2, AlertCircle, X, GraduationCap, 
-  FileText, Sparkles, Phone, Calendar, MapPin, Eye 
+  FileText, Sparkles, Phone, Calendar, MapPin, Eye, FileSpreadsheet 
 } from 'lucide-react';
 
 export default function AdminStudentsTab({ token, showMsg }) {
@@ -58,7 +59,9 @@ export default function AdminStudentsTab({ token, showMsg }) {
     if (selectedCategory !== 'All') url += `category=${encodeURIComponent(selectedCategory)}&`;
     if (searchQuery.trim()) url += `search=${encodeURIComponent(searchQuery.trim())}&`;
 
-    fetch(url)
+    fetch(url, {
+      headers: token ? { 'x-admin-token': token } : {}
+    })
       .then(res => res.json())
       .then(data => {
         if (data.success) setStudents(data.students);
@@ -168,28 +171,65 @@ export default function AdminStudentsTab({ token, showMsg }) {
       });
   };
 
+  const studentHeaders = [
+    "SRNO",
+    "Rollno",
+    "Student Name",
+    "Father/Guardian Name",
+    "Mother Name",
+    "Cast Category",
+    "Gender",
+    "DOB",
+    "Mobile No",
+    "Class",
+    "Section"
+  ];
+
+  // Export current list to Excel (.xlsx) with the exact 11 columns
+  const handleExportExcel = () => {
+    if (students.length === 0) {
+      showMsg("एक्सपोर्ट करने के लिए कोई विद्यार्थी डेटा नहीं है।", "error");
+      return;
+    }
+    const wsData = [
+      studentHeaders,
+      ...students.map(s => [
+        s.sr_no || '',
+        s.roll_no || '',
+        s.name || '',
+        s.father_name || '',
+        s.mother_name || '',
+        s.category || 'GEN',
+        s.gender || 'Girl',
+        s.dob || '',
+        s.phone || '',
+        s.class_name || '',
+        s.section || 'A'
+      ])
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    const colWidths = studentHeaders.map((h, i) => {
+      let maxLen = h.length;
+      wsData.forEach(row => {
+        const val = row[i] ? String(row[i]) : '';
+        if (val.length > maxLen) maxLen = val.length;
+      });
+      return { wch: Math.min(maxLen + 4, 32) };
+    });
+    ws['!cols'] = colWidths;
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Students");
+    XLSX.writeFile(wb, `PM_SHRI_Students_${selectedClass}_${new Date().toISOString().split('T')[0]}.xlsx`);
+    showMsg(`विद्यार्थी डेटा Excel (.xlsx) फ़ाइल में सफलतापूर्वक डाउनलोड हुआ!`);
+  };
+
   // Export current list to CSV with UTF-8 BOM matching the exact 11 columns
   const handleExportCSV = () => {
     if (students.length === 0) {
       showMsg("एक्सपोर्ट करने के लिए कोई विद्यार्थी डेटा नहीं है।", "error");
       return;
     }
-    const headers = [
-      "Class",
-      "Section",
-      "SRNO",
-      "Rollno",
-      "Student Name",
-      "Father/Guardian Name",
-      "Mother Name",
-      "Cast Category",
-      "Gender",
-      "DOB",
-      "Mobile No"
-    ];
     const rows = students.map(s => [
-      `"${(s.class_name || '').replace(/"/g, '""')}"`,
-      `"${(s.section || 'A').replace(/"/g, '""')}"`,
       `"${(s.sr_no || '').replace(/"/g, '""')}"`,
       `"${(s.roll_no || '').replace(/"/g, '""')}"`,
       `"${(s.name || '').replace(/"/g, '""')}"`,
@@ -198,10 +238,12 @@ export default function AdminStudentsTab({ token, showMsg }) {
       `"${(s.category || '').replace(/"/g, '""')}"`,
       `"${(s.gender || '').replace(/"/g, '""')}"`,
       `"${(s.dob || '').replace(/"/g, '""')}"`,
-      `"${(s.phone || '').replace(/"/g, '""')}"`
+      `"${(s.phone || '').replace(/"/g, '""')}"`,
+      `"${(s.class_name || '').replace(/"/g, '""')}"`,
+      `"${(s.section || 'A').replace(/"/g, '""')}"`
     ]);
 
-    const csvString = "\uFEFF" + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const csvString = "\uFEFF" + [studentHeaders.join(","), ...rows.map(r => r.join(","))].join("\n");
     const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -213,28 +255,30 @@ export default function AdminStudentsTab({ token, showMsg }) {
     showMsg(`विद्यार्थी डेटा CSV फ़ाइल में सफलतापूर्वक डाउनलोड हुआ!`);
   };
 
+  // Download Sample Excel (.xlsx) Template matching the exact 11 columns
+  const handleDownloadSampleExcel = () => {
+    const sampleRows = [
+      ["5569", "120192329", "Aaina Saini", "Shankar Lal Saini", "Lichhma Devi", "OBC", "Girl", "2011-12-03", "9772325355", "Class 10", "A"],
+      ["6145", "124209424", "Aarti", "Mahendra Maru", "Punam Devi", "OBC", "Girl", "2011-12-08", "7023240704", "Class 10", "A"],
+      ["5890", "120192330", "कविता शर्मा", "सुरेश कुमार शर्मा", "मंजू देवी", "GEN", "Girl", "2010-04-15", "9829123456", "Class 10", "B"],
+      ["6012", "120192331", "सुनील प्रजापत", "रामगोपाल प्रजापत", "शांति देवी", "OBC", "Boy", "2010-08-20", "9414567890", "Class 10", "B"]
+    ];
+    const ws = XLSX.utils.aoa_to_sheet([studentHeaders, ...sampleRows]);
+    ws['!cols'] = studentHeaders.map(h => ({ wch: h.length + 6 }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Sample");
+    XLSX.writeFile(wb, "PM_SHRI_Students_Sample_11_Columns.xlsx");
+  };
+
   // Download Sample CSV Template matching the exact 11 columns
   const handleDownloadSampleCSV = () => {
-    const headers = [
-      "Class",
-      "Section",
-      "SRNO",
-      "Rollno",
-      "Student Name",
-      "Father/Guardian Name",
-      "Mother Name",
-      "Cast Category",
-      "Gender",
-      "DOB",
-      "Mobile No"
-    ];
     const sampleRows = [
-      ["Class 10", "A", "5569", "120192329", "Aaina Saini", "Shankar Lal Saini", "Lichhma Devi", "OBC", "Girl", "2011-12-03", "9772325355"],
-      ["Class 10", "A", "6145", "124209424", "Aarti", "Mahendra Maru", "Punam Devi", "OBC", "Girl", "2011-12-08", "7023240704"],
-      ["Class 10", "B", "5890", "120192330", "कविता शर्मा", "सुरेश कुमार शर्मा", "मंजू देवी", "GEN", "Girl", "2010-04-15", "9829123456"],
-      ["Class 10", "B", "6012", "120192331", "सुनील प्रजापत", "रामगोपाल प्रजापत", "शांति देवी", "OBC", "Boy", "2010-08-20", "9414567890"]
+      ["5569", "120192329", "Aaina Saini", "Shankar Lal Saini", "Lichhma Devi", "OBC", "Girl", "2011-12-03", "9772325355", "Class 10", "A"],
+      ["6145", "124209424", "Aarti", "Mahendra Maru", "Punam Devi", "OBC", "Girl", "2011-12-08", "7023240704", "Class 10", "A"],
+      ["5890", "120192330", "कविता शर्मा", "सुरेश कुमार शर्मा", "मंजू देवी", "GEN", "Girl", "2010-04-15", "9829123456", "Class 10", "B"],
+      ["6012", "120192331", "सुनील प्रजापत", "रामगोपाल प्रजापत", "शांति देवी", "OBC", "Boy", "2010-08-20", "9414567890", "Class 10", "B"]
     ];
-    const csvString = "\uFEFF" + [headers.join(","), ...sampleRows.map(r => r.map(c => `"${c}"`).join(","))].join("\n");
+    const csvString = "\uFEFF" + [studentHeaders.join(","), ...sampleRows.map(r => r.map(c => `"${c}"`).join(","))].join("\n");
     const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -245,15 +289,40 @@ export default function AdminStudentsTab({ token, showMsg }) {
     document.body.removeChild(link);
   };
 
-  // Parse CSV File or Text for Bulk Import
+  // Parse Excel (.xlsx, .xls) or CSV File for Bulk Import
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setBulkCsvText(event.target.result);
-    };
-    reader.readAsText(file);
+    const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+    if (isExcel) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const data = new Uint8Array(event.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+          const csvText = rows.map(r => (r || []).map(cell => {
+            const val = cell !== undefined && cell !== null ? String(cell) : '';
+            return val.includes(',') || val.includes('"') || val.includes('\n')
+              ? `"${val.replace(/"/g, '""')}"`
+              : val;
+          }).join(',')).join('\n');
+          setBulkCsvText(csvText);
+          showMsg(`Excel फ़ाइल '${file.name}' सफलतापूर्वक लोड हुई (${rows.length} पंक्तियां)!`, 'info');
+        } catch (err) {
+          showMsg("Excel फ़ाइल पढ़ने में समस्या: " + err.message, "error");
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    } else {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setBulkCsvText(event.target.result);
+      };
+      reader.readAsText(file);
+    }
   };
 
   const handleProcessBulkImport = () => {
@@ -373,18 +442,18 @@ export default function AdminStudentsTab({ token, showMsg }) {
         phone = getVal(['mobile no', 'mobile number', 'mobile', 'phone', 'phone no', 'phone number', 'contact', 'संपर्क', 'मोबाइल', 'मोबाइल नं']);
       } else {
         // Positional fallback to the exact 11 columns:
-        // 0: Class, 1: Section, 2: SRNO, 3: Rollno, 4: Student Name, 5: Father/Guardian Name, 6: Mother Name, 7: Cast Category, 8: Gender, 9: DOB, 10: Mobile No
-        className = values[0] || '';
-        section = values[1] || 'A';
-        srNo = values[2] || '';
-        rollNo = values[3] || '';
-        name = values[4] || '';
-        fatherName = values[5] || '';
-        motherName = values[6] || '';
-        category = values[7] || 'GEN';
-        gender = values[8] || 'Girl';
-        dob = formatDOB(values[9] || '');
-        phone = values[10] || '';
+        // 0: SRNO, 1: Rollno, 2: Student Name, 3: Father/Guardian Name, 4: Mother Name, 5: Cast Category, 6: Gender, 7: DOB, 8: Mobile No, 9: Class, 10: Section
+        srNo = values[0] || '';
+        rollNo = values[1] || '';
+        name = values[2] || '';
+        fatherName = values[3] || '';
+        motherName = values[4] || '';
+        category = values[5] || 'GEN';
+        gender = values[6] || 'Girl';
+        dob = formatDOB(values[7] || '');
+        phone = values[8] || '';
+        className = values[9] || '';
+        section = values[10] || 'A';
       }
 
       // Default class fallback
@@ -477,7 +546,15 @@ export default function AdminStudentsTab({ token, showMsg }) {
               className="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow"
             >
               <Upload className="w-3.5 h-3.5" />
-              <span>बल्क CSV आयात (Import)</span>
+              <span>बल्क आयात (Excel / CSV)</span>
+            </button>
+
+            <button
+              onClick={handleExportExcel}
+              className="bg-emerald-700 hover:bg-emerald-800 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <span>Excel एक्सपोर्ट (.xlsx)</span>
             </button>
 
             <button
@@ -840,8 +917,8 @@ export default function AdminStudentsTab({ token, showMsg }) {
               <div className="flex items-center gap-2">
                 <Upload className="w-5 h-5 text-emerald-600" />
                 <div>
-                  <h3 className="font-bold text-slate-900 text-base">विद्यार्थी डेटा बल्क आयात (Bulk CSV Import)</h3>
-                  <p className="text-xs text-slate-500">Excel अथवा CSV फाइल से एक साथ सैकड़ों विद्यार्थियों का रिकॉर्ड अपलोड करें</p>
+                  <h3 className="font-bold text-slate-900 text-base">विद्यार्थी डेटा बल्क आयात (Bulk Excel / CSV Import)</h3>
+                  <p className="text-xs text-slate-500">Excel (.xlsx) अथवा CSV फाइल से एक साथ सैकड़ों विद्यार्थियों का रिकॉर्ड अपलोड करें</p>
                 </div>
               </div>
               <button
@@ -855,38 +932,47 @@ export default function AdminStudentsTab({ token, showMsg }) {
             <div className="space-y-3 text-xs">
               <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-200 space-y-2">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <span className="font-bold text-emerald-950">मानक 11-कॉलम CSV प्रारूप (Required Columns):</span>
-                  <button
-                    onClick={handleDownloadSampleCSV}
-                    className="text-xs text-blue-900 font-bold hover:underline flex items-center gap-1 shrink-0"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>नमूना CSV डाउनलोड करें (Sample CSV)</span>
-                  </button>
+                  <span className="font-bold text-emerald-950">मानक 11-कॉलम प्रारूप (Required 11 Columns):</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleDownloadSampleExcel}
+                      className="text-xs text-emerald-800 font-bold hover:underline flex items-center gap-1 shrink-0 bg-white px-2.5 py-1 rounded-md border border-emerald-300 shadow-sm"
+                    >
+                      <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-700" />
+                      <span>नमूना Excel (.xlsx)</span>
+                    </button>
+                    <button
+                      onClick={handleDownloadSampleCSV}
+                      className="text-xs text-blue-900 font-bold hover:underline flex items-center gap-1 shrink-0 bg-white px-2.5 py-1 rounded-md border border-slate-300 shadow-sm"
+                    >
+                      <Download className="w-3.5 h-3.5 text-blue-800" />
+                      <span>नमूना CSV</span>
+                    </button>
+                  </div>
                 </div>
                 <div className="p-2.5 bg-white rounded-lg border border-emerald-300 font-mono text-[11px] text-emerald-900 overflow-x-auto whitespace-nowrap select-all font-bold">
-                  Class, Section, SRNO, Rollno, Student Name, Father/Guardian Name, Mother Name, Cast Category, Gender, DOB, Mobile No
+                  SRNO, Rollno, Student Name, Father/Guardian Name, Mother Name, Cast Category, Gender, DOB, Mobile No, Class, Section
                 </div>
                 <p className="text-[11px] text-emerald-800">
-                  💡 आप <strong>शाला दर्पण (Shala Darpan)</strong> अथवा Excel से सीधे डेटा कॉपी करके नीचे पेस्ट कर सकते हैं। यह स्वतः 5-अंकों वाली जन्म तिथि (Serial Date) व सभी फ़ील्ड्स को पहचान लेगा।
+                  💡 आप <strong>शाला दर्पण (Shala Darpan)</strong> अथवा Excel (.xlsx) से सीधे फ़ाइल अपलोड कर सकते हैं या डेटा कॉपी करके नीचे पेस्ट कर सकते हैं। यह स्वतः 5-अंकों वाली जन्म तिथि (Serial Date) व सभी फ़ील्ड्स को पहचान लेगा।
                 </p>
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">CSV फ़ाइल चुनें (.csv):</label>
+                <label className="block font-bold text-slate-700 mb-1">Excel अथवा CSV फ़ाइल चुनें (.xlsx, .xls, .csv):</label>
                 <input
                   type="file"
-                  accept=".csv,text/csv"
+                  accept=".xlsx,.xls,.csv,text/csv"
                   onChange={handleFileUpload}
                   className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-700 file:text-white hover:file:bg-emerald-800 cursor-pointer"
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">-- या यहाँ 11-कॉलम CSV / Excel डेटा पेस्ट करें: --</label>
+                <label className="block font-bold text-slate-700 mb-1">-- या यहाँ 11-कॉलम Excel / CSV डेटा पेस्ट करें: --</label>
                 <textarea
                   rows={8}
-                  placeholder={`Class,Section,SRNO,Rollno,Student Name,Father/Guardian Name,Mother Name,Cast Category,Gender,DOB,Mobile No\nClass 10,A,5569,120192329,Aaina Saini,Shankar Lal Saini,Lichhma Devi,OBC,Girl,2011-12-03,9772325355\nClass 10,A,6145,124209424,Aarti,Mahendra Maru,Punam Devi,OBC,Girl,2011-12-08,7023240704`}
+                  placeholder={`SRNO,Rollno,Student Name,Father/Guardian Name,Mother Name,Cast Category,Gender,DOB,Mobile No,Class,Section\n5569,120192329,Aaina Saini,Shankar Lal Saini,Lichhma Devi,OBC,Girl,2011-12-03,9772325355,Class 10,A\n6145,124209424,Aarti,Mahendra Maru,Punam Devi,OBC,Girl,2011-12-08,7023240704,Class 10,A`}
                   value={bulkCsvText}
                   onChange={(e) => setBulkCsvText(e.target.value)}
                   className="w-full p-3 rounded-lg border border-slate-300 font-mono text-[11px] focus:outline-none focus:ring-2 focus:ring-emerald-600"

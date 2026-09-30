@@ -5,8 +5,9 @@ import {
   Plus, Trash2, Upload, CheckCircle2, AlertCircle, RefreshCw, Eye,
   Building, Settings, Save, MapPin, Calendar, Video, Trophy, BookOpen, Clock, FileText,
   MessageSquare, Mail, PhoneCall, CheckCheck, MessageCircle, Pencil, X,
-  KeyRound, HelpCircle, GraduationCap, UserCheck, Printer, Download
+  KeyRound, HelpCircle, GraduationCap, UserCheck, Printer, Download, FileSpreadsheet
 } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { useSchool } from '../context/SchoolContext';
 import AdminStudentsTab from '../components/admin/AdminStudentsTab';
 import AdminLibraryTab from '../components/admin/AdminLibraryTab';
@@ -1129,12 +1130,67 @@ export default function Admin() {
   };
 
   // 9. TEACHER BULK IMPORT & EXPORT HANDLERS (10 Columns: SERIAL, Name, Post, Subject, Faculty, current post, joining, current joining, Study, mobile no)
+  const teacherHeaders = ["SERIAL", "Name", "Post", "Subject", "Faculty", "current post", "joining", "current joining", "Study", "mobile no"];
+
+  // Export teachers list to Excel (.xlsx) with the exact 10 columns
+  const handleExportTeachersExcel = () => {
+    if (teachers.length === 0) {
+      showMsg("एक्सपोर्ट करने के लिए शिक्षक डेटा उपलब्ध नहीं है।", "error");
+      return;
+    }
+    const wsData = [
+      teacherHeaders,
+      ...teachers.map((t, idx) => [
+        t.serial_no || idx + 1,
+        t.name || '',
+        t.designation || '',
+        t.subject || '',
+        t.department || '',
+        t.current_post || t.designation || '',
+        t.joining_date || '',
+        t.current_joining_date || '',
+        t.qualification || '',
+        t.phone || ''
+      ])
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    const colWidths = teacherHeaders.map((h, i) => {
+      let maxLen = h.length;
+      wsData.forEach(row => {
+        const val = row[i] ? String(row[i]) : '';
+        if (val.length > maxLen) maxLen = val.length;
+      });
+      return { wch: Math.min(maxLen + 4, 35) };
+    });
+    ws['!cols'] = colWidths;
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Teachers");
+    XLSX.writeFile(wb, `PM_SHRI_Teachers_Staff_${new Date().toISOString().split('T')[0]}.xlsx`);
+    showMsg("शिक्षक डेटा Excel (.xlsx) फ़ाइल में सफलतापूर्वक डाउनलोड हुआ!");
+  };
+
+  const handleDownloadTeacherSampleExcel = () => {
+    const sampleRows = [
+      ["1", "MOHAN LAL", "Vice Principal (School)", "", "Administration", "Vice Principal", "2002-08-15", "2023-04-28", "B.A/M.A/BSTC.B.ED/RSCIT", "9414894845"],
+      ["2", "INDER SINGH", "Vice Principal (School)", "", "Administration", "Vice Principal", "2006-09-12", "2016-07-30", "B.A/M.A", "9057295392"],
+      ["4", "MAHESH KUMAR SANKHOLIA", "Lecturer (I Gr.)", "Sanskrit Literature", "Arts", "Lecturer", "2012-04-10", "2016-09-03", "M.A/M.P/NET/RSCIT", "9024347777"],
+      ["5", "RASHMI MAHARSHI", "Lecturer (I Gr.)", "Political Science", "Arts", "Lecturer", "2010-07-20", "2017-01-21", "B.A/M.A/B.ED", "9079682607"],
+      ["6", "RAMESH KUMAR", "Lecturer (I Gr.)", "Physics", "Science", "Lecturer", "2012-05-18", "2017-06-28", "B.SC/M.SC/B.ED", "8963892319"],
+      ["35", "JAGDISH PRAJAPAT", "Basic Computer Instructor", "Computer Science", "ICT", "Basic Computer Instructor", "2022-10-18", "2022-10-18", "MCA", "9784730824"]
+    ];
+    const ws = XLSX.utils.aoa_to_sheet([teacherHeaders, ...sampleRows]);
+    ws['!cols'] = teacherHeaders.map(h => ({ wch: h.length + 6 }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Sample");
+    XLSX.writeFile(wb, "PM_SHRI_Teachers_Sample_10_Columns.xlsx");
+  };
+
   const handleExportTeachersCSV = () => {
     if (teachers.length === 0) {
       showMsg("एक्सपोर्ट करने के लिए शिक्षक डेटा उपलब्ध नहीं है।", "error");
       return;
     }
-    const headers = ["SERIAL", "Name", "Post", "Subject", "Faculty", "current post", "joining", "current joining", "Study", "mobile no"];
+    const headers = teacherHeaders;
     const rows = teachers.map((t, idx) => [
       `"${t.serial_no || idx + 1}"`,
       `"${(t.name || '').replace(/"/g, '""')}"`,
@@ -1160,7 +1216,7 @@ export default function Admin() {
   };
 
   const handleDownloadTeacherSampleCSV = () => {
-    const headers = ["SERIAL", "Name", "Post", "Subject", "Faculty", "current post", "joining", "current joining", "Study", "mobile no"];
+    const headers = teacherHeaders;
     const sampleRows = [
       ["1", "MOHAN LAL", "Vice Principal (School)", "", "Administration", "Vice Principal", "2002-08-15", "2023-04-28", "B.A/M.A/BSTC.B.ED/RSCIT", "9414894845"],
       ["2", "INDER SINGH", "Vice Principal (School)", "", "Administration", "Vice Principal", "2006-09-12", "2016-07-30", "B.A/M.A", "9057295392"],
@@ -1335,12 +1391,62 @@ export default function Admin() {
   };
 
   // 10. RESULTS BULK IMPORT & EXPORT HANDLERS
+  const resultHeaders = ["Roll No", "Student Name", "Father Name", "Class", "Year", "Percentage", "Grade", "Status"];
+
+  // Export results list to Excel (.xlsx)
+  const handleExportResultsExcel = () => {
+    if (results.length === 0) {
+      showMsg("एक्सपोर्ट करने के लिए परिणाम डेटा उपलब्ध नहीं है।", "error");
+      return;
+    }
+    const wsData = [
+      resultHeaders,
+      ...results.map(r => [
+        r.roll_no || '',
+        r.student_name || '',
+        r.father_name || '',
+        r.class_name || '',
+        r.year || '2025-2026',
+        r.percentage !== undefined && r.percentage !== null ? Number(r.percentage) : '',
+        r.grade || '',
+        r.status || 'PASS'
+      ])
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    const colWidths = resultHeaders.map((h, i) => {
+      let maxLen = h.length;
+      wsData.forEach(row => {
+        const val = row[i] ? String(row[i]) : '';
+        if (val.length > maxLen) maxLen = val.length;
+      });
+      return { wch: Math.min(maxLen + 4, 30) };
+    });
+    ws['!cols'] = colWidths;
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Results");
+    XLSX.writeFile(wb, `PM_SHRI_Results_${new Date().toISOString().split('T')[0]}.xlsx`);
+    showMsg("परीक्षा परिणाम डेटा Excel (.xlsx) फ़ाइल में सफलतापूर्वक डाउनलोड हुआ!");
+  };
+
+  const handleDownloadResultSampleExcel = () => {
+    const sampleHeaders = ["Roll No", "Student Name", "Father Name", "Class", "Year", "Percentage", "Grade", "Status", "Hindi", "English", "Science", "Maths"];
+    const sampleRows = [
+      ["260105", "अंजू शर्मा", "दिनेश कुमार शर्मा", "10th Board", "2025-2026", "94.50", "Merit", "PASS", "95", "92", "96", "95"],
+      ["260106", "सुनीता प्रजापत", "रामगोपाल प्रजापत", "12th Science", "2025-2026", "91.80", "First Div", "PASS", "90", "88", "94", "95"]
+    ];
+    const ws = XLSX.utils.aoa_to_sheet([sampleHeaders, ...sampleRows]);
+    ws['!cols'] = sampleHeaders.map(h => ({ wch: h.length + 5 }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Sample");
+    XLSX.writeFile(wb, "Sample_Results_Import_Template.xlsx");
+  };
+
   const handleExportResultsCSV = () => {
     if (results.length === 0) {
       showMsg("एक्सपोर्ट करने के लिए परिणाम डेटा उपलब्ध नहीं है।", "error");
       return;
     }
-    const headers = ["Roll No", "Student Name", "Father Name", "Class", "Year", "Percentage", "Grade", "Status"];
+    const headers = resultHeaders;
     const rows = results.map(r => [
       `"${r.roll_no || ''}"`,
       `"${r.student_name || ''}"`,
@@ -2687,9 +2793,17 @@ export default function Admin() {
                   type="button"
                   onClick={() => setIsTeacherBulkModalOpen(true)}
                   className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition shadow-sm"
-                  title="CSV फ़ाइल से बल्क शिक्षक डेटा जोड़ें"
+                  title="Excel अथवा CSV फ़ाइल से बल्क शिक्षक डेटा जोड़ें"
                 >
-                  <Upload className="w-3.5 h-3.5" /> बल्क इंपोर्ट (CSV)
+                  <Upload className="w-3.5 h-3.5" /> बल्क आयात (Excel / CSV)
+                </button>
+                <button
+                  type="button"
+                  onClick={handleExportTeachersExcel}
+                  className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold transition shadow-sm"
+                  title="सभी शिक्षक डेटा Excel (.xlsx) डाउनलोड करें"
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5" /> Excel एक्सपोर्ट (.xlsx)
                 </button>
                 <button
                   type="button"
@@ -3124,14 +3238,22 @@ export default function Admin() {
           <div className="lg:col-span-7 bg-white p-6 rounded-2xl shadow-md border border-slate-200 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
               <h3 className="text-base font-bold text-blue-950">रिकॉर्डेड परिणाम ({results.length})</h3>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <button
                   type="button"
                   onClick={() => setIsResultBulkModalOpen(true)}
                   className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition shadow-sm"
-                  title="CSV फ़ाइल से बल्क परिणाम अपलोड करें"
+                  title="Excel अथवा CSV फ़ाइल से बल्क परिणाम अपलोड करें"
                 >
-                  <Upload className="w-3.5 h-3.5" /> बल्क परिणाम (CSV)
+                  <Upload className="w-3.5 h-3.5" /> बल्क परिणाम (Excel / CSV)
+                </button>
+                <button
+                  type="button"
+                  onClick={handleExportResultsExcel}
+                  className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold transition shadow-sm"
+                  title="सभी परीक्षा परिणाम Excel (.xlsx) डाउनलोड करें"
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5" /> Excel एक्सपोर्ट (.xlsx)
                 </button>
                 <button
                   type="button"
@@ -3579,8 +3701,8 @@ export default function Admin() {
                   <Upload className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 text-base">शिक्षक डेटा बल्क इंपोर्ट (Bulk Import Teachers via CSV)</h3>
-                  <p className="text-[11px] text-slate-500">CSV फ़ाइल से एक साथ सभी शिक्षकों का डेटा जोड़ें</p>
+                  <h3 className="font-bold text-slate-900 text-base">शिक्षक डेटा बल्क आयात (Bulk Import Teachers via Excel / CSV)</h3>
+                  <p className="text-[11px] text-slate-500">Excel (.xlsx) अथवा CSV फ़ाइल से एक साथ सभी शिक्षकों का डेटा जोड़ें</p>
                 </div>
               </div>
               <button
@@ -3592,15 +3714,24 @@ export default function Admin() {
             </div>
 
             <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 text-xs text-emerald-950 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-emerald-900">10-कॉलम CSV फ़ॉर्मेट निर्देश (Format Guide):</span>
-                <button
-                  type="button"
-                  onClick={handleDownloadTeacherSampleCSV}
-                  className="inline-flex items-center gap-1 text-[11px] text-emerald-800 bg-white border border-emerald-300 font-bold px-2 py-0.5 rounded shadow-sm hover:bg-emerald-100 transition"
-                >
-                  <Download className="w-3 h-3" /> नमूना (Sample CSV) डाउनलोड करें
-                </button>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <span className="font-bold text-emerald-900">10-कॉलम प्रारूप निर्देश (Format Guide):</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleDownloadTeacherSampleExcel}
+                    className="inline-flex items-center gap-1 text-[11px] text-emerald-800 bg-white border border-emerald-300 font-bold px-2 py-0.5 rounded shadow-sm hover:bg-emerald-100 transition"
+                  >
+                    <FileSpreadsheet className="w-3 h-3 text-emerald-700" /> नमूना Excel (.xlsx)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDownloadTeacherSampleCSV}
+                    className="inline-flex items-center gap-1 text-[11px] text-blue-900 bg-white border border-slate-300 font-bold px-2 py-0.5 rounded shadow-sm hover:bg-slate-100 transition"
+                  >
+                    <Download className="w-3 h-3 text-blue-800" /> नमूना CSV
+                  </button>
+                </div>
               </div>
               <p className="text-[11px] text-emerald-900 font-mono bg-emerald-100/70 p-1.5 rounded border border-emerald-200">
                 SERIAL, Name, Post, Subject, Faculty, current post, joining, current joining, Study, mobile no
@@ -3613,16 +3744,39 @@ export default function Admin() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">CSV फ़ाइल चुनें (Choose CSV File)</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Excel अथवा CSV फ़ाइल चुनें (.xlsx, .xls, .csv)</label>
               <input
                 type="file"
-                accept=".csv"
+                accept=".xlsx,.xls,.csv,text/csv"
                 onChange={(e) => {
                   const file = e.target.files[0];
                   if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => setTeacherBulkCsvText(event.target.result);
-                    reader.readAsText(file);
+                    const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+                    if (isExcel) {
+                      const reader = new FileReader();
+                      reader.onload = (event) => {
+                        try {
+                          const data = new Uint8Array(event.target.result);
+                          const workbook = XLSX.read(data, { type: 'array' });
+                          const sheetName = workbook.SheetNames[0];
+                          const worksheet = workbook.Sheets[sheetName];
+                          const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                          const csvText = rows.map(r => (r || []).map(cell => {
+                            const val = cell !== undefined && cell !== null ? String(cell) : '';
+                            return val.includes(',') || val.includes('"') || val.includes('\n') ? `"${val.replace(/"/g, '""')}"` : val;
+                          }).join(',')).join('\n');
+                          setTeacherBulkCsvText(csvText);
+                          showMsg(`Excel फ़ाइल '${file.name}' सफलतापूर्वक लोड हुई (${rows.length} पंक्तियां)!`, 'info');
+                        } catch (err) {
+                          showMsg("Excel फ़ाइल पढ़ने में समस्या: " + err.message, "error");
+                        }
+                      };
+                      reader.readAsArrayBuffer(file);
+                    } else {
+                      const reader = new FileReader();
+                      reader.onload = (event) => setTeacherBulkCsvText(event.target.result);
+                      reader.readAsText(file);
+                    }
                   }
                 }}
                 className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 cursor-pointer"
@@ -3771,8 +3925,8 @@ export default function Admin() {
                   <Upload className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 text-base">परीक्षा परिणाम बल्क इंपोर्ट (Bulk Import Results via CSV)</h3>
-                  <p className="text-[11px] text-slate-500">CSV फ़ाइल से कक्षावार छात्राओं के अंक व परिणाम जोड़ें</p>
+                  <h3 className="font-bold text-slate-900 text-base">परीक्षा परिणाम बल्क आयात (Bulk Import Results via Excel / CSV)</h3>
+                  <p className="text-[11px] text-slate-500">Excel (.xlsx) अथवा CSV फ़ाइल से कक्षावार छात्राओं के अंक व परिणाम जोड़ें</p>
                 </div>
               </div>
               <button
@@ -3784,15 +3938,24 @@ export default function Admin() {
             </div>
 
             <div className="bg-purple-50 border border-purple-200 rounded-xl p-3 text-xs text-purple-950 space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="font-bold">CSV फ़ॉर्मेट निर्देश (CSV Format Guide):</span>
-                <button
-                  type="button"
-                  onClick={handleDownloadResultSampleCSV}
-                  className="inline-flex items-center gap-1 text-[11px] text-purple-800 bg-white border border-purple-300 font-bold px-2 py-0.5 rounded shadow-sm hover:bg-purple-100 transition"
-                >
-                  <Download className="w-3 h-3" /> नमूना (Sample CSV) डाउनलोड करें
-                </button>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <span className="font-bold">प्रारूप निर्देश (Format Guide):</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleDownloadResultSampleExcel}
+                    className="inline-flex items-center gap-1 text-[11px] text-purple-900 bg-white border border-purple-300 font-bold px-2 py-0.5 rounded shadow-sm hover:bg-purple-100 transition"
+                  >
+                    <FileSpreadsheet className="w-3 h-3 text-purple-700" /> नमूना Excel (.xlsx)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDownloadResultSampleCSV}
+                    className="inline-flex items-center gap-1 text-[11px] text-purple-800 bg-white border border-slate-300 font-bold px-2 py-0.5 rounded shadow-sm hover:bg-slate-100 transition"
+                  >
+                    <Download className="w-3 h-3" /> नमूना CSV
+                  </button>
+                </div>
               </div>
               <p className="text-[11px] text-purple-800">
                 कॉलम क्रम: <code>Roll No, Student Name, Father Name, Class, Year, Percentage, Grade, Status</code>
@@ -3800,16 +3963,39 @@ export default function Admin() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">CSV फ़ाइल चुनें (Choose CSV File)</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Excel अथवा CSV फ़ाइल चुनें (.xlsx, .xls, .csv)</label>
               <input
                 type="file"
-                accept=".csv"
+                accept=".xlsx,.xls,.csv,text/csv"
                 onChange={(e) => {
                   const file = e.target.files[0];
                   if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => setResultBulkCsvText(event.target.result);
-                    reader.readAsText(file);
+                    const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+                    if (isExcel) {
+                      const reader = new FileReader();
+                      reader.onload = (event) => {
+                        try {
+                          const data = new Uint8Array(event.target.result);
+                          const workbook = XLSX.read(data, { type: 'array' });
+                          const sheetName = workbook.SheetNames[0];
+                          const worksheet = workbook.Sheets[sheetName];
+                          const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                          const csvText = rows.map(r => (r || []).map(cell => {
+                            const val = cell !== undefined && cell !== null ? String(cell) : '';
+                            return val.includes(',') || val.includes('"') || val.includes('\n') ? `"${val.replace(/"/g, '""')}"` : val;
+                          }).join(',')).join('\n');
+                          setResultBulkCsvText(csvText);
+                          showMsg(`Excel फ़ाइल '${file.name}' सफलतापूर्वक लोड हुई (${rows.length} पंक्तियां)!`, 'info');
+                        } catch (err) {
+                          showMsg("Excel फ़ाइल पढ़ने में समस्या: " + err.message, "error");
+                        }
+                      };
+                      reader.readAsArrayBuffer(file);
+                    } else {
+                      const reader = new FileReader();
+                      reader.onload = (event) => setResultBulkCsvText(event.target.result);
+                      reader.readAsText(file);
+                    }
                   }
                 }}
                 className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-purple-700 file:text-white hover:file:bg-purple-800 cursor-pointer"
