@@ -8,16 +8,14 @@ export default function Teachers() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeModalTeacher, setActiveModalTeacher] = useState(null);
 
-  const departments = ['All', 'Administration', 'Science', 'Arts', 'ICT', 'Primary / Elementary'];
+  const departments = ['All', 'Arts', 'Science', 'Administration'];
 
   const getDeptLabel = (dept) => {
     switch (dept) {
-      case 'All': return 'सभी संकाय (All)';
-      case 'Administration': return 'प्रशासन (Admin)';
-      case 'Science': return 'विज्ञान संकाय';
-      case 'Arts': return 'कला संकाय';
-      case 'ICT': return 'कंप्यूटर / ICT';
-      case 'Primary / Elementary': return 'प्राथमिक / उच्च प्राथमिक';
+      case 'All': return 'सभी शिक्षक / कार्मिक (All)';
+      case 'Arts': return 'कला संकाय (Arts)';
+      case 'Science': return 'विज्ञान संकाय (Science)';
+      case 'Administration': return 'प्रशासन (Administration)';
       default: return dept;
     }
   };
@@ -198,10 +196,12 @@ export default function Teachers() {
                     </span>
                   </div>
 
-                  {/* Department Badge */}
-                  <span className="absolute bottom-2 left-2 z-20 bg-blue-950/90 backdrop-blur-md text-amber-400 text-[11px] font-bold px-2.5 py-0.5 rounded shadow">
-                    {teacher.department}
-                  </span>
+                  {/* Department Badge - Only show if department is Arts, Science, or Administration */}
+                  {teacher.department && ['Arts', 'Science', 'Administration'].includes(teacher.department) && (
+                    <span className="absolute bottom-2 left-2 z-20 bg-blue-950/90 backdrop-blur-md text-amber-400 text-[11px] font-bold px-2.5 py-0.5 rounded shadow">
+                      {getDeptLabel(teacher.department)}
+                    </span>
+                  )}
 
                   {/* Tiranga Top Rim */}
                   <div className="absolute top-0 left-0 right-0 h-1 tiranga-bar z-20"></div>
@@ -236,7 +236,11 @@ export default function Teachers() {
               </div>
 
               <div className="p-4 bg-slate-50 border-t border-slate-100 text-xs text-slate-500 flex items-center justify-between">
-                <span>पीएम श्री संकाय</span>
+                <span>
+                  {teacher.department && ['Arts', 'Science', 'Administration'].includes(teacher.department)
+                    ? getDeptLabel(teacher.department)
+                    : 'पीएम श्री विद्यालय'}
+                </span>
                 <button
                   onClick={() => setActiveModalTeacher(teacher)}
                   className="text-orange-600 font-bold hover:underline flex items-center gap-1"
@@ -291,9 +295,11 @@ export default function Teachers() {
             {/* Modal Teacher Details */}
             <div className="p-5 space-y-3 bg-white">
               <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-orange-600 bg-orange-50 px-2 py-0.5 rounded">
-                  {activeModalTeacher.department}
-                </span>
+                {activeModalTeacher.department && ['Arts', 'Science', 'Administration'].includes(activeModalTeacher.department) && (
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-orange-600 bg-orange-50 px-2 py-0.5 rounded">
+                    {getDeptLabel(activeModalTeacher.department)}
+                  </span>
+                )}
                 <h3 className="text-xl font-black text-slate-900 mt-1">
                   {activeModalTeacher.name}
                 </h3>

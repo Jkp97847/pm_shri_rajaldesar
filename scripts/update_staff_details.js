@@ -1,11 +1,11 @@
-const XLSX = require('./node_modules/xlsx');
-const http = require('node:http');
-const fs = require('node:fs');
-const path = require('node:path');
+const fs = require('fs');
+const path = require('path');
+const XLSX = require('../server/node_modules/xlsx');
+const db = require('../server/db');
 
 // 1. Ensure staff photos from staff/ are synced to server/uploads/staff/
 const staffDir = path.join(__dirname, '..', 'staff');
-const uploadsStaffDir = path.join(__dirname, 'uploads', 'staff');
+const uploadsStaffDir = path.join(__dirname, '..', 'server', 'uploads', 'staff');
 if (!fs.existsSync(uploadsStaffDir)) {
   fs.mkdirSync(uploadsStaffDir, { recursive: true });
 }
@@ -18,7 +18,7 @@ for (const f of photoFiles) {
     console.error('Error copying photo:', f, e);
   }
 }
-console.log('Synchronized ' + photoFiles.length + ' staff photos.');
+console.log(`Synchronized ${photoFiles.length} staff photos to ${uploadsStaffDir}`);
 
 // 2. Read staff details Excel
 const excelPath = path.join(staffDir, 'staff details.xlsx');
@@ -51,7 +51,9 @@ const calculateExp = (dStr) => {
   return `${months || 1} माह`;
 };
 
+// "art sciecne admistrator ye sab factly me h to hi rakho nhi to show mat karo"
 const getCleanFaculty = (serial, post, subject, excelFaculty) => {
+  // If Excel specifies an explicit faculty, use it if it's Arts/Science/Administration
   if (excelFaculty && excelFaculty !== '…………' && excelFaculty !== 'General') {
     const ef = String(excelFaculty).trim().toLowerCase();
     if (ef.includes('art') || ef.includes('कला')) return 'Arts';
@@ -62,7 +64,7 @@ const getCleanFaculty = (serial, post, subject, excelFaculty) => {
   const p = (post || '').toLowerCase();
   const s = (subject || '').toLowerCase();
 
-  // 1. Administration: Vice Principals, Administrative Officer, Junior Assistant
+  // 1. Administration (प्रशासन): Vice Principals, Administrative Officer, Junior Assistant
   if (p.includes('vice principal') || p.includes('administrative officer') || p.includes('junior assistant')) {
     return 'Administration';
   }
@@ -77,7 +79,7 @@ const getCleanFaculty = (serial, post, subject, excelFaculty) => {
     }
   }
 
-  // Everyone else has NO faculty (nhi to show mat karo)
+  // Everyone else has NO faculty (Senior Teachers, Computer, Level-1, Level-2, Lab Assistant, Class IV)
   return '';
 };
 
@@ -116,80 +118,61 @@ for (let i = 1; i < rows.length; i++) {
     serial_no: serial,
     name,
     designation: post,
-    subject,
-    department: faculty,
-    current_post: post,
-    joining_date: joining,
-    current_joining_date: currJoining,
+    department: faculty, // Only 'Arts', 'Science', 'Administration' or ''
     qualification: study,
     experience,
+    photo,
     phone,
-    photo
+    subject,
+    current_post: post,
+    joining_date: joining,
+    current_joining_date: currJoining
   });
 }
 
 console.log(`Parsed ${teachers.length} teachers from Excel.`);
 
-// 3. Login to server to get admin token
-const loginBody = JSON.stringify({ password: 'admin@rajaldesar123' });
-const loginReq = http.request({
-  hostname: 'localhost',
-  port: 5000,
-  path: '/api/admin/login',
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Content-Length': Buffer.byteLength(loginBody)
-  }
-}, (res) => {
-  let data = '';
-  res.on('data', chunk => data += chunk);
-  res.on('end', () => {
-    const loginRes = JSON.parse(data);
-    if (!loginRes.success) {
-      console.error('Login failed:', loginRes);
-      process.exit(1);
-    }
-    const token = loginRes.token;
-    console.log('Logged in successfully. Admin token acquired.');
+// 3. Update database table
+db.exec('BEGIN TRANSACTION;');
+db.exec('DELETE FROM teachers;');
 
-    // 4. Send bulk teachers update
-    const bulkBody = JSON.stringify({ teachers });
-    const bulkReq = http.request({
-      hostname: 'localhost',
-      port: 5000,
-      path: '/api/admin/teachers/bulk',
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(bulkBody),
-        'x-admin-token': token
-      }
-    }, (bulkRes) => {
-      let bData = '';
-      bulkRes.on('data', chunk => bData += chunk);
-      bulkRes.on('end', () => {
-        const bResult = JSON.parse(bData);
-        console.log('Bulk Update Result:', bResult);
+const insertStmt = db.prepare(`
+  INSERT INTO teachers (
+    name, designation, department, qualification, experience, photo, phone,
+    serial_no, subject, current_post, joining_date, current_joining_date
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`);
 
-        // 5. Verify by querying GET /api/teachers
-        http.get('http://localhost:5000/api/teachers', (getRes) => {
-          let gData = '';
-          getRes.on('data', chunk => gData += chunk);
-          getRes.on('end', () => {
-            const getJson = JSON.parse(gData);
-            console.log(`Verification: ${getJson.teachers.length} teachers retrieved.`);
-            getJson.teachers.forEach(t => {
-              console.log(`#${t.serial_no} ${t.name} | ${t.designation} (${t.subject || '-'}) | ${t.department} | ${t.experience} | ${t.phone} | Photo: ${t.photo}`);
-            });
-            process.exit(0);
-          });
-        });
-      });
-    });
-    bulkReq.write(bulkBody);
-    bulkReq.end();
-  });
+for (const t of teachers) {
+  insertStmt.run(
+    t.name,
+    t.designation,
+    t.department,
+    t.qualification,
+    t.experience,
+    t.photo,
+    t.phone,
+    t.serial_no,
+    t.subject,
+    t.current_post,
+    t.joining_date,
+    t.current_joining_date
+  );
+}
+db.exec('COMMIT;');
+
+console.log(`Successfully updated database with ${teachers.length} staff records!`);
+
+// 4. Verify from DB
+const dbRows = db.prepare('SELECT serial_no, name, designation, subject, department, experience, phone, photo FROM teachers ORDER BY serial_no ASC').all();
+console.log('\n--- VERIFICATION FROM DATABASE ---');
+dbRows.forEach(r => {
+  const facTag = r.department ? `[Faculty: ${r.department}]` : '[No Faculty - Non-faculty Staff]';
+  console.log(`#${r.serial_no} ${r.name} | ${r.designation} (${r.subject || '-'}) | ${facTag} | Exp: ${r.experience} | Phone: ${r.phone} | Photo: ${r.photo}`);
 });
-loginReq.write(loginBody);
-loginReq.end();
+
+const artsCount = dbRows.filter(r => r.department === 'Arts').length;
+const sciCount = dbRows.filter(r => r.department === 'Science').length;
+const adminCount = dbRows.filter(r => r.department === 'Administration').length;
+const noFacCount = dbRows.filter(r => !r.department).length;
+console.log(`\nSummary: Total: ${dbRows.length} | Arts: ${artsCount} | Science: ${sciCount} | Administration: ${adminCount} | Without Faculty: ${noFacCount}`);

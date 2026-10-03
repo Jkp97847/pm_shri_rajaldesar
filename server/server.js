@@ -817,6 +817,15 @@ const calculateStaffExperience = (joiningDate, currentJoiningDate) => {
   return '1 वर्ष';
 };
 
+const cleanStaffFaculty = (facultyStr) => {
+  if (!facultyStr) return '';
+  const fl = String(facultyStr).toLowerCase().trim();
+  if (fl.includes('art') || fl.includes('कला')) return 'Arts';
+  if (fl.includes('sci') || fl.includes('विज्ञान')) return 'Science';
+  if (fl.includes('admin') || fl.includes('प्रशासन')) return 'Administration';
+  return '';
+};
+
 // --- ADMIN TEACHERS CRUD (with direct file upload & reset support) ---
 app.post('/api/admin/teachers', adminAuth, upload.single('photo_file'), (req, res) => {
   try {
@@ -841,7 +850,7 @@ app.post('/api/admin/teachers', adminAuth, upload.single('photo_file'), (req, re
       name || '',
       designation || '',
       subject || '',
-      department || 'General',
+      cleanStaffFaculty(department),
       current_post || designation || '',
       joining,
       currJoining,
@@ -875,7 +884,7 @@ app.put('/api/admin/teachers/:id', adminAuth, upload.single('photo_file'), (req,
     const name = req.body.name !== undefined ? req.body.name : existing.name;
     const designation = req.body.designation !== undefined ? req.body.designation : existing.designation;
     const subject = req.body.subject !== undefined ? req.body.subject : (existing.subject || '');
-    const department = req.body.department !== undefined ? req.body.department : existing.department;
+    const department = req.body.department !== undefined ? cleanStaffFaculty(req.body.department) : existing.department;
     const current_post = req.body.current_post !== undefined ? req.body.current_post : (existing.current_post || '');
     const joining = req.body.joining_date !== undefined ? normalizeStaffDate(req.body.joining_date) : (existing.joining_date || '');
     const currJoining = req.body.current_joining_date !== undefined ? normalizeStaffDate(req.body.current_joining_date) : (existing.current_joining_date || '');
@@ -938,7 +947,7 @@ app.post('/api/admin/teachers/bulk', adminAuth, (req, res) => {
       const serial_no = rawSerial !== undefined && rawSerial !== '' ? parseInt(rawSerial, 10) : null;
       const designation = t.designation || t['Post'] || t['post'] || t['Designation'] || t['पद'] || 'शिक्षक';
       const subject = t.subject || t['Subject'] || t['subject'] || t['विषय'] || '';
-      const department = t.department || t['Faculty'] || t['faculty'] || t['Department'] || t['संकाय'] || 'General';
+      const department = cleanStaffFaculty(t.department || t['Faculty'] || t['faculty'] || t['Department'] || t['संकाय'] || '');
       const current_post = t.current_post || t['current post'] || t['current_post'] || t['वर्तमान पद'] || designation;
       const joining = normalizeStaffDate(t.joining_date || t['joining'] || t['Joining'] || t['joining_date'] || '');
       const currJoining = normalizeStaffDate(t.current_joining_date || t['current joining'] || t['current post joining'] || t['current_joining'] || '');

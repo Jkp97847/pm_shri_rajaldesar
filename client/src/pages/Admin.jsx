@@ -95,7 +95,7 @@ export default function Admin() {
     name: '',
     designation: '',
     subject: '',
-    department: 'General',
+    department: '',
     current_post: '',
     joining_date: '',
     current_joining_date: '',
@@ -553,7 +553,7 @@ export default function Admin() {
             name: '',
             designation: '',
             subject: '',
-            department: 'General',
+            department: '',
             current_post: '',
             joining_date: '',
             current_joining_date: '',
@@ -584,7 +584,7 @@ export default function Admin() {
       name: t.name || '',
       designation: t.designation || '',
       subject: t.subject || '',
-      department: t.department || 'General',
+      department: t.department || '',
       current_post: t.current_post || t.designation || '',
       joining_date: t.joining_date || '',
       current_joining_date: t.current_joining_date || '',
@@ -606,7 +606,7 @@ export default function Admin() {
       name: '',
       designation: '',
       subject: '',
-      department: 'General',
+      department: '',
       current_post: '',
       joining_date: '',
       current_joining_date: '',
@@ -1348,7 +1348,11 @@ export default function Admin() {
         name = getVal(['name', 'teacher name', 'शिक्षक का नाम', 'नाम']);
         post = getVal(['post', 'designation', 'पद']);
         subject = getVal(['subject', 'विषय']);
-        faculty = getVal(['faculty', 'department', 'संकाय']) || 'General';
+        const rawFac = (getVal(['faculty', 'department', 'संकाय']) || '').toLowerCase().trim();
+        if (rawFac.includes('art') || rawFac.includes('कला')) faculty = 'Arts';
+        else if (rawFac.includes('sci') || rawFac.includes('विज्ञान')) faculty = 'Science';
+        else if (rawFac.includes('admin') || rawFac.includes('प्रशासन')) faculty = 'Administration';
+        else faculty = '';
         currentPost = getVal(['current post', 'वर्तमान पद']) || post;
         joining = getVal(['joining', 'first joining', 'कार्यग्रहण तिथि']);
         currentJoining = getVal(['current joining', 'current post joining', 'वर्तमान कार्यग्रहण']);
@@ -1361,7 +1365,11 @@ export default function Admin() {
         name = values[1] || '';
         post = values[2] || '';
         subject = values[3] || '';
-        faculty = values[4] || 'General';
+        const rawFac = (values[4] || '').toLowerCase().trim();
+        if (rawFac.includes('art') || rawFac.includes('कला')) faculty = 'Arts';
+        else if (rawFac.includes('sci') || rawFac.includes('विज्ञान')) faculty = 'Science';
+        else if (rawFac.includes('admin') || rawFac.includes('प्रशासन')) faculty = 'Administration';
+        else faculty = '';
         currentPost = values[5] || post;
         joining = values[6] || '';
         currentJoining = values[7] || '';
@@ -1375,7 +1383,7 @@ export default function Admin() {
           name: name.trim(),
           designation: post || 'शिक्षक',
           subject: subject || '',
-          department: faculty || 'General',
+          department: faculty || '',
           current_post: currentPost || post || '',
           joining_date: joining || '',
           current_joining_date: currentJoining || '',
@@ -2705,17 +2713,14 @@ export default function Admin() {
                 <div>
                   <label className="block font-bold text-slate-700 mb-1">संकाय (Faculty / Department) *</label>
                   <select
-                    value={newTeacher.department}
+                    value={newTeacher.department || ''}
                     onChange={(e) => setNewTeacher({ ...newTeacher, department: e.target.value })}
                     className="w-full px-3 py-2 rounded-lg border border-slate-300"
                   >
-                    <option value="Administration">Administration</option>
-                    <option value="Science">Science</option>
-                    <option value="Arts">Arts</option>
-                    <option value="ICT">ICT / Computer</option>
-                    <option value="Primary / Elementary">Primary / Elementary</option>
-                    <option value="Sports">Sports / PTI</option>
-                    <option value="General">General</option>
+                    <option value="">-- कोई संकाय नहीं (None / Non-Faculty) --</option>
+                    <option value="Arts">कला संकाय (Arts)</option>
+                    <option value="Science">विज्ञान संकाय (Science)</option>
+                    <option value="Administration">प्रशासन (Administration)</option>
                   </select>
                 </div>
 
@@ -2896,7 +2901,9 @@ export default function Admin() {
                         {t.designation}{t.subject ? ` (${t.subject})` : ''}
                       </p>
                       <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-                        <span className="text-[10px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-700 font-medium">{t.department}</span>
+                        {t.department && (
+                          <span className="text-[10px] bg-blue-100 text-blue-900 px-1.5 py-0.5 rounded font-bold">{t.department}</span>
+                        )}
                         {t.experience && (
                           <span className="text-[10px] bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded font-bold">{t.experience}</span>
                         )}
@@ -4046,7 +4053,7 @@ export default function Admin() {
                         <td className="border border-slate-300 px-3 py-1 font-bold text-slate-900">{t.name}</td>
                         <td className="border border-slate-300 px-3 py-1 text-blue-900 font-semibold">{t.designation}</td>
                         <td className="border border-slate-300 px-2 py-1 text-slate-700">{t.subject || "-"}</td>
-                        <td className="border border-slate-300 px-2 py-1 text-slate-700">{t.department}</td>
+                        <td className="border border-slate-300 px-2 py-1 text-slate-700">{t.department || "-"}</td>
                         <td className="border border-slate-300 px-3 py-1 text-slate-600">{t.qualification || "-"}</td>
                         <td className="border border-slate-300 px-2 py-1 text-center font-semibold text-slate-700">{t.experience || "-"}</td>
                         <td className="border border-slate-300 px-2 py-1 text-center font-mono text-slate-800">{t.phone || "-"}</td>
