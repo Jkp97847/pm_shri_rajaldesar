@@ -4,15 +4,11 @@ import { Users, Search, Award, GraduationCap, Phone, Mail, BookOpen, ZoomIn, X, 
 export default function Teachers() {
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDept, setSelectedDept] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeModalTeacher, setActiveModalTeacher] = useState(null);
 
-  const departments = ['All', 'Arts', 'Science', 'Administration'];
-
   const getDeptLabel = (dept) => {
     switch (dept) {
-      case 'All': return 'सभी शिक्षक / कार्मिक (All)';
       case 'Arts': return 'कला संकाय (Arts)';
       case 'Science': return 'विज्ञान संकाय (Science)';
       case 'Administration': return 'प्रशासन (Administration)';
@@ -34,13 +30,13 @@ export default function Teachers() {
   }, []);
 
   const filtered = teachers.filter(t => {
-    const matchesDept = selectedDept === 'All' || (t.department && t.department.toLowerCase() === selectedDept.toLowerCase());
-    const matchesSearch = t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          t.designation.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          (t.subject && t.subject.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                          (t.qualification && t.qualification.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                          (t.phone && t.phone.includes(searchQuery));
-    return matchesDept && matchesSearch;
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return true;
+    return t.name.toLowerCase().includes(q) ||
+           t.designation.toLowerCase().includes(q) ||
+           (t.subject && t.subject.toLowerCase().includes(q)) ||
+           (t.qualification && t.qualification.toLowerCase().includes(q)) ||
+           (t.phone && t.phone.includes(q));
   });
 
   return (
@@ -122,34 +118,24 @@ export default function Teachers() {
         </div>
       </div>
 
-      {/* Filter and Search Controls */}
-      <div className="bg-white p-4 sm:p-6 rounded-xl shadow-md border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4">
-        {/* Department Tabs */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {departments.map((dept) => (
-            <button
-              key={dept}
-              onClick={() => setSelectedDept(dept)}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${
-                selectedDept === dept
-                  ? 'bg-blue-950 text-amber-400 shadow-sm'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-              }`}
-            >
-              {getDeptLabel(dept)}
-            </button>
-          ))}
+      {/* Search and Total Staff Count Bar */}
+      <div className="bg-white p-4 sm:p-5 rounded-xl shadow-md border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-2 text-slate-700">
+          <Users className="w-5 h-5 text-blue-900" />
+          <span className="text-sm font-bold">
+            कुल कार्मिक एवं शिक्षक: <span className="text-blue-900 font-extrabold text-base">{filtered.length}</span>
+          </span>
         </div>
 
         {/* Search Box */}
-        <div className="relative w-full md:w-72">
+        <div className="relative w-full sm:w-80">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="शिक्षक का नाम या विषय खोजें..."
+            placeholder="शिक्षक का नाम, पद या विषय खोजें..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-900"
+            className="w-full pl-9 pr-4 py-2.5 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-900"
           />
         </div>
       </div>
@@ -256,7 +242,7 @@ export default function Teachers() {
         <div className="text-center py-16 bg-white rounded-2xl border border-slate-200 space-y-2">
           <p className="text-slate-500 font-medium">कोई शिक्षक नहीं मिला।</p>
           <button
-            onClick={() => { setSelectedDept('All'); setSearchQuery(''); }}
+            onClick={() => setSearchQuery('')}
             className="text-xs text-blue-900 font-bold hover:underline"
           >
             सभी शिक्षक देखें

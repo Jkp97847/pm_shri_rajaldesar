@@ -3,22 +3,23 @@ const path = require('path');
 const XLSX = require('../server/node_modules/xlsx');
 const db = require('../server/db');
 
-// 1. Ensure staff photos from staff/ are synced to server/uploads/staff/
+// 1. Ensure staff photos from staff/ are synced to server/uploads/staff/ and client/public/uploads/staff/
 const staffDir = path.join(__dirname, '..', 'staff');
 const uploadsStaffDir = path.join(__dirname, '..', 'server', 'uploads', 'staff');
-if (!fs.existsSync(uploadsStaffDir)) {
-  fs.mkdirSync(uploadsStaffDir, { recursive: true });
-}
+const clientStaffDir = path.join(__dirname, '..', 'client', 'public', 'uploads', 'staff');
+if (!fs.existsSync(uploadsStaffDir)) fs.mkdirSync(uploadsStaffDir, { recursive: true });
+if (!fs.existsSync(clientStaffDir)) fs.mkdirSync(clientStaffDir, { recursive: true });
 
 const photoFiles = fs.readdirSync(staffDir).filter(f => !f.endsWith('.xlsx'));
 for (const f of photoFiles) {
   try {
     fs.copyFileSync(path.join(staffDir, f), path.join(uploadsStaffDir, f));
+    fs.copyFileSync(path.join(staffDir, f), path.join(clientStaffDir, f));
   } catch (e) {
     console.error('Error copying photo:', f, e);
   }
 }
-console.log(`Synchronized ${photoFiles.length} staff photos to ${uploadsStaffDir}`);
+console.log(`Synchronized ${photoFiles.length} staff photos to ${uploadsStaffDir} and ${clientStaffDir}`);
 
 // 2. Read staff details Excel
 const excelPath = path.join(staffDir, 'staff details.xlsx');
